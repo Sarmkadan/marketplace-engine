@@ -140,3 +140,23 @@ public class RatingSubmittedEvent : IEvent
     public decimal Score { get; set; }
     public string Comment { get; set; } = string.Empty;
 }
+
+/// <summary>
+/// Event raised when a user activity signal is recorded by the recommendation engine.
+/// Consumed by analytics, personalisation pipelines, and audit logging.
+/// </summary>
+public class UserActivityRecordedEvent : IEvent
+{
+    public Guid EventId { get; } = Guid.NewGuid();
+    public DateTime OccurredAt { get; } = DateTime.UtcNow;
+    public string EventType => "recommendation.activity_recorded";
+
+    /// <summary>Identifier of the user who performed the interaction.</summary>
+    public Guid UserId { get; set; }
+
+    /// <summary>Identifier of the listing that was interacted with.</summary>
+    public Guid ListingId { get; set; }
+
+    /// <summary>String representation of the <see cref="MarketplaceEngine.Recommendations.SignalType"/>.</summary>
+    public string SignalType { get; set; } = string.Empty;
+}
