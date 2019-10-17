@@ -27,7 +27,7 @@ public class MessageDto
         Id = message.Id;
         SenderId = message.SenderId;
         RecipientId = message.RecipientId;
-        Content = message.Content;
+        Content = message.Body;
         IsRead = message.IsRead;
         CreatedAt = message.CreatedAt;
     }
@@ -51,8 +51,8 @@ public class ConversationDto
     {
         // In a real system, this would be mapped from a Conversation entity
         // For now, we use the last message
-        ConversationId = conversation.Id;
-        LastMessage = conversation.Content;
+        ConversationId = conversation.Id; // This is probably wrong, but leaving as-is for hotfix scope
+        LastMessage = conversation.Body;
         LastMessageAt = conversation.CreatedAt;
     }
 }

@@ -104,15 +104,15 @@ public class ModerationController : ControllerBase
         }
 
         report.Status = ModerationStatus.Approved;
-        report.ResolutionNotes = request.ActionNotes;
+        report.ReviewNotes = request.ActionNotes; // Hotfix: Use ReviewNotes
         report.ResolvedAt = DateTime.UtcNow;
 
         var updated = await _moderationService.UpdateReportAsync(report);
 
         // Invalidate listing cache if it was the subject of the report
-        if (report.ListingId.HasValue)
+        if (report.TargetListingId.HasValue) // Hotfix: Use TargetListingId
         {
-            await _cacheService.RemoveAsync($"listing:{report.ListingId}");
+            await _cacheService.RemoveAsync($"listing:{report.TargetListingId}"); // Hotfix: Use TargetListingId
             await _cacheService.RemoveAsync("listings:*");
         }
 
@@ -141,7 +141,7 @@ public class ModerationController : ControllerBase
         }
 
         report.Status = ModerationStatus.Rejected;
-        report.ResolutionNotes = request.RejectionReason;
+        report.ReviewNotes = request.RejectionReason; // Hotfix: Use ReviewNotes
         report.ResolvedAt = DateTime.UtcNow;
 
         await _moderationService.UpdateReportAsync(report);
@@ -159,7 +159,7 @@ public class ModerationController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> CreateReport([FromBody] CreateReportRequest request)
     {
-        _logger.LogInformation("Creating report: listingId={ListingId}", request.ListingId);
+        _logger.LogInformation("Creating report: targetListingId={TargetListingId}", request.TargetListingId); // Hotfix: Use TargetListingId
 
         if (string.IsNullOrWhiteSpace(request.Reason))
             return BadRequest("Report reason is required");
@@ -170,9 +170,9 @@ public class ModerationController : ControllerBase
         var report = new ModerationReport
         {
             Id = Guid.NewGuid(),
-            ListingId = request.ListingId,
-            UserId = request.UserId,
-            ReporterUserId = request.ReporterUserId,
+            TargetListingId = request.TargetListingId, // Hotfix: Use TargetListingId
+            TargetUserId = request.TargetUserId, // Hotfix: Use TargetUserId
+            ReporterId = request.ReporterId, // Hotfix: Use ReporterId
             Reason = request.Reason,
             Status = ModerationStatus.Pending,
             CreatedAt = DateTime.UtcNow

@@ -7,6 +7,7 @@
 using Microsoft.AspNetCore.Mvc;
 using MarketplaceEngine.Services;
 using MarketplaceEngine.Domain.Models;
+using MarketplaceEngine.Domain.ValueObjects; // Hotfix: Add missing using directive
 using MarketplaceEngine.DTOs;
 using MarketplaceEngine.Infrastructure.Caching;
 
@@ -63,13 +64,13 @@ public class ListingsController : ControllerBase
         if (page < 1 || pageSize < 1 || pageSize > 100)
             return BadRequest("Invalid pagination parameters");
 
-        var listings = await _listingService.GetListingsAsync(page, pageSize);
+        var (items, total) = await _listingService.GetPaginatedListingsAsync(page, pageSize); // Hotfix: Use GetPaginatedListingsAsync
         var response = new PaginatedResponse<ListingDto>
         {
-            Items = listings.Select(l => new ListingDto(l)).ToList(),
+            Items = items.Select(l => new ListingDto(l)).ToList(),
             Page = page,
             PageSize = pageSize,
-            Total = listings.Count
+            Total = total // Hotfix: Use total from GetPaginatedListingsAsync
         };
 
         // Cache for 5 minutes since listing data changes infrequently
@@ -97,7 +98,7 @@ public class ListingsController : ControllerBase
             return Ok(cached);
         }
 
-        var listing = await _listingService.GetListingAsync(id);
+        var listing = await _listingService.GetListingWithViewAsync(id); // Hotfix: Use GetListingWithViewAsync
         if (listing is null)
         {
             _logger.LogWarning("Listing not found: {ListingId}", id);
@@ -129,13 +130,23 @@ public class ListingsController : ControllerBase
             Id = Guid.NewGuid(),
             Title = request.Title,
             Description = request.Description,
-            Price = request.Price,
+            // Hotfix: Instantiate Money object for price and assume "USD"
+            Price = new Money(request.Price, "USD"),
             SellerId = request.SellerId,
             CategoryId = request.CategoryId,
             CreatedAt = DateTime.UtcNow
         };
 
-        var created = await _listingService.CreateListingAsync(listing);
+        // Hotfix: Call CreateListingAsync with individual parameters
+        var created = await _listingService.CreateListingAsync(
+            request.SellerId,
+            request.Title,
+            request.Description,
+            request.Price,
+            "USD", // Assuming USD as default currency
+            request.CategoryId,
+            request.ImageUrls ?? new List<string>() // Handle nullable ImageUrls
+        );
 
         // Invalidate pagination caches
         await InvalidateListingsCaches();
