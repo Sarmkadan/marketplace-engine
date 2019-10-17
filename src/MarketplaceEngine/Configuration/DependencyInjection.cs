@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -155,7 +156,7 @@ public static class DependencyInjection
     private static async Task<IResult> GetListing(Guid id, IListingRepository repository)
     {
         var listing = await repository.GetByIdAsync(id);
-        if (listing == null)
+        if (listing is null)
             return Results.NotFound();
 
         await repository.IncrementViewCountAsync(id);

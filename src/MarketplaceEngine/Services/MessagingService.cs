@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -28,11 +29,11 @@ public class MessagingService
         Guid? listingId = null, List<string>? attachments = null)
     {
         var sender = await _userRepository.GetByIdAsync(senderId);
-        if (sender == null)
+        if (sender is null)
             throw new ResourceNotFoundException("User", senderId);
 
         var recipient = await _userRepository.GetByIdAsync(recipientId);
-        if (recipient == null)
+        if (recipient is null)
             throw new ResourceNotFoundException("User", recipientId);
 
         var message = new Message
@@ -53,7 +54,7 @@ public class MessagingService
     public async Task<List<Message>> GetReceivedMessagesAsync(Guid userId)
     {
         var user = await _userRepository.GetByIdAsync(userId);
-        if (user == null)
+        if (user is null)
             throw new ResourceNotFoundException("User", userId);
 
         return await _messageRepository.GetReceivedMessagesAsync(userId);
@@ -63,7 +64,7 @@ public class MessagingService
     public async Task<List<Message>> GetSentMessagesAsync(Guid userId)
     {
         var user = await _userRepository.GetByIdAsync(userId);
-        if (user == null)
+        if (user is null)
             throw new ResourceNotFoundException("User", userId);
 
         return await _messageRepository.GetSentMessagesAsync(userId);
@@ -73,7 +74,7 @@ public class MessagingService
     public async Task<List<Message>> GetUnreadMessagesAsync(Guid userId)
     {
         var user = await _userRepository.GetByIdAsync(userId);
-        if (user == null)
+        if (user is null)
             throw new ResourceNotFoundException("User", userId);
 
         return await _messageRepository.GetUnreadMessagesAsync(userId);
@@ -83,11 +84,11 @@ public class MessagingService
     public async Task<List<Message>> GetConversationAsync(Guid userId1, Guid userId2)
     {
         var user1 = await _userRepository.GetByIdAsync(userId1);
-        if (user1 == null)
+        if (user1 is null)
             throw new ResourceNotFoundException("User", userId1);
 
         var user2 = await _userRepository.GetByIdAsync(userId2);
-        if (user2 == null)
+        if (user2 is null)
             throw new ResourceNotFoundException("User", userId2);
 
         return await _messageRepository.GetConversationAsync(userId1, userId2);
@@ -97,7 +98,7 @@ public class MessagingService
     public async Task<Message> MarkAsReadAsync(Guid messageId)
     {
         var message = await _messageRepository.GetByIdAsync(messageId);
-        if (message == null)
+        if (message is null)
             throw new ResourceNotFoundException("Message", messageId);
 
         message.MarkAsRead();
@@ -114,7 +115,7 @@ public class MessagingService
     public async Task<Message> MarkAsUnreadAsync(Guid messageId)
     {
         var message = await _messageRepository.GetByIdAsync(messageId);
-        if (message == null)
+        if (message is null)
             throw new ResourceNotFoundException("Message", messageId);
 
         message.MarkAsUnread();
@@ -125,11 +126,11 @@ public class MessagingService
     public async Task<Message> FlagMessageAsync(Guid messageId, Guid flaggerId)
     {
         var message = await _messageRepository.GetByIdAsync(messageId);
-        if (message == null)
+        if (message is null)
             throw new ResourceNotFoundException("Message", messageId);
 
         var flagger = await _userRepository.GetByIdAsync(flaggerId);
-        if (flagger == null)
+        if (flagger is null)
             throw new ResourceNotFoundException("User", flaggerId);
 
         message.Flag();
@@ -140,7 +141,7 @@ public class MessagingService
     public async Task<Message> RemoveFlagAsync(Guid messageId)
     {
         var message = await _messageRepository.GetByIdAsync(messageId);
-        if (message == null)
+        if (message is null)
             throw new ResourceNotFoundException("Message", messageId);
 
         message.RemoveFlag();
@@ -152,11 +153,11 @@ public class MessagingService
         List<string>? attachments = null)
     {
         var parentMessage = await _messageRepository.GetByIdAsync(parentMessageId);
-        if (parentMessage == null)
+        if (parentMessage is null)
             throw new ResourceNotFoundException("Message", parentMessageId);
 
         var sender = await _userRepository.GetByIdAsync(senderId);
-        if (sender == null)
+        if (sender is null)
             throw new ResourceNotFoundException("User", senderId);
 
         var reply = new Message
@@ -194,7 +195,7 @@ public class MessagingService
     public async Task<(List<Message> items, int total)> GetPaginatedMessagesAsync(Guid userId, int pageNumber, int pageSize)
     {
         var user = await _userRepository.GetByIdAsync(userId);
-        if (user == null)
+        if (user is null)
             throw new ResourceNotFoundException("User", userId);
 
         return await _messageRepository.GetPagedAsync(userId, pageNumber, pageSize);
@@ -204,7 +205,7 @@ public class MessagingService
     public async Task<int> GetConversationCountAsync(Guid userId)
     {
         var user = await _userRepository.GetByIdAsync(userId);
-        if (user == null)
+        if (user is null)
             throw new ResourceNotFoundException("User", userId);
 
         return await _messageRepository.GetConversationCountAsync(userId);
@@ -214,7 +215,7 @@ public class MessagingService
     public async Task DeleteMessageAsync(Guid messageId, Guid requesterId)
     {
         var message = await _messageRepository.GetByIdAsync(messageId);
-        if (message == null)
+        if (message is null)
             throw new ResourceNotFoundException("Message", messageId);
 
         if (message.SenderId != requesterId && message.RecipientId != requesterId)

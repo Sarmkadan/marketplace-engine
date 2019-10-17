@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -34,7 +35,7 @@ public class SearchService
     // Searches listings by tags
     public async Task<List<Listing>> SearchByTagsAsync(List<string> tags)
     {
-        if (tags == null || tags.Count == 0)
+        if (tags is null || tags.Count == 0)
             throw new ValidationException("At least one tag is required for search");
 
         return await _listingRepository.GetByTagsAsync(tags);
@@ -116,14 +117,14 @@ public class SearchService
         if (minPrice.HasValue || maxPrice.HasValue)
         {
             allListings = allListings
-                .Where(l => l.Price != null &&
+                .Where(l => l.Price is not null &&
                            (!minPrice.HasValue || l.Price.Amount >= minPrice.Value) &&
                            (!maxPrice.HasValue || l.Price.Amount <= maxPrice.Value))
                 .ToList();
         }
 
         // Apply tags filter
-        if (tags != null && tags.Count > 0)
+        if (tags is not null && tags.Count > 0)
         {
             var normalizedTags = tags.Select(t => t.ToLowerInvariant()).ToList();
             allListings = allListings

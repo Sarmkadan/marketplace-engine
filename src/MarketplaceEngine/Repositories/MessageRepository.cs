@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -36,7 +37,7 @@ public class MessageRepository : IMessageRepository
 
     public async Task<Message> AddAsync(Message entity)
     {
-        if (entity == null)
+        if (entity is null)
             throw new ArgumentNullException(nameof(entity));
 
         entity.Id = Guid.NewGuid();
@@ -49,11 +50,11 @@ public class MessageRepository : IMessageRepository
 
     public async Task<Message> UpdateAsync(Message entity)
     {
-        if (entity == null)
+        if (entity is null)
             throw new ArgumentNullException(nameof(entity));
 
         var existing = _context.Messages.FirstOrDefault(m => m.Id == entity.Id);
-        if (existing == null)
+        if (existing is null)
             throw new ResourceNotFoundException(ResourceType, entity.Id);
 
         var index = _context.Messages.IndexOf(existing);
@@ -66,7 +67,7 @@ public class MessageRepository : IMessageRepository
     public async Task DeleteAsync(Guid id)
     {
         var message = await GetByIdAsync(id);
-        if (message == null)
+        if (message is null)
             throw new ResourceNotFoundException(ResourceType, id);
 
         _context.Messages.Remove(message);
@@ -183,7 +184,7 @@ public class MessageRepository : IMessageRepository
         foreach (var id in messageIds)
         {
             var message = _context.Messages.FirstOrDefault(m => m.Id == id);
-            if (message != null)
+            if (message is not null)
             {
                 message.MarkAsRead();
             }

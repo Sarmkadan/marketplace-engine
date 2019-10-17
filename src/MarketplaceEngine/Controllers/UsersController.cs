@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -48,13 +49,13 @@ public class UsersController : ControllerBase
         var cacheKey = $"user:{id}:profile";
         var cached = await _cacheService.GetAsync<UserDto>(cacheKey);
 
-        if (cached != null)
+        if (cached is not null)
         {
             return Ok(cached);
         }
 
         var user = await _userService.GetUserAsync(id);
-        if (user == null)
+        if (user is null)
         {
             _logger.LogWarning("User not found: {UserId}", id);
             return NotFound(new { error = "User not found" });
@@ -80,13 +81,13 @@ public class UsersController : ControllerBase
         var cacheKey = $"user:{id}:metrics";
         var cached = await _cacheService.GetAsync<SellerMetricsDto>(cacheKey);
 
-        if (cached != null)
+        if (cached is not null)
         {
             return Ok(cached);
         }
 
         var user = await _userService.GetUserAsync(id);
-        if (user == null)
+        if (user is null)
         {
             return NotFound();
         }
@@ -119,7 +120,7 @@ public class UsersController : ControllerBase
         var cacheKey = $"sellers:top:{limit}";
         var cached = await _cacheService.GetAsync<List<SellerRankingDto>>(cacheKey);
 
-        if (cached != null)
+        if (cached is not null)
         {
             return Ok(cached);
         }
@@ -154,7 +155,7 @@ public class UsersController : ControllerBase
             return BadRequest("Display name is required");
 
         var user = await _userService.GetUserAsync(id);
-        if (user == null)
+        if (user is null)
         {
             return NotFound();
         }
@@ -184,7 +185,7 @@ public class UsersController : ControllerBase
         _logger.LogInformation("Verifying email for user: {UserId}", id);
 
         var user = await _userService.GetUserAsync(id);
-        if (user == null)
+        if (user is null)
         {
             return NotFound();
         }

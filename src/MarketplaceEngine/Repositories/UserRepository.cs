@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -36,7 +37,7 @@ public class UserRepository : IUserRepository
 
     public async Task<User> AddAsync(User entity)
     {
-        if (entity == null)
+        if (entity is null)
             throw new ArgumentNullException(nameof(entity));
 
         if (await EmailExistsAsync(entity.Email))
@@ -52,11 +53,11 @@ public class UserRepository : IUserRepository
 
     public async Task<User> UpdateAsync(User entity)
     {
-        if (entity == null)
+        if (entity is null)
             throw new ArgumentNullException(nameof(entity));
 
         var existing = _context.Users.FirstOrDefault(u => u.Id == entity.Id);
-        if (existing == null)
+        if (existing is null)
             throw new ResourceNotFoundException(ResourceType, entity.Id);
 
         entity.UpdatedAt = DateTime.UtcNow;
@@ -70,7 +71,7 @@ public class UserRepository : IUserRepository
     public async Task DeleteAsync(Guid id)
     {
         var user = await GetByIdAsync(id);
-        if (user == null)
+        if (user is null)
             throw new ResourceNotFoundException(ResourceType, id);
 
         _context.Users.Remove(user);
@@ -134,7 +135,7 @@ public class UserRepository : IUserRepository
         await Task.Delay(5);
         return _context.Users
             .Where(u => u.IsActive && u.IsVerified && u.TotalSales > 0)
-            .OrderByDescending(u => u.Rating != null ? u.Rating.AverageRating : 0)
+            .OrderByDescending(u => u.Rating is not null ? u.Rating.AverageRating : 0)
             .ThenByDescending(u => u.TotalSales)
             .Take(limit)
             .ToList();
@@ -144,7 +145,7 @@ public class UserRepository : IUserRepository
     {
         await Task.Delay(5);
         return _context.Users
-            .Where(u => u.Location != null &&
+            .Where(u => u.Location is not null &&
                        u.Location.City.Equals(city, StringComparison.OrdinalIgnoreCase) &&
                        u.Location.CountryCode.Equals(countryCode, StringComparison.OrdinalIgnoreCase))
             .ToList();
@@ -186,7 +187,7 @@ public class UserRepository : IUserRepository
     public async Task UpdateLastActivityAsync(Guid userId)
     {
         var user = await GetByIdAsync(userId);
-        if (user != null)
+        if (user is not null)
         {
             user.UpdateLastActivity();
             await UpdateAsync(user);
