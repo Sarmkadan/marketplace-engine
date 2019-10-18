@@ -1,0 +1,145 @@
+# =============================================================================
+# Author: Vladyslav Zaiets | https://sarmkadan.com
+# CTO & Software Architect
+# =============================================================================
+
+# Example Docker Compose Configuration for Marketplace Engine
+# This is an extended example with additional services for production
+
+version: '3.8'
+
+services:
+  # Marketplace Engine API
+  api:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    container_name: marketplace-api
+    ports:
+      - "5000:5000"
+      - "5001:5001"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:5000
+      REDIS_CONNECTION_STRING: redis:6379
+      DATABASE_CONNECTION_STRING: "Server=postgres;Port=5432;Database=marketplace;User Id=marketplace;Password=P@ssw0rd123;"
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./logs:/app/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - marketplace-network
+    restart: unless-stopped
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: marketplace-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes --requirepass P@ssw0rd123
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - marketplace-network
+    restart: unless-stopped
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: marketplace-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: marketplace
+      POSTGRES_USER: marketplace
+      POSTGRES_PASSWORD: P@ssw0rd123
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U marketplace"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - marketplace-network
+    restart: unless-stopped
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: marketplace-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - api
+    networks:
+      - marketplace-network
+    restart: unless-stopped
+
+  # Adminer for Database Management
+  adminer:
+    image: adminer:latest
+    container_name: marketplace-adminer
+    ports:
+      - "8080:8080"
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres
+    depends_on:
+      - postgres
+    networks:
+      - marketplace-network
+    restart: unless-stopped
+
+  # Redis Commander for Cache Management
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: marketplace-redis-commander
+    ports:
+      - "8081:8081"
+    environment:
+      REDIS_HOSTS: local:redis:6379
+      REDIS_PASSWORD: P@ssw0rd123
+    depends_on:
+      - redis
+    networks:
+      - marketplace-network
+    restart: unless-stopped
+
+volumes:
+  redis-data:
+    driver: local
+  postgres-data:
+    driver: local
+
+networks:
+  marketplace-network:
+    driver: bridge
+
+# Usage:
+# 1. Copy this file to project root as docker-compose.yml
+# 2. Update environment variables with secure passwords
+# 3. Prepare nginx.conf and SSL certificates
+# 4. Run: docker-compose up -d
+# 5. Access:
+#    - API: http://localhost:5000
+#    - Adminer: http://localhost:8080
+#    - Redis Commander: http://localhost:8081

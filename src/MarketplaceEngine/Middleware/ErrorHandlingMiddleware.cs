@@ -64,7 +64,13 @@ public class ErrorHandlingMiddleware
                 context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
                 response.Code = "VALIDATION_ERROR";
                 response.Message = ex.Message;
-                response.Details = ex.Errors?.ToDictionary(e => e.Field, e => (object)e.Message);
+                if (ex.ValidationErrors != null)
+                {
+                    response.Details = ex.ValidationErrors.ToDictionary(
+                        kvp => kvp.Key,
+                        kvp => (object)string.Join(", ", kvp.Value)
+                    );
+                }
                 break;
 
             case DuplicateResourceException ex:

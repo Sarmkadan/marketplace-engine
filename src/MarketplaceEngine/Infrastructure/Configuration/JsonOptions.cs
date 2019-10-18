@@ -3,6 +3,9 @@
 // CTO & Software Architect
 // =============================================================================
 
+using System.Text.Json;
+using System.Text.Json.Serialization;
+
 namespace MarketplaceEngine.Infrastructure.Configuration;
 
 /// <summary>
@@ -18,10 +21,10 @@ public static class JsonOptions
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
             PropertyNameCaseInsensitive = true,
             WriteIndented = false,
-            DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull,
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
             Converters =
             {
-                new System.Text.Json.Serialization.JsonStringEnumConverter(JsonNamingPolicy.CamelCase)
+                new JsonStringEnumConverter(JsonNamingPolicy.CamelCase)
             }
         };
     }
