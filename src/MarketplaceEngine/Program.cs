@@ -4,6 +4,8 @@
 // =============================================================================
 
 using MarketplaceEngine.Configuration;
+using MarketplaceEngine.Middleware;
+using MarketplaceEngine.Infrastructure.Background;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,7 +16,10 @@ builder.Services.AddMarketplaceServices();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Add CORS if needed
+// Add Controllers for Phase 2
+builder.Services.AddControllers();
+
+// Add CORS policy
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
@@ -38,14 +43,34 @@ if (app.Environment.IsDevelopment())
     });
 }
 
+// Register middleware (order matters!)
+app.UseMiddleware<RequestLoggingMiddleware>();
+app.UseMiddleware<RateLimitingMiddleware>();
+app.UseMiddleware<ErrorHandlingMiddleware>();
+
 // Enable HTTPS redirection
 app.UseHttpsRedirection();
 
 // Enable CORS
 app.UseCors("AllowAll");
 
-// Map marketplace endpoints
+// Map marketplace controllers (Phase 2)
+app.MapControllers();
+
+// Map marketplace endpoints (Phase 1)
 app.MapMarketplaceEndpoints();
 
+// Start background job queue
+var backgroundQueue = app.Services.GetRequiredService<BackgroundJobQueue>();
+backgroundQueue.Start();
+
 // Run the application
-app.Run();
+try
+{
+    app.Run();
+}
+finally
+{
+    // Ensure background queue is stopped gracefully on shutdown
+    await backgroundQueue.StopAsync();
+}
