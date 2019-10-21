@@ -10,7 +10,8 @@
     <Authors>Vladyslav Zaiets</Authors>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <Description>Lightweight marketplace backend engine - listings, search, categories, messaging, moderation</Description>
-    <PackageProjectUrl>https://github.com/vladyslav-zaiets/marketplace-engine</PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/sarmkadan/marketplace-engine</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/sarmkadan/marketplace-engine</RepositoryUrl>
   </PropertyGroup>
 
   <ItemGroup>
