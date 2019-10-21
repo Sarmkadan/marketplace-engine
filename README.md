@@ -1,3 +1,7 @@
+[![Build](https://github.com/sarmkadan/marketplace-engine/actions/workflows/build.yml/badge.svg)](https://github.com/sarmkadan/marketplace-engine/actions/workflows/build.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![.NET](https://img.shields.io/badge/.NET-10.0-purple.svg)](https://dotnet.microsoft.com/)
+
 # Marketplace Engine
 
 A production-grade, lightweight marketplace backend engine built with **.NET 10** and **C# 14**. Provides comprehensive functionality for managing listings, searching products, organizing categories, enabling user messaging, and content moderation. Designed for high performance, scalability, and ease of integration.
