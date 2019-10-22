@@ -46,7 +46,9 @@ Focus on your business logic and user experience. We handle the marketplace infr
 - [Usage Examples](#usage-examples)
 - [API Reference](#api-reference)
 - [Configuration](#configuration)
+- [Testing](#testing)
 - [Troubleshooting](#troubleshooting)
+- [Related Projects](#related-projects)
 - [Contributing](#contributing)
 - [License](#license)
 
