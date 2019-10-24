@@ -194,3 +194,35 @@ public class RatingSubmittedEventHandler : IEventHandler<RatingSubmittedEvent>
         await Task.Delay(100); // Simulate processing
     }
 }
+
+/// <summary>
+/// Handler for UserActivityRecordedEvent.
+/// Forwards interaction signals to analytics and updates engagement metrics.
+/// </summary>
+public class UserActivityRecordedEventHandler : IEventHandler<UserActivityRecordedEvent>
+{
+    private readonly ILogger<UserActivityRecordedEventHandler> _logger;
+
+    public UserActivityRecordedEventHandler(ILogger<UserActivityRecordedEventHandler> logger)
+    {
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    }
+
+    public async Task HandleAsync(UserActivityRecordedEvent @event)
+    {
+        _logger.LogInformation(
+            "Activity signal recorded — type: {SignalType}, user: {UserId}, listing: {ListingId}",
+            @event.SignalType,
+            @event.UserId,
+            @event.ListingId);
+
+        // In production, this would:
+        // 1. Forward the signal to a streaming analytics platform (Kafka, Azure Event Hubs)
+        // 2. Update real-time engagement dashboards
+        // 3. Trigger personalisation model retraining if signal volume thresholds are reached
+        // 4. Audit-log the interaction for compliance and fraud detection
+        // 5. Update A/B test attribution counters
+
+        await Task.CompletedTask;
+    }
+}
