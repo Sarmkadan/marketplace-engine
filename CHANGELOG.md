@@ -10,28 +10,22 @@ All notable changes to Marketplace Engine are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.0.0] - 2025-09-30
+## [2.0.0] - 2025-07-31
 
 ### Added
-- Comprehensive documentation suite (getting-started, architecture, api-reference, deployment, faq)
-- Example programs demonstrating all major features in `examples/`
-- Docker support with Dockerfile and docker-compose configuration
-- GitHub Actions CI/CD workflow for automated testing and building
-- CodeQL security scanning workflow
-- Dependabot configuration for automated dependency updates
-- NuGet packaging configuration with full metadata
-- Makefile with common development targets (build, run, test, clean)
-- Health check endpoint at `/api/v1/health`
+- Add recommendation engine with collaborative filtering
+- Docker support with multi-stage builds
+- Health check endpoints (/health, /health/ready)
+- Integration test suite with xUnit
+- Migration guide from v1.x
 
 ### Changed
-- Version bumped to 1.0.0 — all core functionality is stable
-- Improved API response format with consistent `timestamp` and `requestId` fields
-- Enhanced Swagger/OpenAPI documentation with detailed descriptions and examples
+- Upgraded to .NET 10.0
+- Modern C# features (records, primary constructors)
+- Improved API consistency
 
 ### Fixed
-- Concurrent message handling edge case in MessagingService
-- Pagination boundary calculation in listing search results
-- Category listing count accuracy when listings change status
+- Various edge cases found through testing
 
 ---
 
