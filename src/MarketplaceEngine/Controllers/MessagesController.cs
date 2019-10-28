@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -47,7 +48,7 @@ public class MessagesController : ControllerBase
         var cacheKey = $"conversations:{userId}";
         var cached = await _cacheService.GetAsync<List<ConversationDto>>(cacheKey);
 
-        if (cached != null)
+        if (cached is not null)
         {
             _logger.LogInformation("Cache hit for conversations");
             return Ok(cached);
@@ -140,7 +141,7 @@ public class MessagesController : ControllerBase
         _logger.LogInformation("Fetching message: {MessageId}", id);
 
         var message = await _messagingService.GetMessageAsync(id);
-        if (message == null)
+        if (message is null)
         {
             return NotFound();
         }
@@ -160,7 +161,7 @@ public class MessagesController : ControllerBase
         _logger.LogInformation("Marking message as read: {MessageId}", id);
 
         var message = await _messagingService.GetMessageAsync(id);
-        if (message == null)
+        if (message is null)
         {
             return NotFound();
         }
@@ -182,7 +183,7 @@ public class MessagesController : ControllerBase
         _logger.LogInformation("Deleting message: {MessageId}", id);
 
         var message = await _messagingService.GetMessageAsync(id);
-        if (message == null)
+        if (message is null)
         {
             return NotFound();
         }

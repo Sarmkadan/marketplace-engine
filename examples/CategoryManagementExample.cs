@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -94,7 +95,7 @@ public class CategoryManagementExample
             Console.WriteLine("4. Retrieving all categories...");
             var allCategories = await categoryService.GetAllCategoriesAsync();
             Console.WriteLine($"✓ Total categories: {allCategories.Count}");
-            foreach (var category in allCategories.Where(c => c.ParentCategoryId == null))
+            foreach (var category in allCategories.Where(c => c.ParentCategoryId is null))
             {
                 Console.WriteLine($"  - {category.Name}");
                 var subcats = allCategories.Where(c => c.ParentCategoryId == category.Id);
@@ -186,7 +187,7 @@ public class CategoryManagementExample
             // Example 9: Update category
             Console.WriteLine("9. Updating category description...");
             var categoryToUpdate = await categoryService.GetCategoryAsync(phonesCategory.Id);
-            if (categoryToUpdate != null)
+            if (categoryToUpdate is not null)
             {
                 await categoryService.UpdateCategoryAsync(
                     id: categoryToUpdate.Id,
@@ -206,7 +207,7 @@ public class CategoryManagementExample
             var activeCategories = await categoryService.GetAllCategoriesAsync();
             var activeCategoryCount = activeCategories.Count(c => c.IsActive);
             Console.WriteLine($"✓ Active categories: {activeCategoryCount}");
-            foreach (var cat in activeCategories.Where(c => c.IsActive && c.ParentCategoryId == null))
+            foreach (var cat in activeCategories.Where(c => c.IsActive && c.ParentCategoryId is null))
             {
                 Console.WriteLine($"  - {cat.Name}");
             }

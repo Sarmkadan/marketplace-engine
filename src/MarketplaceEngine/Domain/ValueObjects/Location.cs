@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -65,7 +66,7 @@ public sealed class Location : IEquatable<Location>
 
     public bool Equals(Location? other)
     {
-        return other != null &&
+        return other is not null &&
                City == other.City &&
                State == other.State &&
                CountryCode == other.CountryCode &&
