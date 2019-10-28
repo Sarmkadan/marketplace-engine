@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using MarketplaceEngine.Services;
 using MarketplaceEngine.DTOs;
 using MarketplaceEngine.Infrastructure.Caching;
+using MarketplaceEngine.Repositories; // Hotfix: Add missing using directive
 
 namespace MarketplaceEngine.Controllers;
 
@@ -22,17 +23,20 @@ public class UsersController : ControllerBase
     private readonly UserService _userService;
     private readonly SearchService _searchService;
     private readonly CacheService _cacheService;
+    private readonly IUserRepository _userRepository; // Hotfix: Injected for direct user updates
     private readonly ILogger<UsersController> _logger;
 
     public UsersController(
         UserService userService,
         SearchService searchService,
         CacheService cacheService,
+        IUserRepository userRepository,
         ILogger<UsersController> logger)
     {
         _userService = userService;
         _searchService = searchService;
         _cacheService = cacheService;
+        _userRepository = userRepository;
         _logger = logger;
     }
 
@@ -96,10 +100,10 @@ public class UsersController : ControllerBase
         var metrics = new SellerMetricsDto
         {
             UserId = id,
-            AverageRating = user.Rating?.Score ?? 0,
-            TotalReviews = user.Rating?.ReviewCount ?? 0,
-            TotalSales = 0, // Would be calculated from listings
-            ResponseTime = "< 1 hour"
+            AverageRating = user.Rating?.AverageRating ?? 0, // Hotfix: Use AverageRating
+            TotalReviews = user.Rating?.TotalReviews ?? 0, // Hotfix: Use TotalReviews
+            TotalSales = user.TotalSales, // Hotfix: Use TotalSales from User
+            ResponseTime = "< 1 hour" // Placeholder
         };
 
         await _cacheService.SetAsync(cacheKey, metrics, TimeSpan.FromMinutes(10));
@@ -130,9 +134,9 @@ public class UsersController : ControllerBase
         {
             Rank = index + 1,
             UserId = s.Id,
-            DisplayName = s.DisplayName,
-            AverageRating = s.Rating?.Score ?? 0,
-            TotalReviews = s.Rating?.ReviewCount ?? 0
+            DisplayName = s.FullName, // Hotfix: Use FullName
+            AverageRating = s.Rating?.AverageRating ?? 0, // Hotfix: Use AverageRating
+            TotalReviews = s.Rating?.TotalReviews ?? 0 // Hotfix: Use TotalReviews
         }).ToList();
 
         await _cacheService.SetAsync(cacheKey, rankings, TimeSpan.FromMinutes(30));
@@ -160,11 +164,14 @@ public class UsersController : ControllerBase
             return NotFound();
         }
 
-        user.DisplayName = request.DisplayName;
-        user.Email = request.Email;
-        user.Bio = request.Bio;
-
-        var updated = await _userService.UpdateUserAsync(user);
+        // Hotfix: Use UpdateProfileAsync from UserService
+        var updated = await _userService.UpdateProfileAsync(
+            id,
+            request.DisplayName, // Assuming DisplayName maps to FullName
+            null, // Phone not in request
+            request.Bio,
+            null // Location not in request
+        );
 
         // Invalidate related caches
         await _cacheService.RemoveAsync($"user:{id}:*");
@@ -190,8 +197,8 @@ public class UsersController : ControllerBase
             return NotFound();
         }
 
-        user.EmailVerified = true;
-        await _userService.UpdateUserAsync(user);
+        user.IsVerified = true; // Hotfix: Use IsVerified
+        await _userRepository.UpdateAsync(user); // Hotfix: Use repository directly
 
         await _cacheService.RemoveAsync($"user:{id}:*");
 

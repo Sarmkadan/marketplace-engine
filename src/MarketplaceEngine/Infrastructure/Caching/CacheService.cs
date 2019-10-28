@@ -133,7 +133,7 @@ public class CacheService
         var stats = new CacheStatistics
         {
             TotalItems = _cache.Count,
-            TotalMemoryMb = GetEstimatedMemoryUsage() / (1024 * 1024),
+            TotalMemoryMb = (long)(GetEstimatedMemoryUsage() / (1024 * 1024)), // Hotfix: Explicit cast to long
             OldestItemAge = GetOldestItemAge()
         };
 
