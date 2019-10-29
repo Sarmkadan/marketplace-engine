@@ -56,7 +56,7 @@ public class ListingRepositoryConcurrencyTests : IDisposable
             {
                 try
                 {
-                    var listings = await _listingRepository.GetActiveListingsAsync();
+                    var listings = await _listingRepository.GetActiveListingsAsync().ConfigureAwait(false);
                     listings.Should().NotBeNull();
                     listings.Count.Should().BeGreaterOrEqualTo(1);
                 }
@@ -65,7 +65,7 @@ public class ListingRepositoryConcurrencyTests : IDisposable
                     exceptions.Add(ex);
                     break;
                 }
-                await Task.Delay(1); // Small delay to yield
+                await Task.Delay(1).ConfigureAwait(false); // Small delay to yield
             }
         });
 
@@ -76,11 +76,11 @@ public class ListingRepositoryConcurrencyTests : IDisposable
             {
                 try
                 {
-                    var listingToUpdate = await _listingRepository.GetByIdAsync(_testListingId);
+                    var listingToUpdate = await _listingRepository.GetByIdAsync(_testListingId).ConfigureAwait(false);
                     if (listingToUpdate != null)
                     {
                         listingToUpdate.Title = $"Updated Title {counter++}";
-                        await _listingRepository.UpdateAsync(listingToUpdate);
+                        await _listingRepository.UpdateAsync(listingToUpdate).ConfigureAwait(false);
                     }
                 }
                 catch (Exception ex)
@@ -88,11 +88,11 @@ public class ListingRepositoryConcurrencyTests : IDisposable
                     exceptions.Add(ex);
                     break;
                 }
-                await Task.Delay(1); // Small delay to yield
+                await Task.Delay(1).ConfigureAwait(false); // Small delay to yield
             }
         });
 
-        await Task.WhenAll(readerTask, writerTask);
+        await Task.WhenAll(readerTask, writerTask).ConfigureAwait(false);
 
         exceptions.Should().BeEmpty("No exceptions should be thrown during concurrent access.");
     }

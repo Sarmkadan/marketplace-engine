@@ -93,7 +93,7 @@ public class CategoryManagementExample
 
             // Example 4: Get all categories
             Console.WriteLine("4. Retrieving all categories...");
-            var allCategories = await categoryService.GetAllCategoriesAsync();
+            var allCategories = await categoryService.GetAllCategoriesAsync().ConfigureAwait(false);
             Console.WriteLine($"✓ Total categories: {allCategories.Count}");
             foreach (var category in allCategories.Where(c => c.ParentCategoryId is null))
             {
@@ -143,7 +143,7 @@ public class CategoryManagementExample
 
             // Example 6: Get listings by category
             Console.WriteLine("6. Getting listings by category...");
-            var electronicsListings = await categoryService.GetCategoryListingsAsync(electronicsCategory.Id);
+            var electronicsListings = await categoryService.GetCategoryListingsAsync(electronicsCategory.Id).ConfigureAwait(false);
             Console.WriteLine($"✓ Electronics category: {electronicsListings.Count} listings");
             foreach (var listing in electronicsListings)
             {
@@ -151,7 +151,7 @@ public class CategoryManagementExample
             }
             Console.WriteLine();
 
-            var clothingListings = await categoryService.GetCategoryListingsAsync(clothingCategory.Id);
+            var clothingListings = await categoryService.GetCategoryListingsAsync(clothingCategory.Id).ConfigureAwait(false);
             Console.WriteLine($"✓ Clothing category: {clothingListings.Count} listings");
             foreach (var listing in clothingListings)
             {
@@ -161,7 +161,7 @@ public class CategoryManagementExample
 
             // Example 7: Get subcategory listings
             Console.WriteLine("7. Getting listings from Phones subcategory...");
-            var phoneListings = await categoryService.GetCategoryListingsAsync(phonesCategory.Id);
+            var phoneListings = await categoryService.GetCategoryListingsAsync(phonesCategory.Id).ConfigureAwait(false);
             Console.WriteLine($"✓ Found {phoneListings.Count} phone listings:");
             foreach (var listing in phoneListings)
             {
@@ -186,7 +186,7 @@ public class CategoryManagementExample
 
             // Example 9: Update category
             Console.WriteLine("9. Updating category description...");
-            var categoryToUpdate = await categoryService.GetCategoryAsync(phonesCategory.Id);
+            var categoryToUpdate = await categoryService.GetCategoryAsync(phonesCategory.Id).ConfigureAwait(false);
             if (categoryToUpdate is not null)
             {
                 await categoryService.UpdateCategoryAsync(
@@ -199,12 +199,12 @@ public class CategoryManagementExample
 
             // Example 10: Deactivate category
             Console.WriteLine("10. Deactivating a category...");
-            await categoryService.DeactivateCategoryAsync(accessoriesCategory.Id);
+            await categoryService.DeactivateCategoryAsync(accessoriesCategory.Id).ConfigureAwait(false);
             Console.WriteLine($"✓ Deactivated: {accessoriesCategory.Name}\n");
 
             // Example 11: Get active categories
             Console.WriteLine("11. Getting active categories...");
-            var activeCategories = await categoryService.GetAllCategoriesAsync();
+            var activeCategories = await categoryService.GetAllCategoriesAsync().ConfigureAwait(false);
             var activeCategoryCount = activeCategories.Count(c => c.IsActive);
             Console.WriteLine($"✓ Active categories: {activeCategoryCount}");
             foreach (var cat in activeCategories.Where(c => c.IsActive && c.ParentCategoryId is null))

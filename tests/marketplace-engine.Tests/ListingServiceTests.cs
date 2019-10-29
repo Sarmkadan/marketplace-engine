@@ -67,7 +67,7 @@ public class ListingServiceTests
             ["https://img.example.com/guitar.jpg"]);
 
         // Assert
-        await act.Should().ThrowAsync<UnauthorizedException>();
+        await act.Should().ThrowAsync<UnauthorizedException>().ConfigureAwait(false);
     }
 
     [Fact]
@@ -83,10 +83,10 @@ public class ListingServiceTests
             .ReturnsAsync(listing);
 
         // Act
-        var act = async () => await _sut.DelistListingAsync(listingId, requesterId);
+        var act = async () => await _sut.DelistListingAsync(listingId, requesterId).ConfigureAwait(false);
 
         // Assert
-        await act.Should().ThrowAsync<UnauthorizedException>();
+        await act.Should().ThrowAsync<UnauthorizedException>().ConfigureAwait(false);
     }
 
     [Fact]
@@ -101,9 +101,9 @@ public class ListingServiceTests
             .ReturnsAsync(regularUser);
 
         // Act
-        var act = async () => await _sut.MarkAsFeaturedAsync(listingId, nonAdminId);
+        var act = async () => await _sut.MarkAsFeaturedAsync(listingId, nonAdminId).ConfigureAwait(false);
 
         // Assert
-        await act.Should().ThrowAsync<UnauthorizedException>();
+        await act.Should().ThrowAsync<UnauthorizedException>().ConfigureAwait(false);
     }
 }

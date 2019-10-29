@@ -25,14 +25,14 @@ public class CategoryService
     // Gets all categories
     public async Task<List<Category>> GetAllCategoriesAsync()
     {
-        await Task.Delay(5);
+        await Task.Delay(5).ConfigureAwait(false);
         return _context.Categories.Where(c => c.IsActive).ToList();
     }
 
     // Gets category by ID
     public async Task<Category> GetCategoryAsync(Guid categoryId)
     {
-        await Task.Delay(5);
+        await Task.Delay(5).ConfigureAwait(false);
         var category = _context.Categories.FirstOrDefault(c => c.Id == categoryId);
         if (category is null)
             throw new ResourceNotFoundException("Category", categoryId);
@@ -43,7 +43,7 @@ public class CategoryService
     // Gets root categories only
     public async Task<List<Category>> GetRootCategoriesAsync()
     {
-        await Task.Delay(5);
+        await Task.Delay(5).ConfigureAwait(false);
         return _context.Categories
             .Where(c => c.IsActive && c.ParentCategoryId is null)
             .OrderBy(c => c.DisplayOrder)
@@ -53,7 +53,7 @@ public class CategoryService
     // Gets subcategories for a parent
     public async Task<List<Category>> GetSubCategoriesAsync(Guid parentCategoryId)
     {
-        await Task.Delay(5);
+        await Task.Delay(5).ConfigureAwait(false);
         return _context.Categories
             .Where(c => c.IsActive && c.ParentCategoryId == parentCategoryId)
             .OrderBy(c => c.DisplayOrder)
@@ -63,12 +63,12 @@ public class CategoryService
     // Gets category with hierarchy
     public async Task<Category> GetCategoryHierarchyAsync(Guid categoryId)
     {
-        var category = await GetCategoryAsync(categoryId);
-        category.SubCategories = await GetSubCategoriesAsync(categoryId);
+        var category = await GetCategoryAsync(categoryId).ConfigureAwait(false);
+        category.SubCategories = await GetSubCategoriesAsync(categoryId).ConfigureAwait(false);
 
         if (category.ParentCategoryId.HasValue)
         {
-            category.ParentCategory = await GetCategoryAsync(category.ParentCategoryId.Value);
+            category.ParentCategory = await GetCategoryAsync(category.ParentCategoryId.Value).ConfigureAwait(false);
         }
 
         return category;
@@ -90,20 +90,20 @@ public class CategoryService
 
         if (parentCategoryId.HasValue)
         {
-            var parent = await GetCategoryAsync(parentCategoryId.Value);
+            var parent = await GetCategoryAsync(parentCategoryId.Value).ConfigureAwait(false);
             if (parent is null)
                 throw new ResourceNotFoundException("Parent Category", parentCategoryId.Value);
         }
 
         _context.Categories.Add(category);
-        await Task.Delay(5);
+        await Task.Delay(5).ConfigureAwait(false);
         return category;
     }
 
     // Updates category information
     public async Task<Category> UpdateCategoryAsync(Guid categoryId, string? name = null, string? description = null)
     {
-        var category = await GetCategoryAsync(categoryId);
+        var category = await GetCategoryAsync(categoryId).ConfigureAwait(false);
 
         if (!string.IsNullOrEmpty(name))
             category.Name = name;
@@ -114,28 +114,28 @@ public class CategoryService
         category.ValidateAndInitialize();
         category.UpdatedAt = DateTime.UtcNow;
 
-        await Task.Delay(5);
+        await Task.Delay(5).ConfigureAwait(false);
         return category;
     }
 
     // Deactivates a category
     public async Task<Category> DeactivateCategoryAsync(Guid categoryId)
     {
-        var category = await GetCategoryAsync(categoryId);
+        var category = await GetCategoryAsync(categoryId).ConfigureAwait(false);
         category.Deactivate();
 
-        await Task.Delay(5);
+        await Task.Delay(5).ConfigureAwait(false);
         return category;
     }
 
     // Gets category tree structure
     public async Task<List<Category>> GetCategoryTreeAsync()
     {
-        var root = await GetRootCategoriesAsync();
+        var root = await GetRootCategoriesAsync().ConfigureAwait(false);
 
         foreach (var category in root)
         {
-            category.SubCategories = await GetSubCategoriesAsync(category.Id);
+            category.SubCategories = await GetSubCategoriesAsync(category.Id).ConfigureAwait(false);
         }
 
         return root;
@@ -147,7 +147,7 @@ public class CategoryService
         if (string.IsNullOrWhiteSpace(query))
             return new List<Category>();
 
-        await Task.Delay(5);
+        await Task.Delay(5).ConfigureAwait(false);
         var searchTerm = query.ToLowerInvariant();
         return _context.Categories
             .Where(c => c.IsActive && c.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
@@ -157,7 +157,7 @@ public class CategoryService
     // Gets category by slug
     public async Task<Category> GetBySlugAsync(string slug)
     {
-        await Task.Delay(5);
+        await Task.Delay(5).ConfigureAwait(false);
         var category = _context.Categories.FirstOrDefault(c => c.Slug == slug && c.IsActive);
         if (category is null)
             throw new ResourceNotFoundException("Category", slug);
@@ -168,7 +168,7 @@ public class CategoryService
     // Gets hot categories by listing count
     public async Task<List<Category>> GetHotCategoriesAsync(int limit = 10)
     {
-        await Task.Delay(5);
+        await Task.Delay(5).ConfigureAwait(false);
         return _context.Categories
             .Where(c => c.IsActive && c.ListingCount > 0)
             .OrderByDescending(c => c.ListingCount)

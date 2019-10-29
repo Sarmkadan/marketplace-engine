@@ -165,7 +165,7 @@ public class CacheService
         {
             try
             {
-                await Task.Delay(TimeSpan.FromSeconds(60), _cleanupTokenSource.Token);
+                await Task.Delay(TimeSpan.FromSeconds(60), _cleanupTokenSource.Token).ConfigureAwait(false);
 
                 var expiredKeys = _cache
                     .Where(kvp => kvp.Value.ExpiresAt < DateTime.UtcNow)

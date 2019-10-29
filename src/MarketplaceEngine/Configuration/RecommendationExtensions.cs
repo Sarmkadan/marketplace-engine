@@ -89,7 +89,7 @@ public static class RecommendationExtensions
 
     private static async Task<IResult> GetTrending(RecommendationService service, int count = 20)
     {
-        var feed = await service.GetTrendingListingsAsync(count);
+        var feed = await service.GetTrendingListingsAsync(count).ConfigureAwait(false);
         return Results.Ok(feed);
     }
 
@@ -98,7 +98,7 @@ public static class RecommendationExtensions
     {
         try
         {
-            var feed = await service.GetRecommendationsForUserAsync(userId, count);
+            var feed = await service.GetRecommendationsForUserAsync(userId, count).ConfigureAwait(false);
             return Results.Ok(feed);
         }
         catch (ResourceNotFoundException)
@@ -112,7 +112,7 @@ public static class RecommendationExtensions
     {
         try
         {
-            var feed = await service.GetAffinityRecommendationsAsync(userId, count);
+            var feed = await service.GetAffinityRecommendationsAsync(userId, count).ConfigureAwait(false);
             return Results.Ok(feed);
         }
         catch (ResourceNotFoundException)
@@ -126,7 +126,7 @@ public static class RecommendationExtensions
     {
         try
         {
-            var feed = await service.GetSimilarListingsAsync(listingId, count);
+            var feed = await service.GetSimilarListingsAsync(listingId, count).ConfigureAwait(false);
             return Results.Ok(feed);
         }
         catch (ResourceNotFoundException)
@@ -147,7 +147,7 @@ public static class RecommendationExtensions
             });
         }
 
-        await service.TrackUserActivityAsync(request.UserId, request.ListingId, signalType);
+        await service.TrackUserActivityAsync(request.UserId, request.ListingId, signalType).ConfigureAwait(false);
         return Results.NoContent();
     }
 }

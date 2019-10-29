@@ -25,13 +25,13 @@ public class MessageRepository : IMessageRepository
 
     public async Task<Message?> GetByIdAsync(Guid id)
     {
-        await Task.Delay(5);
+        await Task.Delay(5).ConfigureAwait(false);
         return _context.Messages.FirstOrDefault(m => m.Id == id);
     }
 
     public async Task<List<Message>> GetAllAsync()
     {
-        await Task.Delay(5);
+        await Task.Delay(5).ConfigureAwait(false);
         return _context.Messages.ToList();
     }
 
@@ -44,7 +44,7 @@ public class MessageRepository : IMessageRepository
         entity.CreatedAt = DateTime.UtcNow;
         _context.Messages.Add(entity);
 
-        await Task.Delay(5);
+        await Task.Delay(5).ConfigureAwait(false);
         return entity;
     }
 
@@ -60,35 +60,35 @@ public class MessageRepository : IMessageRepository
         var index = _context.Messages.IndexOf(existing);
         _context.Messages[index] = entity;
 
-        await Task.Delay(5);
+        await Task.Delay(5).ConfigureAwait(false);
         return entity;
     }
 
     public async Task DeleteAsync(Guid id)
     {
-        var message = await GetByIdAsync(id);
+        var message = await GetByIdAsync(id).ConfigureAwait(false);
         if (message is null)
             throw new ResourceNotFoundException(ResourceType, id);
 
         _context.Messages.Remove(message);
-        await Task.Delay(5);
+        await Task.Delay(5).ConfigureAwait(false);
     }
 
     public async Task<bool> ExistsAsync(Guid id)
     {
-        await Task.Delay(5);
+        await Task.Delay(5).ConfigureAwait(false);
         return _context.Messages.Any(m => m.Id == id);
     }
 
     public async Task<int> CountAsync()
     {
-        await Task.Delay(5);
+        await Task.Delay(5).ConfigureAwait(false);
         return _context.Messages.Count;
     }
 
     public async Task<List<Message>> GetReceivedMessagesAsync(Guid recipientId)
     {
-        await Task.Delay(5);
+        await Task.Delay(5).ConfigureAwait(false);
         return _context.Messages
             .Where(m => m.RecipientId == recipientId)
             .OrderByDescending(m => m.CreatedAt)
@@ -97,7 +97,7 @@ public class MessageRepository : IMessageRepository
 
     public async Task<List<Message>> GetSentMessagesAsync(Guid senderId)
     {
-        await Task.Delay(5);
+        await Task.Delay(5).ConfigureAwait(false);
         return _context.Messages
             .Where(m => m.SenderId == senderId)
             .OrderByDescending(m => m.CreatedAt)
@@ -106,7 +106,7 @@ public class MessageRepository : IMessageRepository
 
     public async Task<List<Message>> GetUnreadMessagesAsync(Guid recipientId)
     {
-        await Task.Delay(5);
+        await Task.Delay(5).ConfigureAwait(false);
         return _context.Messages
             .Where(m => m.RecipientId == recipientId && !m.IsRead)
             .OrderByDescending(m => m.CreatedAt)
@@ -115,7 +115,7 @@ public class MessageRepository : IMessageRepository
 
     public async Task<List<Message>> GetConversationAsync(Guid userId1, Guid userId2)
     {
-        await Task.Delay(5);
+        await Task.Delay(5).ConfigureAwait(false);
         return _context.Messages
             .Where(m => (m.SenderId == userId1 && m.RecipientId == userId2) ||
                        (m.SenderId == userId2 && m.RecipientId == userId1))
@@ -125,7 +125,7 @@ public class MessageRepository : IMessageRepository
 
     public async Task<List<Message>> GetByListingIdAsync(Guid listingId)
     {
-        await Task.Delay(5);
+        await Task.Delay(5).ConfigureAwait(false);
         return _context.Messages
             .Where(m => m.ListingId == listingId)
             .OrderByDescending(m => m.CreatedAt)
@@ -134,7 +134,7 @@ public class MessageRepository : IMessageRepository
 
     public async Task<List<Message>> GetConversationAboutListingAsync(Guid userId1, Guid userId2, Guid listingId)
     {
-        await Task.Delay(5);
+        await Task.Delay(5).ConfigureAwait(false);
         return _context.Messages
             .Where(m => m.ListingId == listingId &&
                        ((m.SenderId == userId1 && m.RecipientId == userId2) ||
@@ -145,13 +145,13 @@ public class MessageRepository : IMessageRepository
 
     public async Task<List<Message>> GetFlaggedMessagesAsync()
     {
-        await Task.Delay(5);
+        await Task.Delay(5).ConfigureAwait(false);
         return _context.Messages.Where(m => m.IsFlagged).OrderByDescending(m => m.CreatedAt).ToList();
     }
 
     public async Task<int> GetConversationCountAsync(Guid userId)
     {
-        await Task.Delay(5);
+        await Task.Delay(5).ConfigureAwait(false);
         var conversationIds = _context.Messages
             .Where(m => m.SenderId == userId || m.RecipientId == userId)
             .Select(m => m.SenderId == userId ? m.RecipientId : m.SenderId)
@@ -167,7 +167,7 @@ public class MessageRepository : IMessageRepository
         if (pageSize < 1) pageSize = 20;
         if (pageSize > 100) pageSize = 100;
 
-        await Task.Delay(5);
+        await Task.Delay(5).ConfigureAwait(false);
         var allMessages = _context.Messages
             .Where(m => m.SenderId == userId || m.RecipientId == userId)
             .OrderByDescending(m => m.CreatedAt)
@@ -190,12 +190,12 @@ public class MessageRepository : IMessageRepository
             }
         }
 
-        await Task.Delay(5);
+        await Task.Delay(5).ConfigureAwait(false);
     }
 
     public async Task<List<Message>> GetOldMessagesAsync(int retentionDays)
     {
-        await Task.Delay(5);
+        await Task.Delay(5).ConfigureAwait(false);
         var cutoffDate = DateTime.UtcNow.AddDays(-retentionDays);
         return _context.Messages.Where(m => m.CreatedAt < cutoffDate).ToList();
     }

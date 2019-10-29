@@ -69,7 +69,7 @@ public class DropshipProviderClient : IListingProvider
             _logger.LogInformation("Fetching listings from external provider: category={Category}, page={Page}", category, page);
 
             var url = $"{_apiBaseUrl}/listings?category={category}&page={page}";
-            var response = await _httpClient.GetAsync<GetListingsResponse>(url);
+            var response = await _httpClient.GetAsync<GetListingsResponse>(url).ConfigureAwait(false);
 
             return response?.Items ?? new();
         }
@@ -90,7 +90,7 @@ public class DropshipProviderClient : IListingProvider
             _logger.LogInformation("Fetching listing from external provider: externalId={ExternalId}", externalId);
 
             var url = $"{_apiBaseUrl}/listings/{externalId}";
-            return await _httpClient.GetAsync<ExternalListingDto>(url);
+            return await _httpClient.GetAsync<ExternalListingDto>(url).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -106,7 +106,7 @@ public class DropshipProviderClient : IListingProvider
     {
         try
         {
-            var listing = await GetListingAsync(externalId);
+            var listing = await GetListingAsync(externalId).ConfigureAwait(false);
             return listing is not null && listing.StockQuantity > 0;
         }
         catch
@@ -152,7 +152,7 @@ public class ExternalListingSyncService
     {
         _logger.LogInformation("Syncing external listings for category: {Category}", category);
 
-        var externalListings = await _provider.GetListingsAsync(category);
+        var externalListings = await _provider.GetListingsAsync(category).ConfigureAwait(false);
         var results = new List<Domain.Models.Listing>();
 
         foreach (var external in externalListings)
@@ -180,7 +180,7 @@ public class ExternalListingSyncService
     /// </summary>
     public async Task UpdateAvailabilityAsync(string externalId, Domain.Models.Listing listing)
     {
-        var available = await _provider.IsListingAvailableAsync(externalId);
+        var available = await _provider.IsListingAvailableAsync(externalId).ConfigureAwait(false);
 
         if (!available)
         {

@@ -94,7 +94,7 @@ public class MessagingExample
 
             // Example 4: Get conversation between two users
             Console.WriteLine("4. Retrieving conversation between user 1 and user 2...");
-            var conversation = await messagingService.GetConversationAsync(userId1: 1, userId2: 2);
+            var conversation = await messagingService.GetConversationAsync(userId1: 1, userId2: 2).ConfigureAwait(false);
             Console.WriteLine($"✓ Conversation retrieved:");
             Console.WriteLine($"  Total messages: {conversation.Count}");
             foreach (var msg in conversation)
@@ -107,7 +107,7 @@ public class MessagingExample
 
             // Example 5: Get user's recent conversations
             Console.WriteLine("5. Getting recent conversations for user 1...");
-            var conversations = await messagingService.GetUserConversationsAsync(userId: 1, pageSize: 10, pageNumber: 1);
+            var conversations = await messagingService.GetUserConversationsAsync(userId: 1, pageSize: 10, pageNumber: 1).ConfigureAwait(false);
             Console.WriteLine($"✓ User 1 has {conversations.Count} conversation(s):");
             foreach (var conv in conversations)
             {
@@ -118,7 +118,7 @@ public class MessagingExample
 
             // Example 6: Get conversations for user 2
             Console.WriteLine("6. Getting conversations for user 2...");
-            var user2Conversations = await messagingService.GetUserConversationsAsync(userId: 2, pageSize: 10, pageNumber: 1);
+            var user2Conversations = await messagingService.GetUserConversationsAsync(userId: 2, pageSize: 10, pageNumber: 1).ConfigureAwait(false);
             Console.WriteLine($"✓ User 2 has {user2Conversations.Count} conversation(s):");
             foreach (var conv in user2Conversations)
             {
@@ -128,7 +128,7 @@ public class MessagingExample
 
             // Example 7: Get unread message count
             Console.WriteLine("7. Checking unread messages for user 1...");
-            var unreadCount = await messagingService.GetUnreadMessageCountAsync(userId: 1);
+            var unreadCount = await messagingService.GetUnreadMessageCountAsync(userId: 1).ConfigureAwait(false);
             Console.WriteLine($"✓ User 1 has {unreadCount} unread message(s)\n");
 
             // Example 8: Mark messages as read

@@ -79,7 +79,7 @@ public class ModerationExample
 
             // Example 3: Get pending reports (for moderator)
             Console.WriteLine("3. Retrieving pending reports for moderation...");
-            var pendingReports = await moderationService.GetReportsByStatusAsync(ReportStatus.Pending);
+            var pendingReports = await moderationService.GetReportsByStatusAsync(ReportStatus.Pending).ConfigureAwait(false);
             Console.WriteLine($"✓ Found {pendingReports.Count} pending reports:");
             foreach (var report in pendingReports.OrderByDescending(r => r.Priority))
             {
@@ -128,12 +128,12 @@ public class ModerationExample
 
             // Example 8: Get reports by priority
             Console.WriteLine("8. Getting high-priority reports...");
-            var highPriorityReports = await moderationService.GetReportsByPriorityAsync(ReportPriority.High);
+            var highPriorityReports = await moderationService.GetReportsByPriorityAsync(ReportPriority.High).ConfigureAwait(false);
             Console.WriteLine($"✓ Found {highPriorityReports.Count} high-priority reports\n");
 
             // Example 9: Get moderator's assigned reports
             Console.WriteLine("9. Getting reports assigned to moderator 10...");
-            var moderatorReports = await moderationService.GetReportsAssignedToAsync(moderatorId: 10);
+            var moderatorReports = await moderationService.GetReportsAssignedToAsync(moderatorId: 10).ConfigureAwait(false);
             Console.WriteLine($"✓ Moderator has {moderatorReports.Count} assigned reports:");
             foreach (var report in moderatorReports)
             {
@@ -156,7 +156,7 @@ public class ModerationExample
 
             // Example 11: Moderation statistics
             Console.WriteLine("11. Moderation statistics...");
-            var allReports = await moderationService.GetAllReportsAsync();
+            var allReports = await moderationService.GetAllReportsAsync().ConfigureAwait(false);
             var byStatus = allReports.GroupBy(r => r.Status).ToDictionary(g => g.Key, g => g.Count());
             var byPriority = allReports.GroupBy(r => r.Priority).ToDictionary(g => g.Key, g => g.Count());
 

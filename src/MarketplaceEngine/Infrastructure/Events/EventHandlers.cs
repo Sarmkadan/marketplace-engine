@@ -33,7 +33,7 @@ public class ListingCreatedEventHandler : IEventHandler<ListingCreatedEvent>
         // 4. Log analytics event
         // 5. Trigger scheduled jobs (price alerts, etc)
 
-        await Task.Delay(100); // Simulate processing
+        await Task.Delay(100).ConfigureAwait(false); // Simulate processing
     }
 }
 
@@ -65,7 +65,7 @@ public class MessageSentEventHandler : IEventHandler<MessageSentEvent>
         // 4. Archive message for compliance
         // 5. Update conversation metadata
 
-        await Task.Delay(50); // Simulate processing
+        await Task.Delay(50).ConfigureAwait(false); // Simulate processing
     }
 }
 
@@ -96,7 +96,7 @@ public class ReportCreatedEventHandler : IEventHandler<ReportCreatedEvent>
         // 4. Auto-flag if high-confidence abuse pattern detected
         // 5. Update user trust score
 
-        await Task.Delay(100); // Simulate processing
+        await Task.Delay(100).ConfigureAwait(false); // Simulate processing
     }
 }
 
@@ -128,7 +128,7 @@ public class UserCreatedEventHandler : IEventHandler<UserCreatedEvent>
         // 5. Generate API key if needed
         // 6. Log analytics event
 
-        await Task.Delay(100); // Simulate processing
+        await Task.Delay(100).ConfigureAwait(false); // Simulate processing
     }
 }
 
@@ -159,7 +159,7 @@ public class UserEmailVerifiedEventHandler : IEventHandler<UserEmailVerifiedEven
         // 4. Update trust/reputation score
         // 5. Enable messaging and other features
 
-        await Task.Delay(50); // Simulate processing
+        await Task.Delay(50).ConfigureAwait(false); // Simulate processing
     }
 }
 
@@ -192,7 +192,7 @@ public class RatingSubmittedEventHandler : IEventHandler<RatingSubmittedEvent>
         // 5. Update recommendation algorithm weights
         // 6. Notify seller of new review
 
-        await Task.Delay(100); // Simulate processing
+        await Task.Delay(100).ConfigureAwait(false); // Simulate processing
     }
 }
 

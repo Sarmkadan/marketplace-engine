@@ -55,10 +55,10 @@ public sealed class CollaborativeFilteringEngine : IRecommendationEngine
         Guid userId, int count, CancellationToken cancellationToken = default)
     {
         if (!_options.EnablePersonalisation)
-            return await ComputeTrendingAsync(count, cancellationToken);
+            return await ComputeTrendingAsync(count, cancellationToken).ConfigureAwait(false);
 
         var cacheKey = $"rec:user:{userId}:{count}";
-        var cached = await _cache.GetAsync<List<ScoredListing>>(cacheKey);
+        var cached = await _cache.GetAsync<List<ScoredListing>>(cacheKey).ConfigureAwait(false);
         if (cached is { Count: > 0 })
         {
             _logger.LogDebug("Recommendation cache hit for user {UserId}", userId);
@@ -73,20 +73,20 @@ public sealed class CollaborativeFilteringEngine : IRecommendationEngine
             _logger.LogDebug(
                 "Insufficient history for user {UserId} ({Count} signals); falling back to trending",
                 userId, history.Count);
-            return await ComputeTrendingAsync(count, cancellationToken);
+            return await ComputeTrendingAsync(count, cancellationToken).ConfigureAwait(false);
         }
 
         var interacted = history.Select(s => s.ListingId).ToHashSet();
-        var candidates = await BuildCandidateScoresAsync(userId, history, interacted, cancellationToken);
+        var candidates = await BuildCandidateScoresAsync(userId, history, interacted, cancellationToken).ConfigureAwait(false);
 
         if (candidates.Count == 0)
         {
             _logger.LogDebug("No CF candidates for user {UserId}; falling back to trending", userId);
-            return await ComputeTrendingAsync(count, cancellationToken);
+            return await ComputeTrendingAsync(count, cancellationToken).ConfigureAwait(false);
         }
 
         var results = SelectTopN(candidates, count, RecommendationReason.CollaborativeFiltering);
-        await _cache.SetAsync(cacheKey, results, TimeSpan.FromMinutes(_options.UserFeedCacheTtlMinutes));
+        await _cache.SetAsync(cacheKey, results, TimeSpan.FromMinutes(_options.UserFeedCacheTtlMinutes)).ConfigureAwait(false);
 
         _logger.LogInformation("CF produced {Count} candidates for user {UserId}", results.Count, userId);
         return results;
@@ -97,19 +97,19 @@ public sealed class CollaborativeFilteringEngine : IRecommendationEngine
         Guid listingId, int count, CancellationToken cancellationToken = default)
     {
         var cacheKey = $"rec:similar:{listingId}:{count}";
-        var cached = await _cache.GetAsync<List<ScoredListing>>(cacheKey);
+        var cached = await _cache.GetAsync<List<ScoredListing>>(cacheKey).ConfigureAwait(false);
         if (cached is { Count: > 0 })
             return cached;
 
-        var audience = await _activityTracker.GetListingAudienceAsync(listingId, cancellationToken);
+        var audience = await _activityTracker.GetListingAudienceAsync(listingId, cancellationToken).ConfigureAwait(false);
         if (audience.Count == 0)
-            return await ComputeTrendingAsync(count, cancellationToken);
+            return await ComputeTrendingAsync(count, cancellationToken).ConfigureAwait(false);
 
         var coOccurrence = new ConcurrentDictionary<Guid, double>();
 
         await Parallel.ForEachAsync(audience, cancellationToken, async (viewerId, ct) =>
         {
-            var signals = await _activityTracker.GetUserHistoryAsync(viewerId, null, ct);
+            var signals = await _activityTracker.GetUserHistoryAsync(viewerId, null, ct).ConfigureAwait(false);
             foreach (var s in signals.Where(s => s.ListingId != listingId))
                 coOccurrence.AddOrUpdate(s.ListingId, s.Weight, (_, current) => current + s.Weight);
         });
@@ -134,12 +134,12 @@ public sealed class CollaborativeFilteringEngine : IRecommendationEngine
         int count, CancellationToken cancellationToken = default)
     {
         var cacheKey = $"rec:trending:{count}";
-        var cached = await _cache.GetAsync<List<ScoredListing>>(cacheKey);
+        var cached = await _cache.GetAsync<List<ScoredListing>>(cacheKey).ConfigureAwait(false);
         if (cached is { Count: > 0 })
             return cached;
 
         var window = TimeSpan.FromHours(_options.TrendingWindowHours);
-        var recentSignals = await _activityTracker.GetSignalsInWindowAsync(window, cancellationToken);
+        var recentSignals = await _activityTracker.GetSignalsInWindowAsync(window, cancellationToken).ConfigureAwait(false);
 
         Dictionary<Guid, double> velocityScores;
 
@@ -171,7 +171,7 @@ public sealed class CollaborativeFilteringEngine : IRecommendationEngine
         else
         {
             // Cold-start fallback: derive proxy scores from listing-model counters.
-            var listings = await _listingRepository.GetActiveListingsAsync();
+            var listings = await _listingRepository.GetActiveListingsAsync().ConfigureAwait(false);
             velocityScores = listings.ToDictionary(
                 l => l.Id,
                 l => (l.ViewCount * _options.ViewWeight) + (l.InterestCount * _options.SaveWeight));
@@ -200,10 +200,10 @@ public sealed class CollaborativeFilteringEngine : IRecommendationEngine
         Guid userId, int count, CancellationToken cancellationToken = default)
     {
         if (!_options.EnablePersonalisation)
-            return await ComputeTrendingAsync(count, cancellationToken);
+            return await ComputeTrendingAsync(count, cancellationToken).ConfigureAwait(false);
 
         var cacheKey = $"rec:affinity:{userId}:{count}";
-        var cached = await _cache.GetAsync<List<ScoredListing>>(cacheKey);
+        var cached = await _cache.GetAsync<List<ScoredListing>>(cacheKey).ConfigureAwait(false);
         if (cached is { Count: > 0 })
             return cached;
 
@@ -217,7 +217,7 @@ public sealed class CollaborativeFilteringEngine : IRecommendationEngine
             _logger.LogDebug(
                 "Insufficient categorised signals for user {UserId} ({Count}/{Min}); falling back to trending",
                 userId, categorisedSignals.Count, _options.MinAffinitySignals);
-            return await ComputeTrendingAsync(count, cancellationToken);
+            return await ComputeTrendingAsync(count, cancellationToken).ConfigureAwait(false);
         }
 
         // Build weighted category-preference vector.
@@ -233,7 +233,7 @@ public sealed class CollaborativeFilteringEngine : IRecommendationEngine
         if (maxCatWeight == 0.0) maxCatWeight = 1.0;
 
         var interacted = history.Select(s => s.ListingId).ToHashSet();
-        var allActiveListings = await _listingRepository.GetActiveListingsAsync();
+        var allActiveListings = await _listingRepository.GetActiveListingsAsync().ConfigureAwait(false);
 
         // Score unseen listings that fall into a preferred category.
         // Popularity is normalised on a 1 000-interaction reference scale; values above this
@@ -258,7 +258,7 @@ public sealed class CollaborativeFilteringEngine : IRecommendationEngine
             _logger.LogDebug(
                 "Category-affinity yielded no candidates for user {UserId}; falling back to trending",
                 userId);
-            return await ComputeTrendingAsync(count, cancellationToken);
+            return await ComputeTrendingAsync(count, cancellationToken).ConfigureAwait(false);
         }
 
         var results = SelectTopN(scores, count, RecommendationReason.CategoryAffinity);
@@ -276,12 +276,12 @@ public sealed class CollaborativeFilteringEngine : IRecommendationEngine
     public async Task RecordSignalAsync(
         UserActivitySignal signal, CancellationToken cancellationToken = default)
     {
-        await _activityTracker.RecordAsync(signal, cancellationToken);
+        await _activityTracker.RecordAsync(signal, cancellationToken).ConfigureAwait(false);
 
         // Invalidate all cached feeds that could be affected by this new signal.
-        await _cache.RemoveAsync($"rec:user:{signal.UserId}:*");
-        await _cache.RemoveAsync($"rec:affinity:{signal.UserId}:*");
-        await _cache.RemoveAsync($"rec:similar:{signal.ListingId}:*");
+        await _cache.RemoveAsync($"rec:user:{signal.UserId}:*").ConfigureAwait(false);
+        await _cache.RemoveAsync($"rec:affinity:{signal.UserId}:*").ConfigureAwait(false);
+        await _cache.RemoveAsync($"rec:similar:{signal.ListingId}:*").ConfigureAwait(false);
 
         _logger.LogDebug("Signal {Type} recorded; caches invalidated for user {UserId}",
             signal.SignalType, signal.UserId);
@@ -302,14 +302,14 @@ public sealed class CollaborativeFilteringEngine : IRecommendationEngine
         await Parallel.ForEachAsync(
             interactedListings.Take(100), cancellationToken, async (lid, ct) =>
             {
-                var peers = await _activityTracker.GetListingAudienceAsync(lid, ct);
+                var peers = await _activityTracker.GetListingAudienceAsync(lid, ct).ConfigureAwait(false);
 
                 foreach (var neighbourId in peers
                              .Where(id => id != userId)
                              .Take(_options.MaxNeighbours))
                 {
                     var neighbourHistory =
-                        await _activityTracker.GetUserHistoryAsync(neighbourId, null, ct);
+                        await _activityTracker.GetUserHistoryAsync(neighbourId, null, ct).ConfigureAwait(false);
 
                     var similarity = CosineSimilarity(userVector, neighbourHistory);
                     if (similarity < _options.MinSimilarityThreshold)

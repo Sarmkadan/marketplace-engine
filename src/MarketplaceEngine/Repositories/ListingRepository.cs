@@ -27,7 +27,7 @@ public class ListingRepository : IListingRepository
 
     public async Task<Listing?> GetByIdAsync(Guid id)
     {
-        await Task.Delay(5); // Simulate async operation
+        await Task.Delay(5).ConfigureAwait(false); // Simulate async operation
         lock (_lock)
         {
             return _context.Listings.FirstOrDefault(l => l.Id == id);
@@ -36,7 +36,7 @@ public class ListingRepository : IListingRepository
 
     public async Task<List<Listing>> GetAllAsync()
     {
-        await Task.Delay(5);
+        await Task.Delay(5).ConfigureAwait(false);
         lock (_lock)
         {
             return _context.Listings.ToList();
@@ -55,7 +55,7 @@ public class ListingRepository : IListingRepository
             _context.Listings.Add(entity);
         }
 
-        await Task.Delay(5);
+        await Task.Delay(5).ConfigureAwait(false);
         return entity;
     }
 
@@ -76,7 +76,7 @@ public class ListingRepository : IListingRepository
             _context.Listings[index] = entity; // Hotfix: Ensure atomic update of listing in shared collection
         }
 
-        await Task.Delay(5);
+        await Task.Delay(5).ConfigureAwait(false);
         return entity;
     }
 
@@ -92,12 +92,12 @@ public class ListingRepository : IListingRepository
             _context.Listings.Remove(listing);
         }
 
-        await Task.Delay(5);
+        await Task.Delay(5).ConfigureAwait(false);
     }
 
     public async Task<bool> ExistsAsync(Guid id)
     {
-        await Task.Delay(5);
+        await Task.Delay(5).ConfigureAwait(false);
         lock (_lock)
         {
             return _context.Listings.Any(l => l.Id == id);
@@ -106,7 +106,7 @@ public class ListingRepository : IListingRepository
 
     public async Task<int> CountAsync()
     {
-        await Task.Delay(5);
+        await Task.Delay(5).ConfigureAwait(false);
         lock (_lock)
         {
             return _context.Listings.Count;
@@ -115,7 +115,7 @@ public class ListingRepository : IListingRepository
 
     public async Task<List<Listing>> GetBySellerIdAsync(Guid sellerId)
     {
-        await Task.Delay(5);
+        await Task.Delay(5).ConfigureAwait(false);
         lock (_lock)
         {
             return _context.Listings.Where(l => l.SellerId == sellerId).ToList();
@@ -124,7 +124,7 @@ public class ListingRepository : IListingRepository
 
     public async Task<List<Listing>> GetByCategoryIdAsync(Guid categoryId)
     {
-        await Task.Delay(5);
+        await Task.Delay(5).ConfigureAwait(false);
         lock (_lock)
         {
             return _context.Listings.Where(l => l.CategoryId == categoryId).ToList();
@@ -133,7 +133,7 @@ public class ListingRepository : IListingRepository
 
     public async Task<List<Listing>> GetByStatusAsync(ListingStatus status)
     {
-        await Task.Delay(5);
+        await Task.Delay(5).ConfigureAwait(false);
         lock (_lock)
         {
             return _context.Listings.Where(l => l.Status == status).ToList();
@@ -142,7 +142,7 @@ public class ListingRepository : IListingRepository
 
     public async Task<List<Listing>> GetActiveListingsAsync()
     {
-        await Task.Delay(5);
+        await Task.Delay(5).ConfigureAwait(false);
         lock (_lock)
         {
             return _context.Listings
@@ -154,7 +154,7 @@ public class ListingRepository : IListingRepository
 
     public async Task<List<Listing>> GetFeaturedListingsAsync(int limit = 10)
     {
-        await Task.Delay(5);
+        await Task.Delay(5).ConfigureAwait(false);
         lock (_lock)
         {
             return _context.Listings
@@ -167,7 +167,7 @@ public class ListingRepository : IListingRepository
 
     public async Task<List<Listing>> GetRecentListingsAsync(int days = 7)
     {
-        await Task.Delay(5);
+        await Task.Delay(5).ConfigureAwait(false);
         var cutoffDate = DateTime.UtcNow.AddDays(-days);
         lock (_lock)
         {
@@ -183,7 +183,7 @@ public class ListingRepository : IListingRepository
         if (string.IsNullOrWhiteSpace(query))
             return new List<Listing>();
 
-        await Task.Delay(5);
+        await Task.Delay(5).ConfigureAwait(false);
         var searchTerm = query.ToLowerInvariant();
         lock (_lock)
         {
@@ -201,7 +201,7 @@ public class ListingRepository : IListingRepository
         if (tags is null || tags.Count == 0)
             return new List<Listing>();
 
-        await Task.Delay(5);
+        await Task.Delay(5).ConfigureAwait(false);
         var normalizedTags = tags.Select(t => t.ToLowerInvariant()).ToList();
         lock (_lock)
         {
@@ -213,7 +213,7 @@ public class ListingRepository : IListingRepository
 
     public async Task<List<Listing>> GetNearbyAsync(double latitude, double longitude, double radiusKm)
     {
-        await Task.Delay(5);
+        await Task.Delay(5).ConfigureAwait(false);
         lock (_lock)
         {
             return _context.Listings
@@ -231,7 +231,7 @@ public class ListingRepository : IListingRepository
         if (pageSize < 1) pageSize = 20;
         if (pageSize > 100) pageSize = 100;
 
-        await Task.Delay(5);
+        await Task.Delay(5).ConfigureAwait(false);
         List<Listing> allListings;
         lock (_lock)
         {
@@ -252,21 +252,21 @@ public class ListingRepository : IListingRepository
 
     public async Task IncrementViewCountAsync(Guid listingId)
     {
-        var listing = await GetByIdAsync(listingId);
+        var listing = await GetByIdAsync(listingId).ConfigureAwait(false);
         if (listing is not null)
         {
             listing.RecordView();
-            await UpdateAsync(listing);
+            await UpdateAsync(listing).ConfigureAwait(false);
         }
     }
 
     public async Task IncrementInterestCountAsync(Guid listingId)
     {
-        var listing = await GetByIdAsync(listingId);
+        var listing = await GetByIdAsync(listingId).ConfigureAwait(false);
         if (listing is not null)
         {
             listing.RecordInterest();
-            await UpdateAsync(listing);
+            await UpdateAsync(listing).ConfigureAwait(false);
         }
     }
 }

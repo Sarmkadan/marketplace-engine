@@ -29,7 +29,7 @@ public class SearchService
     public async Task<List<Listing>> SearchListingsAsync(string query)
     {
         ValidateSearchQuery(query);
-        return await _listingRepository.SearchAsync(query);
+        return await _listingRepository.SearchAsync(query).ConfigureAwait(false);
     }
 
     // Searches listings by tags
@@ -38,7 +38,7 @@ public class SearchService
         if (tags is null || tags.Count == 0)
             throw new ValidationException("At least one tag is required for search");
 
-        return await _listingRepository.GetByTagsAsync(tags);
+        return await _listingRepository.GetByTagsAsync(tags).ConfigureAwait(false);
     }
 
     // Finds nearby listings
@@ -53,14 +53,14 @@ public class SearchService
         if (radiusKm < 0.1 || radiusKm > 500)
             throw new ValidationException("Radius", "Search radius must be between 0.1 and 500 km");
 
-        return await _listingRepository.GetNearbyAsync(latitude, longitude, radiusKm);
+        return await _listingRepository.GetNearbyAsync(latitude, longitude, radiusKm).ConfigureAwait(false);
     }
 
     // Searches users by name or email
     public async Task<List<User>> SearchUsersAsync(string query)
     {
         ValidateSearchQuery(query);
-        return await _userRepository.SearchAsync(query);
+        return await _userRepository.SearchAsync(query).ConfigureAwait(false);
     }
 
     // Finds top sellers by rating
@@ -69,7 +69,7 @@ public class SearchService
         if (limit < 1 || limit > 50)
             limit = 10;
 
-        return await _userRepository.GetTopSellersAsync(limit);
+        return await _userRepository.GetTopSellersAsync(limit).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -85,7 +85,7 @@ public class SearchService
         if (categoryId == Guid.Empty)
             throw new ValidationException("CategoryId", "Category ID cannot be empty");
 
-        var listings = await _listingRepository.GetByCategoryIdAsync(categoryId);
+        var listings = await _listingRepository.GetByCategoryIdAsync(categoryId).ConfigureAwait(false);
 
         if (pageNumber < 1) pageNumber = 1;
         if (pageSize < 1) pageSize = AppConstants.DefaultPageSize;
@@ -105,7 +105,7 @@ public class SearchService
     public async Task<List<Listing>> AdvancedSearchAsync(string? keyword = null, Guid? categoryId = null,
         decimal? minPrice = null, decimal? maxPrice = null, List<string>? tags = null)
     {
-        var allListings = await _listingRepository.GetActiveListingsAsync();
+        var allListings = await _listingRepository.GetActiveListingsAsync().ConfigureAwait(false);
 
         // Apply keyword filter
         if (!string.IsNullOrWhiteSpace(keyword))
@@ -151,7 +151,7 @@ public class SearchService
         if (limit < 1 || limit > 100)
             limit = 20;
 
-        var allListings = await _listingRepository.GetActiveListingsAsync();
+        var allListings = await _listingRepository.GetActiveListingsAsync().ConfigureAwait(false);
         return allListings
             .OrderByDescending(l => l.ViewCount)
             .ThenByDescending(l => l.InterestCount)
@@ -164,7 +164,7 @@ public class SearchService
     {
         ValidateSearchQuery(prefix);
 
-        var listings = await _listingRepository.GetActiveListingsAsync();
+        var listings = await _listingRepository.GetActiveListingsAsync().ConfigureAwait(false);
         var suggestions = listings
             .Where(l => l.Title.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
             .Select(l => l.Title)
