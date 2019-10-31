@@ -536,8 +536,34 @@ X-User-Id: 1
 ### List All Categories
 
 ```http
-GET /api/v1/categories
+GET /api/v1/categories?depth=1
 ```
+
+The category system supports multi-level hierarchies (e.g. **Electronics > Phones > Smartphones**).
+By default `GET /categories` returns only **root-level** categories (those with no parent).
+Use the `?depth=N` parameter to include nested subcategories up to `N` levels deep.
+
+**Query Parameters:**
+- `depth` (integer, optional, default: 1) — How many levels of subcategories to include.
+  - `depth=1` (default): root categories only, `subCategories` list is empty.
+  - `depth=2`: root categories and their direct children.
+  - `depth=3`: root, children, and grandchildren (e.g. Electronics > Phones > Smartphones).
+
+**Category tree structure:**
+```
+Electronics  (root, parentCategoryId: null)
+├── Phones   (parentCategoryId: Electronics.id)
+│   ├── Smartphones
+│   └── Feature Phones
+└── Laptops
+```
+
+**Listing inheritance:** Listings belong to exactly one category. When filtering by a parent
+category (e.g. `Electronics`), search results include listings from all descendant categories
+unless a more specific category is requested.
+
+**Search filters:** Use the `categoryId` parameter on search endpoints to restrict results to
+a specific category node. To search across an entire branch, supply the parent category ID.
 
 **Response (200 OK):**
 ```json
@@ -556,7 +582,16 @@ GET /api/v1/categories
           {
             "id": 2,
             "name": "Phones",
-            "listingCount": 89
+            "parentCategoryId": 1,
+            "listingCount": 89,
+            "subCategories": [
+              {
+                "id": 7,
+                "name": "Smartphones",
+                "parentCategoryId": 2,
+                "listingCount": 72
+              }
+            ]
           }
         ]
       }
