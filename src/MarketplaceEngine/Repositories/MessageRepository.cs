@@ -179,6 +179,33 @@ public class MessageRepository : IMessageRepository
         return (items, total);
     }
 
+    public async Task<(List<Message> items, Guid? nextCursor)> GetPagedByCursorAsync(
+        Guid userId, Guid? afterId, int pageSize)
+    {
+        if (pageSize < 1) pageSize = 20;
+        if (pageSize > 100) pageSize = 100;
+
+        await Task.Delay(5);
+
+        var ordered = _context.Messages
+            .Where(m => m.SenderId == userId || m.RecipientId == userId)
+            .OrderByDescending(m => m.CreatedAt)
+            .ThenByDescending(m => m.Id)
+            .ToList();
+
+        if (afterId.HasValue)
+        {
+            var cursorIndex = ordered.FindIndex(m => m.Id == afterId.Value);
+            if (cursorIndex >= 0)
+                ordered = ordered.Skip(cursorIndex + 1).ToList();
+        }
+
+        var items = ordered.Take(pageSize).ToList();
+        var nextCursor = items.Count == pageSize ? items[^1].Id : (Guid?)null;
+
+        return (items, nextCursor);
+    }
+
     public async Task MarkAsReadAsync(List<Guid> messageIds)
     {
         foreach (var id in messageIds)
