@@ -38,31 +38,32 @@ public class CategoriesController : ControllerBase
     }
 
     /// <summary>
-    /// Retrieves all marketplace categories.
+    /// Retrieves marketplace categories.
+    /// By default returns only root-level categories (depth=1). Use depth=N to include
+    /// nested subcategories up to N levels deep (depth=2 adds direct children,
+    /// depth=3 adds grandchildren, etc.).
     /// Cached for 30 minutes since category structure is stable.
     /// </summary>
     [HttpGet]
     [ProducesResponseType(typeof(List<CategoryDto>), StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetCategories()
+    public async Task<IActionResult> GetCategories([FromQuery] int depth = 1)
     {
-        _logger.LogInformation("Fetching categories");
+        if (depth < 1) depth = 1;
+        if (depth > 5) depth = 5;
 
-        var cacheKey = "categories:all";
+        _logger.LogInformation("Fetching categories with depth={Depth}", depth);
+
+        var cacheKey = $"categories:root:depth:{depth}";
         var cached = await _cacheService.GetAsync<List<CategoryDto>>(cacheKey);
 
         if (cached is not null)
         {
-            _logger.LogDebug("Cache hit for categories");
+            _logger.LogDebug("Cache hit for categories depth={Depth}", depth);
             return Ok(cached);
         }
 
-        var categories = await _categoryService.GetAllCategoriesAsync();
-        var dtos = categories.Select(c => new CategoryDto
-        {
-            Id = c.Id,
-            Name = c.Name,
-            Description = c.Description
-        }).ToList();
+        var categories = await _categoryService.GetCategoryTreeAsync(depth);
+        var dtos = categories.Select(c => CategoryDto.FromCategory(c, depth)).ToList();
 
         // Cache categories for 30 minutes
         await _cacheService.SetAsync(cacheKey, dtos, TimeSpan.FromMinutes(30));
@@ -190,13 +191,41 @@ public class CategoriesController : ControllerBase
 }
 
 /// <summary>
-/// DTO for category information.
+/// DTO for category information, optionally including nested subcategories.
 /// </summary>
 public class CategoryDto
 {
     public Guid Id { get; set; }
     public string Name { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
+    public Guid? ParentCategoryId { get; set; }
+    public int ListingCount { get; set; }
+    public List<CategoryDto> SubCategories { get; set; } = [];
+
+    /// <summary>
+    /// Creates a <see cref="CategoryDto"/> from a domain <see cref="Category"/>,
+    /// recursively including subcategories up to <paramref name="remainingDepth"/> levels.
+    /// </summary>
+    public static CategoryDto FromCategory(Domain.Models.Category category, int remainingDepth)
+    {
+        var dto = new CategoryDto
+        {
+            Id = category.Id,
+            Name = category.Name,
+            Description = category.Description ?? string.Empty,
+            ParentCategoryId = category.ParentCategoryId,
+            ListingCount = category.ListingCount
+        };
+
+        if (remainingDepth > 1)
+        {
+            dto.SubCategories = category.SubCategories
+                .Select(sub => FromCategory(sub, remainingDepth - 1))
+                .ToList();
+        }
+
+        return dto;
+    }
 }
 
 /// <summary>

@@ -141,6 +141,34 @@ public class CategoryService
         return root;
     }
 
+    // Gets root categories with subcategories populated up to the specified depth.
+    // depth=1: root categories only (no subcategories populated)
+    // depth=2: root + direct children
+    // depth=3: root + children + grandchildren, etc.
+    public async Task<List<Category>> GetCategoryTreeAsync(int depth)
+    {
+        var root = await GetRootCategoriesAsync();
+
+        if (depth > 1)
+        {
+            foreach (var category in root)
+                await PopulateSubCategoriesAsync(category, depth - 1);
+        }
+
+        return root;
+    }
+
+    private async Task PopulateSubCategoriesAsync(Category category, int remainingDepth)
+    {
+        category.SubCategories = await GetSubCategoriesAsync(category.Id);
+
+        if (remainingDepth > 1)
+        {
+            foreach (var sub in category.SubCategories)
+                await PopulateSubCategoriesAsync(sub, remainingDepth - 1);
+        }
+    }
+
     // Searches categories by name
     public async Task<List<Category>> SearchCategoriesAsync(string query)
     {
