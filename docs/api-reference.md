@@ -845,6 +845,58 @@ X-User-Role: Moderator
 }
 ```
 
+### Bulk Moderate Listings (Moderator/Admin)
+
+```http
+POST /api/v1/moderation/bulk
+Content-Type: application/json
+X-User-Role: Moderator
+```
+
+Applies a moderation action to multiple listings in a single request. Each listing is
+processed independently and the response includes per-item success/failure status so
+partial failures can be retried. Restricted to `Moderator` and `Administrator` roles.
+
+**Request Body:**
+```json
+{
+  "listingIds": [
+    "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "7b3a9c12-1234-5678-9abc-def012345678"
+  ],
+  "action": "remove"
+}
+```
+
+**Allowed Actions:**
+- `approve` — Restores listing to Active status
+- `remove` — Flags listing as removed
+- `escalate` — Marks listing for escalated review
+
+**Response (200 OK):**
+```json
+{
+  "results": [
+    {
+      "listingId": "3fa85f64-...",
+      "success": true,
+      "error": null
+    },
+    {
+      "listingId": "7b3a9c12-...",
+      "success": false,
+      "error": "Listing not found"
+    }
+  ],
+  "successCount": 1,
+  "failureCount": 1
+}
+```
+
+**Error Responses:**
+- 400 Bad Request — No listing IDs provided or missing/invalid action
+- 403 Forbidden — Caller does not have Moderator or Administrator role
+
 ---
 
 ## Health Check
