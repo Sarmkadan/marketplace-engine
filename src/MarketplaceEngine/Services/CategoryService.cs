@@ -132,10 +132,14 @@ public class CategoryService
     public async Task<List<Category>> GetCategoryTreeAsync()
     {
         var root = await GetRootCategoriesAsync();
+        var listingCounts = ComputeListingCounts();
 
         foreach (var category in root)
         {
+            category.ListingCount = listingCounts.GetValueOrDefault(category.Id);
             category.SubCategories = await GetSubCategoriesAsync(category.Id);
+            foreach (var sub in category.SubCategories)
+                sub.ListingCount = listingCounts.GetValueOrDefault(sub.Id);
         }
 
         return root;
@@ -148,25 +152,42 @@ public class CategoryService
     public async Task<List<Category>> GetCategoryTreeAsync(int depth)
     {
         var root = await GetRootCategoriesAsync();
+        var listingCounts = ComputeListingCounts();
+
+        foreach (var category in root)
+        {
+            category.ListingCount = listingCounts.GetValueOrDefault(category.Id);
+        }
 
         if (depth > 1)
         {
             foreach (var category in root)
-                await PopulateSubCategoriesAsync(category, depth - 1);
+                await PopulateSubCategoriesAsync(category, depth - 1, listingCounts);
         }
 
         return root;
     }
 
-    private async Task PopulateSubCategoriesAsync(Category category, int remainingDepth)
+    private async Task PopulateSubCategoriesAsync(Category category, int remainingDepth, Dictionary<Guid, int> listingCounts)
     {
         category.SubCategories = await GetSubCategoriesAsync(category.Id);
+
+        foreach (var sub in category.SubCategories)
+            sub.ListingCount = listingCounts.GetValueOrDefault(sub.Id);
 
         if (remainingDepth > 1)
         {
             foreach (var sub in category.SubCategories)
-                await PopulateSubCategoriesAsync(sub, remainingDepth - 1);
+                await PopulateSubCategoriesAsync(sub, remainingDepth - 1, listingCounts);
         }
+    }
+
+    // Computes a mapping of category ID to listing count from the actual listings data.
+    private Dictionary<Guid, int> ComputeListingCounts()
+    {
+        return _context.Listings
+            .GroupBy(l => l.CategoryId)
+            .ToDictionary(g => g.Key, g => g.Count());
     }
 
     // Searches categories by name
