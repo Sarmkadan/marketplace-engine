@@ -6,7 +6,7 @@
 
 A production-grade, lightweight marketplace backend engine built with **.NET 10** and **C# 14**. Provides comprehensive functionality for managing listings, searching products, organizing categories, enabling user messaging, and content moderation. Designed for high performance, scalability, and ease of integration.
 
-**Status:** Ready for production use. Active development for Phase 2+ features.
+**Status:** v2.0.0 - Production-ready with enhanced features
 
 ## Overview
 
@@ -180,7 +180,7 @@ The project follows Domain-Driven Design principles with clear separation of con
 
 | Component | Technology | Version |
 |-----------|-----------|---------|
-| **Runtime** | .NET | 10.0+ |
+| **Runtime** | .NET | 10.0 |
 | **Language** | C# | 14.0+ |
 | **Web Framework** | ASP.NET Core | Latest |
 | **API Documentation** | OpenAPI/Swagger | Latest |
