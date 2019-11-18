@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -50,7 +51,7 @@ public class Category
     // Adds a subcategory
     public void AddSubCategory(Category subCategory)
     {
-        if (subCategory == null)
+        if (subCategory is null)
             throw new ArgumentNullException(nameof(subCategory));
 
         if (subCategory.ParentCategoryId == Id)
@@ -81,7 +82,7 @@ public class Category
     // Returns the full category path (e.g., "Electronics > Smartphones")
     public string GetFullPath()
     {
-        if (ParentCategory == null)
+        if (ParentCategory is null)
             return Name;
 
         return $"{ParentCategory.GetFullPath()} > {Name}";

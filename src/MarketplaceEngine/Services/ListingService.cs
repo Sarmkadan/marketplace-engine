@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -30,7 +31,7 @@ public class ListingService
         decimal price, string currency, Guid categoryId, List<string> imageUrls)
     {
         var seller = await _userRepository.GetByIdAsync(sellerId);
-        if (seller == null)
+        if (seller is null)
             throw new ResourceNotFoundException("User", sellerId);
 
         if (!seller.IsActive)
@@ -62,7 +63,7 @@ public class ListingService
         string? description = null, Money? price = null)
     {
         var listing = await _listingRepository.GetByIdAsync(listingId);
-        if (listing == null)
+        if (listing is null)
             throw new ResourceNotFoundException("Listing", listingId);
 
         if (listing.SellerId != requesterId)
@@ -74,7 +75,7 @@ public class ListingService
         if (!string.IsNullOrEmpty(description))
             listing.Description = description;
 
-        if (price != null)
+        if (price is not null)
             listing.Price = price;
 
         listing.ValidateForPublishing();
@@ -85,7 +86,7 @@ public class ListingService
     public async Task<Listing> SetListingVisibilityAsync(Guid listingId, Guid requesterId, bool isVisible)
     {
         var listing = await _listingRepository.GetByIdAsync(listingId);
-        if (listing == null)
+        if (listing is null)
             throw new ResourceNotFoundException("Listing", listingId);
 
         if (listing.SellerId != requesterId)
@@ -103,7 +104,7 @@ public class ListingService
     public async Task<Listing> GetListingWithViewAsync(Guid listingId)
     {
         var listing = await _listingRepository.GetByIdAsync(listingId);
-        if (listing == null)
+        if (listing is null)
             throw new ResourceNotFoundException("Listing", listingId);
 
         await _listingRepository.IncrementViewCountAsync(listingId);
@@ -114,7 +115,7 @@ public class ListingService
     public async Task<Listing> RecordInterestAsync(Guid listingId)
     {
         var listing = await _listingRepository.GetByIdAsync(listingId);
-        if (listing == null)
+        if (listing is null)
             throw new ResourceNotFoundException("Listing", listingId);
 
         await _listingRepository.IncrementInterestCountAsync(listingId);
@@ -125,7 +126,7 @@ public class ListingService
     public async Task<Listing> DelistListingAsync(Guid listingId, Guid requesterId)
     {
         var listing = await _listingRepository.GetByIdAsync(listingId);
-        if (listing == null)
+        if (listing is null)
             throw new ResourceNotFoundException("Listing", listingId);
 
         if (listing.SellerId != requesterId)
@@ -139,7 +140,7 @@ public class ListingService
     public async Task<List<Listing>> GetSellerListingsAsync(Guid sellerId)
     {
         var seller = await _userRepository.GetByIdAsync(sellerId);
-        if (seller == null)
+        if (seller is null)
             throw new ResourceNotFoundException("User", sellerId);
 
         return await _listingRepository.GetBySellerIdAsync(sellerId);
@@ -173,11 +174,11 @@ public class ListingService
     public async Task<Listing> MarkAsFeaturedAsync(Guid listingId, Guid adminId)
     {
         var admin = await _userRepository.GetByIdAsync(adminId);
-        if (admin == null || admin.Role != UserRole.Administrator)
+        if (admin is null || admin.Role != UserRole.Administrator)
             throw new UnauthorizedException(adminId, "feature listings");
 
         var listing = await _listingRepository.GetByIdAsync(listingId);
-        if (listing == null)
+        if (listing is null)
             throw new ResourceNotFoundException("Listing", listingId);
 
         listing.MarkAsFeatured();

@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -33,7 +34,7 @@ public class CategoryService
     {
         await Task.Delay(5);
         var category = _context.Categories.FirstOrDefault(c => c.Id == categoryId);
-        if (category == null)
+        if (category is null)
             throw new ResourceNotFoundException("Category", categoryId);
 
         return category;
@@ -44,7 +45,7 @@ public class CategoryService
     {
         await Task.Delay(5);
         return _context.Categories
-            .Where(c => c.IsActive && c.ParentCategoryId == null)
+            .Where(c => c.IsActive && c.ParentCategoryId is null)
             .OrderBy(c => c.DisplayOrder)
             .ToList();
     }
@@ -90,7 +91,7 @@ public class CategoryService
         if (parentCategoryId.HasValue)
         {
             var parent = await GetCategoryAsync(parentCategoryId.Value);
-            if (parent == null)
+            if (parent is null)
                 throw new ResourceNotFoundException("Parent Category", parentCategoryId.Value);
         }
 
@@ -107,7 +108,7 @@ public class CategoryService
         if (!string.IsNullOrEmpty(name))
             category.Name = name;
 
-        if (description != null)
+        if (description is not null)
             category.Description = description;
 
         category.ValidateAndInitialize();
@@ -158,7 +159,7 @@ public class CategoryService
     {
         await Task.Delay(5);
         var category = _context.Categories.FirstOrDefault(c => c.Slug == slug && c.IsActive);
-        if (category == null)
+        if (category is null)
             throw new ResourceNotFoundException("Category", slug);
 
         return category;

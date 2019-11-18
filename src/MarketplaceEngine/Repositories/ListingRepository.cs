@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -37,7 +38,7 @@ public class ListingRepository : IListingRepository
 
     public async Task<Listing> AddAsync(Listing entity)
     {
-        if (entity == null)
+        if (entity is null)
             throw new ArgumentNullException(nameof(entity));
 
         entity.Id = Guid.NewGuid();
@@ -50,11 +51,11 @@ public class ListingRepository : IListingRepository
 
     public async Task<Listing> UpdateAsync(Listing entity)
     {
-        if (entity == null)
+        if (entity is null)
             throw new ArgumentNullException(nameof(entity));
 
         var existing = _context.Listings.FirstOrDefault(l => l.Id == entity.Id);
-        if (existing == null)
+        if (existing is null)
             throw new ResourceNotFoundException(ResourceType, entity.Id);
 
         entity.UpdatedAt = DateTime.UtcNow;
@@ -68,7 +69,7 @@ public class ListingRepository : IListingRepository
     public async Task DeleteAsync(Guid id)
     {
         var listing = await GetByIdAsync(id);
-        if (listing == null)
+        if (listing is null)
             throw new ResourceNotFoundException(ResourceType, id);
 
         _context.Listings.Remove(listing);
@@ -151,7 +152,7 @@ public class ListingRepository : IListingRepository
 
     public async Task<List<Listing>> GetByTagsAsync(List<string> tags)
     {
-        if (tags == null || tags.Count == 0)
+        if (tags is null || tags.Count == 0)
             return new List<Listing>();
 
         await Task.Delay(5);
@@ -165,7 +166,7 @@ public class ListingRepository : IListingRepository
     {
         await Task.Delay(5);
         return _context.Listings
-            .Where(l => l.Location != null &&
+            .Where(l => l.Location is not null &&
                        l.Status == ListingStatus.Active &&
                        l.Location.DistanceTo(new Domain.ValueObjects.Location(
                            "Temp", "Temp", "US", null, latitude, longitude)) <= radiusKm)
@@ -196,7 +197,7 @@ public class ListingRepository : IListingRepository
     public async Task IncrementViewCountAsync(Guid listingId)
     {
         var listing = await GetByIdAsync(listingId);
-        if (listing != null)
+        if (listing is not null)
         {
             listing.RecordView();
             await UpdateAsync(listing);
@@ -206,7 +207,7 @@ public class ListingRepository : IListingRepository
     public async Task IncrementInterestCountAsync(Guid listingId)
     {
         var listing = await GetByIdAsync(listingId);
-        if (listing != null)
+        if (listing is not null)
         {
             listing.RecordInterest();
             await UpdateAsync(listing);

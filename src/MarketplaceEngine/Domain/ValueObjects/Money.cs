@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -55,7 +56,7 @@ public sealed class Money : IEquatable<Money>
 
     public bool Equals(Money? other)
     {
-        return other != null &&
+        return other is not null &&
                Amount == other.Amount &&
                CurrencyCode == other.CurrencyCode;
     }
