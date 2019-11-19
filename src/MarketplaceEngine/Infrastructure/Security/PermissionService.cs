@@ -26,8 +26,8 @@ public class PermissionService
     /// </summary>
     public bool HasRole(UserRole userRole, UserRole requiredRole)
     {
-        // Admin has all permissions
-        if (userRole == UserRole.Admin)
+        // Administrator has all permissions
+        if (userRole == UserRole.Administrator) // Hotfix: Use Administrator
             return true;
 
         return userRole == requiredRole;
@@ -38,12 +38,12 @@ public class PermissionService
     /// </summary>
     public bool CanEditListing(UserRole userRole, Guid listingSellerId, Guid userId)
     {
-        // Admin can edit any listing
-        if (userRole == UserRole.Admin)
+        // Administrator can edit any listing
+        if (userRole == UserRole.Administrator) // Hotfix: Use Administrator
             return true;
 
-        // Only seller can edit their own listings
-        if (userRole == UserRole.Seller && listingSellerId == userId)
+        // Only seller (User or PremiumSeller) can edit their own listings
+        if ((userRole == UserRole.User || userRole == UserRole.PremiumSeller) && listingSellerId == userId) // Hotfix: Use User/PremiumSeller
             return true;
 
         _logger.LogWarning("User {UserId} denied edit permission for listing {ListingId}", userId, listingSellerId);
@@ -55,12 +55,12 @@ public class PermissionService
     /// </summary>
     public bool CanDeleteListing(UserRole userRole, Guid listingSellerId, Guid userId)
     {
-        // Admin can delete any listing
-        if (userRole == UserRole.Admin)
+        // Administrator can delete any listing
+        if (userRole == UserRole.Administrator) // Hotfix: Use Administrator
             return true;
 
-        // Only seller can delete their own listings
-        if (userRole == UserRole.Seller && listingSellerId == userId)
+        // Only seller (User or PremiumSeller) can delete their own listings
+        if ((userRole == UserRole.User || userRole == UserRole.PremiumSeller) && listingSellerId == userId) // Hotfix: Use User/PremiumSeller
             return true;
 
         return false;
@@ -71,7 +71,7 @@ public class PermissionService
     /// </summary>
     public bool CanModerate(UserRole userRole)
     {
-        return userRole == UserRole.Admin || userRole == UserRole.Moderator;
+        return userRole == UserRole.Administrator || userRole == UserRole.Moderator; // Hotfix: Use Administrator
     }
 
     /// <summary>
@@ -79,7 +79,7 @@ public class PermissionService
     /// </summary>
     public bool CanCreateListing(UserRole userRole)
     {
-        return userRole == UserRole.Seller || userRole == UserRole.Admin;
+        return userRole == UserRole.User || userRole == UserRole.PremiumSeller || userRole == UserRole.Administrator; // Hotfix: Use User/PremiumSeller/Administrator
     }
 
     /// <summary>
