@@ -13,6 +13,9 @@ var builder = WebApplication.CreateBuilder(args);
 // Add Marketplace services and repositories to DI container
 builder.Services.AddMarketplaceServices();
 
+// Add full-text search service
+builder.Services.AddFullTextSearch();
+
 // Add recommendation engine (collaborative filtering + activity tracking)
 builder.Services.AddRecommendationEngine(builder.Configuration);
 
@@ -66,6 +69,9 @@ app.MapMarketplaceEndpoints();
 
 // Map recommendation engine endpoints
 app.MapRecommendationEndpoints();
+
+// Map full-text search endpoints
+app.MapFullTextSearchEndpoints();
 
 // Start background job queue
 var backgroundQueue = app.Services.GetRequiredService<BackgroundJobQueue>();
