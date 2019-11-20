@@ -46,6 +46,19 @@ public class ListingDto
 }
 
 /// <summary>
+/// Request DTO for updating an existing listing.
+/// All fields are optional; only provided fields are changed.
+/// </summary>
+public class UpdateListingRequest
+{
+    public Guid SellerId { get; set; }
+    public string? Title { get; set; }
+    public string? Description { get; set; }
+    public decimal? Price { get; set; }
+    public Guid? CategoryId { get; set; }
+}
+
+/// <summary>
 /// Request DTO for creating new listings.
 /// </summary>
 public class CreateListingRequest
@@ -56,6 +69,18 @@ public class CreateListingRequest
     public Guid SellerId { get; set; }
     public Guid CategoryId { get; set; }
     public List<string>? ImageUrls { get; set; } // Hotfix: Add ImageUrls property
+}
+
+/// <summary>
+/// Cursor-based pagination wrapper for list responses.
+/// Use <see cref="NextCursor"/> as the <c>after</c> parameter on the next request.
+/// </summary>
+public class CursorPaginatedResponse<T>
+{
+    public List<T> Items { get; set; } = new();
+    public Guid? NextCursor { get; set; }
+    public int PageSize { get; set; }
+    public bool HasMore { get; set; }
 }
 
 /// <summary>
