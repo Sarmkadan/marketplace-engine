@@ -185,6 +185,65 @@ public class ModerationController : ControllerBase
     }
 
     /// <summary>
+    /// Applies a moderation action to multiple listings in a single request.
+    /// Each item is processed independently; the response includes per-item
+    /// success/failure status so partial failures can be retried.
+    /// Restricted to users with the Moderator or Administrator role.
+    /// </summary>
+    [HttpPost("bulk")]
+    [ProducesResponseType(typeof(BulkModerationResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> BulkModerate(
+        [FromBody] BulkModerationRequest request,
+        [FromHeader(Name = "X-User-Role")] string? userRole)
+    {
+        _logger.LogInformation("Bulk moderation request: action={Action}, count={Count}",
+            request.Action, request.ListingIds?.Count);
+
+        if (userRole != "Moderator" && userRole != "Administrator")
+            return Forbid();
+
+        if (request.ListingIds is null || request.ListingIds.Count == 0)
+            return BadRequest("At least one listing ID is required");
+
+        if (string.IsNullOrWhiteSpace(request.Action))
+            return BadRequest("Action is required (approve, remove, escalate)");
+
+        var results = new List<BulkModerationItemResult>();
+
+        foreach (var listingId in request.ListingIds)
+        {
+            try
+            {
+                await _moderationService.ApplyBulkActionAsync(listingId, request.Action);
+
+                // Invalidate cached listing data after moderation action
+                await _cacheService.RemoveAsync($"listing:{listingId}");
+
+                results.Add(new BulkModerationItemResult { ListingId = listingId, Success = true });
+                _logger.LogInformation("Bulk action '{Action}' applied to listing {ListingId}",
+                    request.Action, listingId);
+            }
+            catch (Exception ex)
+            {
+                results.Add(new BulkModerationItemResult
+                {
+                    ListingId = listingId,
+                    Success = false,
+                    Error = ex.Message
+                });
+                _logger.LogWarning("Bulk action '{Action}' failed for listing {ListingId}: {Error}",
+                    request.Action, listingId, ex.Message);
+            }
+        }
+
+        await _cacheService.RemoveAsync("listings:*");
+
+        return Ok(new BulkModerationResponse { Results = results });
+    }
+
+    /// <summary>
     /// Retrieves moderation statistics for dashboard.
     /// Provides overview of pending, approved, and rejected reports.
     /// </summary>

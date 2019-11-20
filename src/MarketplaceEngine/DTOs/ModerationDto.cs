@@ -97,6 +97,41 @@ public class CreateReportRequest
 }
 
 /// <summary>
+/// Request for bulk moderation actions on multiple listings.
+/// </summary>
+public class BulkModerationRequest
+{
+    /// <summary>IDs of the listings to act on.</summary>
+    public List<Guid> ListingIds { get; set; } = new();
+
+    /// <summary>
+    /// Action to apply: <c>approve</c> restores a listing to Active,
+    /// <c>remove</c> flags it, <c>escalate</c> marks it for review.
+    /// </summary>
+    public string Action { get; set; } = string.Empty;
+}
+
+/// <summary>
+/// Per-item result returned by the bulk moderation endpoint.
+/// </summary>
+public class BulkModerationItemResult
+{
+    public Guid ListingId { get; set; }
+    public bool Success { get; set; }
+    public string? Error { get; set; }
+}
+
+/// <summary>
+/// Aggregated response from the bulk moderation endpoint.
+/// </summary>
+public class BulkModerationResponse
+{
+    public List<BulkModerationItemResult> Results { get; set; } = new();
+    public int SuccessCount => Results.Count(r => r.Success);
+    public int FailureCount => Results.Count(r => !r.Success);
+}
+
+/// <summary>
 /// Moderation dashboard statistics.
 /// </summary>
 public class ModerationStatsDto

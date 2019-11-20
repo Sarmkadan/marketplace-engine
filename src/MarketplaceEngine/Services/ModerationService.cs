@@ -169,6 +169,34 @@ public class ModerationService
         return report;
     }
 
+    // Applies a moderation action to a single listing as part of a bulk operation
+    public async Task ApplyBulkActionAsync(Guid listingId, string action)
+    {
+        var listing = await _listingRepository.GetByIdAsync(listingId);
+        if (listing is null)
+            throw new ResourceNotFoundException("Listing", listingId);
+
+        switch (action.Trim().ToLowerInvariant())
+        {
+            case "approve":
+                listing.Status = Domain.Enums.ListingStatus.Active;
+                listing.UpdatedAt = DateTime.UtcNow;
+                await _listingRepository.UpdateAsync(listing);
+                break;
+            case "remove":
+                listing.Flag();
+                await _listingRepository.UpdateAsync(listing);
+                break;
+            case "escalate":
+                listing.FlagForReview("Escalated via bulk moderation");
+                await _listingRepository.UpdateAsync(listing);
+                break;
+            default:
+                throw new Exceptions.ValidationException("Action",
+                    $"Unknown action '{action}'. Valid values: approve, remove, escalate");
+        }
+    }
+
     // Gets pending reports
     public async Task<List<ModerationReport>> GetPendingReportsAsync(int page, int pageSize)
     {
