@@ -491,28 +491,38 @@ X-User-Id: 1
 ### Get Conversation Messages
 
 ```http
-GET /api/v1/messages/conversation/{conversationId}?page=1&pageSize=50
+GET /api/v1/messages/conversations/{conversationId}/messages?after=<cursorId>&pageSize=50
 ```
+
+Retrieves messages using **cursor-based pagination**. Unlike offset pagination, this approach
+is stable under concurrent writes — new messages inserted between requests do not cause
+duplicates or gaps.
+
+**Query Parameters:**
+- `after` (UUID, optional) — ID of the last message seen; omit on the first request
+- `pageSize` (integer, optional, default: 50, max: 100) — Messages per page
 
 **Response (200 OK):**
 ```json
 {
-  "success": true,
-  "data": {
-    "messages": [
-      {
-        "id": 501,
-        "senderId": 1,
-        "senderName": "John Seller",
-        "content": "Yes, still available!",
-        "isRead": true,
-        "createdAt": "2026-05-04T10:30:00Z"
-      }
-    ],
-    "totalCount": 8
-  }
+  "items": [
+    {
+      "id": "3fa85f64-...",
+      "senderId": "...",
+      "senderName": "John Seller",
+      "body": "Yes, still available!",
+      "isRead": true,
+      "createdAt": "2026-05-04T10:30:00Z"
+    }
+  ],
+  "nextCursor": "7b3a9c12-...",
+  "pageSize": 50,
+  "hasMore": true
 }
 ```
+
+To fetch the next page, pass `nextCursor` as the `after` parameter. When `hasMore` is
+`false` there are no further messages.
 
 ### Mark Message as Read
 
