@@ -14,6 +14,7 @@ using Xunit;
 
 namespace MarketplaceEngine.Tests;
 
+[Collection("Database")]
 public class ListingRepositoryConcurrencyTests : IDisposable
 {
     private readonly ListingRepository _listingRepository;
