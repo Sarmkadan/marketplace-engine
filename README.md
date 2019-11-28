@@ -1061,17 +1061,21 @@ The test suite covers:
 
 ## Benchmarks
 
+This project includes a BenchmarkDotNet-based performance suite. To run the benchmarks:
+
+```bash
+cd MarketplaceEngine.Benchmarks
+dotnet run -c Release
+```
+
+The benchmark results will be displayed in the console and saved to `MarketplaceEngine.Benchmarks/BenchmarkDotNet.Artifacts/results/`.
+
 Measured on a single-core baseline (Intel Core i5-8259U, 2.3 GHz, 16 GB RAM, .NET 10 Release build):
 
 | Operation | Median | p95 | Throughput |
 |-----------|--------|-----|------------|
 | Create listing | 1.2 ms | 3.1 ms | ~8,200 req/s |
 | Full-text search (10 K listings) | 22 ms | 48 ms | ~1,100 req/s |
-| Get listing by ID | 0.3 ms | 0.9 ms | ~24,000 req/s |
-| Send message | 0.8 ms | 2.0 ms | ~10,500 req/s |
-| Paginated listing query (50 items) | 3.6 ms | 8.2 ms | ~5,200 req/s |
-| Category tree traversal | 0.5 ms | 1.3 ms | ~19,000 req/s |
-| Moderation report creation | 0.9 ms | 2.2 ms | ~9,800 req/s |
 
 > Benchmarks reflect Phase 1 in-memory storage. Phase 2 database-backed numbers will be published after the persistence layer is complete.
 
