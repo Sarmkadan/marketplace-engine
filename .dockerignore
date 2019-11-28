@@ -1,0 +1,58 @@
+# Build output directories
+bin/
+obj/
+
+# Git
+.git/
+.gitignore
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+
+# IDE specific files
+.idea/
+*.swp
+*.swo
+
+# Test results
+TestResults/
+
+# User secrets
+appsettings.Development.json
+appsettings.Local.json
+
+# Environment files
+.env
+.env.local
+docker.env
+
+# IDE and editor files
+.vscode/
+*.code-workspace
+*.sln
+*.csproj.user
+
+# NuGet packages
+packages/
+*.nupkg
+
+# Build artifacts
+*.cache
+*.bak
+*.tmp
+
+# Docker
+.docker/
+Dockerfile*
+
+# Logs
+logs/
+*.log
+
+# Runtime data
+/data/
+
+# Local development overrides
+appsettings*.local.json
