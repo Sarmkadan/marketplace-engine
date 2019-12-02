@@ -9,13 +9,14 @@ using MarketplaceEngine.Domain.Models;
 using MarketplaceEngine.Domain.ValueObjects;
 using MarketplaceEngine.Exceptions;
 using MarketplaceEngine.Repositories;
+using MarketplaceEngine.Constants;
 
 namespace MarketplaceEngine.Services;
 
 /// <summary>
 /// Service for managing marketplace listings.
 /// </summary>
-public class ListingService
+public sealed class ListingService
 {
     private readonly IListingRepository _listingRepository;
     private readonly IUserRepository _userRepository;
@@ -210,10 +211,10 @@ public class ListingService
     /// </summary>
     /// <param name="limit">The maximum number of featured listings to return.</param>
     /// <returns>A list of featured listings.</returns>
-    public async Task<List<Listing>> GetFeaturedListingsAsync(int limit = 10)
+    public async Task<List<Listing>> GetFeaturedListingsAsync(int limit = AppConstants.DefaultFeaturedListingLimit)
     {
-        if (limit < 1 || limit > 100)
-            limit = 10;
+        if (limit < AppConstants.FeaturedListingMinLimit || limit > AppConstants.FeaturedListingMaxLimit)
+            limit = AppConstants.DefaultFeaturedListingLimit;
 
         return await _listingRepository.GetFeaturedListingsAsync(limit);
     }
@@ -223,10 +224,10 @@ public class ListingService
     /// </summary>
     /// <param name="days">The number of days to look back for recent listings.</param>
     /// <returns>A list of recent listings.</returns>
-    public async Task<List<Listing>> GetRecentListingsAsync(int days = 7)
+    public async Task<List<Listing>> GetRecentListingsAsync(int days = AppConstants.RecentListingDays)
     {
-        if (days < 1 || days > 365)
-            days = 7;
+        if (days < AppConstants.RecentListingMinDays || days > AppConstants.RecentListingMaxDays)
+            days = AppConstants.RecentListingDays;
 
         return await _listingRepository.GetRecentListingsAsync(days);
     }
