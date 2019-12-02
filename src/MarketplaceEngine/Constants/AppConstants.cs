@@ -63,9 +63,16 @@ public static class AppConstants
     public const int DefaultListingInterestCount = 0;
 
     // Date ranges
+    public const int RecentListingMinDays = 1;
+    public const int RecentListingMaxDays = 365;
     public const int RecentListingDays = 7;
     public const int ArchivedListingRetentionDays = 90;
     public const int MessageRetentionDays = 365;
+
+    // Featured Listings
+    public const int FeaturedListingMinLimit = 1;
+    public const int FeaturedListingMaxLimit = 100;
+    public const int DefaultFeaturedListingLimit = 10;
 
     // Verification
     public const int EmailVerificationExpiryMinutes = 1440; // 24 hours
