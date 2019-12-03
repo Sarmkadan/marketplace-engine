@@ -6,17 +6,24 @@ using MarketplaceEngine.Repositories;
 using MarketplaceEngine.Services;
 using Moq;
 
-namespace MarketplaceEngine.Benchmarks;
-
+/// <summary>
+/// Contains benchmarks for the ListingService.
+/// </summary>
 [MemoryDiagnoser]
 public class ListingServiceBenchmarks
 {
+    /// <summary>
+    /// Initializes the benchmark setup.
+    /// </summary>
     private ListingService? _listingService;
     private Guid _sellerId;
     private Guid _categoryId;
     private Mock<IListingRepository>? _listingRepositoryMock;
     private Mock<IUserRepository>? _userRepositoryMock;
 
+    /// <summary>
+    /// Sets up the benchmark environment.
+    /// </summary>
     [GlobalSetup]
     public void Setup()
     {
@@ -32,6 +39,10 @@ public class ListingServiceBenchmarks
         _listingService = new ListingService(_listingRepositoryMock.Object, _userRepositoryMock.Object);
     }
 
+    /// <summary>
+    /// Creates a new listing and measures the time it takes.
+    /// </summary>
+    /// <returns>A task representing the creation of the listing.</returns>
     [Benchmark]
     public async Task CreateListingBenchmark()
     {
@@ -47,13 +58,22 @@ public class ListingServiceBenchmarks
     }
 }
 
+/// <summary>
+/// Contains benchmarks for the SearchService.
+/// </summary>
 [MemoryDiagnoser]
 public class SearchServiceBenchmarks
 {
+    /// <summary>
+    /// Initializes the benchmark setup.
+    /// </summary>
     private SearchService? _searchService;
     private Mock<IListingRepository>? _listingRepositoryMock;
     private Mock<IUserRepository>? _userRepositoryMock;
 
+    /// <summary>
+    /// Sets up the benchmark environment.
+    /// </summary>
     [GlobalSetup]
     public void Setup()
     {
@@ -63,6 +83,10 @@ public class SearchServiceBenchmarks
         _searchService = new SearchService(_listingRepositoryMock.Object, _userRepositoryMock.Object);
     }
 
+    /// <summary>
+    /// Searches for listings and measures the time it takes.
+    /// </summary>
+    /// <returns>A task representing the search operation.</returns>
     [Benchmark]
     public async Task SearchListingsBenchmark()
     {
@@ -70,8 +94,15 @@ public class SearchServiceBenchmarks
     }
 }
 
+/// <summary>
+/// The main entry point for the application.
+/// </summary>
 public class Program
 {
+    /// <summary>
+    /// Runs the benchmark for the ListingService.
+    /// </summary>
+    /// <param name="args">The command-line arguments.</param>
     public static void Main(string[] args)
     {
         BenchmarkRunner.Run<ListingServiceBenchmarks>();
