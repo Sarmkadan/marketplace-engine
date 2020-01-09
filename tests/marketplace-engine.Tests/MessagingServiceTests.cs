@@ -14,12 +14,33 @@ using Xunit;
 
 namespace MarketplaceEngine.Tests;
 
+/// <summary>
+/// Unit tests for the <see cref="MessagingService"/> class.
+/// Tests messaging functionality including sending messages, retrieving messages,
+/// marking messages as read/unread, deleting messages, flagging messages,
+/// and managing message replies and conversations.
+/// </summary>
 public class MessagingServiceTests
 {
+    /// <summary>
+    /// Mock repository for message operations used in testing.
+    /// </summary>
     private readonly Mock<IMessageRepository> _messageRepoMock;
+
+    /// <summary>
+    /// Mock repository for user operations used in testing.
+    /// </summary>
     private readonly Mock<IUserRepository> _userRepoMock;
+
+    /// <summary>
+    /// System under test - the <see cref="MessagingService"/> instance being tested.
+    /// </summary>
     private readonly MessagingService _sut;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="MessagingServiceTests"/> class.
+    /// Sets up mock repositories for testing messaging service functionality.
+    /// </summary>
     public MessagingServiceTests()
     {
         _messageRepoMock = new Mock<IMessageRepository>();
@@ -27,6 +48,11 @@ public class MessagingServiceTests
         _sut = new MessagingService(_messageRepoMock.Object, _userRepoMock.Object);
     }
 
+    /// <summary>
+    /// Creates a test user with optional specific ID.
+    /// </summary>
+    /// <param name="id">Optional user ID. If null, a new GUID will be generated.</param>
+    /// <returns>A configured <see cref="User"/> instance for testing.</returns>
     private static User MakeUser(Guid? id = null) => new User
     {
         Id = id ?? Guid.NewGuid(),
@@ -38,6 +64,10 @@ public class MessagingServiceTests
     // ── SendMessageAsync ───────────────────────────────────────────────────
 
     [Fact]
+    /// <summary>
+    /// Tests that <see cref="MessagingService.SendMessageAsync"/> throws <see cref="ResourceNotFoundException"/>
+    /// when the sender user is not found in the repository.
+    /// </summary>
     public async Task SendMessageAsync_WhenSenderNotFound_ThrowsResourceNotFoundException()
     {
         var senderId = Guid.NewGuid();
@@ -52,6 +82,10 @@ public class MessagingServiceTests
     }
 
     [Fact]
+    /// <summary>
+    /// Tests that <see cref="MessagingService.SendMessageAsync"/> throws <see cref="ResourceNotFoundException"/>
+    /// when the recipient user is not found in the repository.
+    /// </summary>
     public async Task SendMessageAsync_WhenRecipientNotFound_ThrowsResourceNotFoundException()
     {
         var sender = MakeUser();
@@ -67,6 +101,10 @@ public class MessagingServiceTests
     }
 
     [Fact]
+    /// <summary>
+    /// Tests that <see cref="MessagingService.SendMessageAsync"/> successfully creates and returns a message
+    /// when both sender and recipient are valid users.
+    /// </summary>
     public async Task SendMessageAsync_WithValidData_ReturnsCreatedMessage()
     {
         var sender = MakeUser();
@@ -93,6 +131,10 @@ public class MessagingServiceTests
     }
 
     [Fact]
+    /// <summary>
+    /// Tests that <see cref="MessagingService.SendMessageAsync"/> throws <see cref="ArgumentException"/>
+    /// when sender ID equals recipient ID (user trying to message themselves).
+    /// </summary>
     public async Task SendMessageAsync_WithSenderEqualToRecipient_ThrowsArgumentException()
     {
         var user = MakeUser();
@@ -108,6 +150,10 @@ public class MessagingServiceTests
     // ── GetReceivedMessagesAsync ───────────────────────────────────────────
 
     [Fact]
+    /// <summary>
+    /// Tests that <see cref="MessagingService.GetReceivedMessagesAsync"/> throws <see cref="ResourceNotFoundException"/>
+    /// when the user is not found in the repository.
+    /// </summary>
     public async Task GetReceivedMessagesAsync_WhenUserNotFound_ThrowsResourceNotFoundException()
     {
         var userId = Guid.NewGuid();
@@ -119,6 +165,10 @@ public class MessagingServiceTests
     }
 
     [Fact]
+    /// <summary>
+    /// Tests that <see cref="MessagingService.GetReceivedMessagesAsync"/> successfully returns messages
+    /// when the user exists in the repository.
+    /// </summary>
     public async Task GetReceivedMessagesAsync_WhenUserExists_ReturnsMessages()
     {
         var user = MakeUser();
@@ -139,6 +189,10 @@ public class MessagingServiceTests
     // ── MarkAsReadAsync ────────────────────────────────────────────────────
 
     [Fact]
+    /// <summary>
+    /// Tests that <see cref="MessagingService.MarkAsReadAsync"/> throws <see cref="ResourceNotFoundException"/>
+    /// when the message is not found in the repository.
+    /// </summary>
     public async Task MarkAsReadAsync_WhenMessageNotFound_ThrowsResourceNotFoundException()
     {
         var messageId = Guid.NewGuid();
@@ -150,6 +204,10 @@ public class MessagingServiceTests
     }
 
     [Fact]
+    /// <summary>
+    /// Tests that <see cref="MessagingService.MarkAsReadAsync"/> successfully marks a message as read
+    /// and sets the ReadAt timestamp when the message exists.
+    /// </summary>
     public async Task MarkAsReadAsync_WhenMessageExists_MarksMessageAsRead()
     {
         var messageId = Guid.NewGuid();
@@ -175,6 +233,10 @@ public class MessagingServiceTests
     // ── DeleteMessageAsync ─────────────────────────────────────────────────
 
     [Fact]
+    /// <summary>
+    /// Tests that <see cref="MessagingService.DeleteMessageAsync"/> successfully deletes a message
+    /// when the requester is the sender of the message.
+    /// </summary>
     public async Task DeleteMessageAsync_WhenRequesterIsSender_DeletesSuccessfully()
     {
         var senderId = Guid.NewGuid();
@@ -198,6 +260,10 @@ public class MessagingServiceTests
     }
 
     [Fact]
+    /// <summary>
+    /// Tests that <see cref="MessagingService.DeleteMessageAsync"/> successfully deletes a message
+    /// when the requester is the recipient of the message.
+    /// </summary>
     public async Task DeleteMessageAsync_WhenRequesterIsRecipient_DeletesSuccessfully()
     {
         var recipientId = Guid.NewGuid();
@@ -220,6 +286,10 @@ public class MessagingServiceTests
     }
 
     [Fact]
+    /// <summary>
+    /// Tests that <see cref="MessagingService.DeleteMessageAsync"/> throws <see cref="UnauthorizedException"/>
+    /// when the requester is neither the sender nor the recipient of the message.
+    /// </summary>
     public async Task DeleteMessageAsync_WhenRequesterIsUnrelated_ThrowsUnauthorizedException()
     {
         var messageId = Guid.NewGuid();
@@ -243,6 +313,10 @@ public class MessagingServiceTests
     // ── FlagMessageAsync ───────────────────────────────────────────────────
 
     [Fact]
+    /// <summary>
+    /// Tests that <see cref="MessagingService.FlagMessageAsync"/> successfully sets IsFlagged to true
+    /// when the message exists and the flagger is a valid user.
+    /// </summary>
     public async Task FlagMessageAsync_WhenMessageExists_SetsIsFlaggedTrue()
     {
         var flaggerId = Guid.NewGuid();
@@ -268,6 +342,10 @@ public class MessagingServiceTests
     }
 
     [Fact]
+    /// <summary>
+    /// Tests that <see cref="MessagingService.FlagMessageAsync"/> throws <see cref="ResourceNotFoundException"/>
+    /// when the flagger user is not found in the repository.
+    /// </summary>
     public async Task FlagMessageAsync_WhenFlaggerNotFound_ThrowsResourceNotFoundException()
     {
         var flaggerId = Guid.NewGuid();
@@ -292,6 +370,10 @@ public class MessagingServiceTests
     // ── AddReplyAsync ──────────────────────────────────────────────────────
 
     [Fact]
+    /// <summary>
+    /// Tests that <see cref="MessagingService.AddReplyAsync"/> successfully creates a reply message
+    /// with a subject prefixed with "Re: " when the parent message exists.
+    /// </summary>
     public async Task AddReplyAsync_WithValidData_CreatesReplyWithPrefixedSubject()
     {
         var parentId = Guid.NewGuid();
@@ -326,6 +408,10 @@ public class MessagingServiceTests
     }
 
     [Fact]
+    /// <summary>
+    /// Tests that <see cref="MessagingService.AddReplyAsync"/> throws <see cref="ResourceNotFoundException"/>
+    /// when the parent message is not found in the repository.
+    /// </summary>
     public async Task AddReplyAsync_WhenParentNotFound_ThrowsResourceNotFoundException()
     {
         var parentId = Guid.NewGuid();
@@ -341,6 +427,10 @@ public class MessagingServiceTests
     // ── GetConversationAsync ───────────────────────────────────────────────
 
     [Fact]
+    /// <summary>
+    /// Tests that <see cref="MessagingService.GetConversationAsync"/> throws <see cref="ResourceNotFoundException"/>
+    /// when the first user is not found in the repository.
+    /// </summary>
     public async Task GetConversationAsync_WhenFirstUserNotFound_ThrowsResourceNotFoundException()
     {
         var user1Id = Guid.NewGuid();
@@ -356,6 +446,10 @@ public class MessagingServiceTests
     // ── MarkAsUnreadAsync ──────────────────────────────────────────────────
 
     [Fact]
+    /// <summary>
+    /// Tests that <see cref="MessagingService.MarkAsUnreadAsync"/> successfully sets IsRead to false
+    /// and clears the ReadAt timestamp when the message was previously read.
+    /// </summary>
     public async Task MarkAsUnreadAsync_WhenMessageWasRead_SetsIsReadFalse()
     {
         var messageId = Guid.NewGuid();
