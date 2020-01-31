@@ -172,3 +172,135 @@ public class PaymentServiceTests
         listing.Status.Should().Be(ListingStatus.Delisted);
     }
 }
+
+/// <summary>
+/// Represents test data and configurations for PaymentService testing.
+/// This class holds input values used by the PaymentServiceTests test methods.
+/// </summary>
+public class PaymentServiceTestsData
+{
+    /// <summary>
+    /// Listing ID used for InitiatePaymentAsync_WhenListingNotFound_ThrowsResourceNotFoundException tests.
+    /// </summary>
+    public Guid ListingIdForNotFoundTest { get; set; }
+
+    /// <summary>
+    /// Buyer ID used for InitiatePaymentAsync_WhenListingNotFound_ThrowsResourceNotFoundException tests.
+    /// </summary>
+    public Guid BuyerIdForNotFoundTest { get; set; }
+
+    /// <summary>
+    /// Payment method used for InitiatePaymentAsync_WhenListingNotFound_ThrowsResourceNotFoundException tests.
+    /// </summary>
+    public string? PaymentMethodForNotFoundTest { get; set; }
+
+    /// <summary>
+    /// Listing ID used for InitiatePaymentAsync_WhenListingIsNotActive_ThrowsMarketplaceException tests.
+    /// </summary>
+    public Guid ListingIdForInactiveTest { get; set; }
+
+    /// <summary>
+    /// Listing with inactive status used for InitiatePaymentAsync_WhenListingIsNotActive_ThrowsMarketplaceException tests.
+    /// </summary>
+    public Listing? InactiveListing { get; set; }
+
+    /// <summary>
+    /// Buyer ID used for InitiatePaymentAsync_WhenBuyerIsSeller_ThrowsMarketplaceException tests.
+    /// </summary>
+    public Guid BuyerIdForSellerTest { get; set; }
+
+    /// <summary>
+    /// Seller ID used for InitiatePaymentAsync_WhenBuyerIsSeller_ThrowsMarketplaceException tests.
+    /// </summary>
+    public Guid SellerIdForSellerTest { get; set; }
+
+    /// <summary>
+    /// Listing with seller ID matching buyer used for InitiatePaymentAsync_WhenBuyerIsSeller_ThrowsMarketplaceException tests.
+    /// </summary>
+    public Listing? ListingWithMatchingSeller { get; set; }
+
+    /// <summary>
+    /// Buyer ID used for InitiatePaymentAsync_WithValidData_CreatesPayment tests.
+    /// </summary>
+    public Guid BuyerIdForValidTest { get; set; }
+
+    /// <summary>
+    /// Seller ID used for InitiatePaymentAsync_WithValidData_CreatesPayment tests.
+    /// </summary>
+    public Guid SellerIdForValidTest { get; set; }
+
+    /// <summary>
+    /// Listing ID used for InitiatePaymentAsync_WithValidData_CreatesPayment tests.
+    /// </summary>
+    public Guid ListingIdForValidTest { get; set; }
+
+    /// <summary>
+    /// Active listing used for InitiatePaymentAsync_WithValidData_CreatesPayment tests.
+    /// </summary>
+    public Listing? ActiveListing { get; set; }
+
+    /// <summary>
+    /// Payment ID used for CancelPaymentAsync_WhenCallerIsNotBuyer_ThrowsUnauthorizedException tests.
+    /// </summary>
+    public Guid PaymentIdForCancelTest { get; set; }
+
+    /// <summary>
+    /// Buyer ID used for CancelPaymentAsync_WhenCallerIsNotBuyer_ThrowsUnauthorizedException tests.
+    /// </summary>
+    public Guid BuyerIdForCancelTest { get; set; }
+
+    /// <summary>
+    /// Other user ID (not buyer) used for CancelPaymentAsync_WhenCallerIsNotBuyer_ThrowsUnauthorizedException tests.
+    /// </summary>
+    public Guid OtherUserIdForCancelTest { get; set; }
+
+    /// <summary>
+    /// Pending payment used for CancelPaymentAsync_WhenCallerIsNotBuyer_ThrowsUnauthorizedException tests.
+    /// </summary>
+    public Payment? PendingPayment { get; set; }
+
+    /// <summary>
+    /// Payment ID used for RefundPaymentAsync_WhenPaymentIsPending_ThrowsInvalidOperationException tests.
+    /// </summary>
+    public Guid PaymentIdForRefundTest { get; set; }
+
+    /// <summary>
+    /// Pending payment used for RefundPaymentAsync_WhenPaymentIsPending_ThrowsInvalidOperationException tests.
+    /// </summary>
+    public Payment? PendingPaymentForRefundTest { get; set; }
+
+    /// <summary>
+    /// Payment ID used for CompletePaymentAsync_WithValidTransactionId_MarksListingAsDelisted tests.
+    /// </summary>
+    public Guid PaymentIdForCompleteTest { get; set; }
+
+    /// <summary>
+    /// Seller ID used for CompletePaymentAsync_WithValidTransactionId_MarksListingAsDelisted tests.
+    /// </summary>
+    public Guid SellerIdForCompleteTest { get; set; }
+
+    /// <summary>
+    /// Listing ID used for CompletePaymentAsync_WithValidTransactionId_MarksListingAsDelisted tests.
+    /// </summary>
+    public Guid ListingIdForCompleteTest { get; set; }
+
+    /// <summary>
+    /// Processing payment used for CompletePaymentAsync_WithValidTransactionId_MarksListingAsDelisted tests.
+    /// </summary>
+    public Payment? ProcessingPayment { get; set; }
+
+    /// <summary>
+    /// Active listing used for CompletePaymentAsync_WithValidTransactionId_MarksListingAsDelisted tests.
+    /// </summary>
+    public Listing? ActiveListingForCompleteTest { get; set; }
+
+    /// <summary>
+    /// Valid external transaction ID used for CompletePaymentAsync_WithValidTransactionId_MarksListingAsDelisted tests.
+    /// </summary>
+    public string? ValidTransactionId { get; set; }
+
+    /// <summary>
+    /// Reason text used for RefundPaymentAsync tests.
+    /// </summary>
+    public string? RefundReason { get; set; }
+}
