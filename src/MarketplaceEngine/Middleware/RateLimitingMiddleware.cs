@@ -21,10 +21,10 @@ public class RateLimitingMiddleware
 
     // Sliding window rate limiter using in-memory store
     // In production, this should use Redis for distributed rate limiting
-    private static readonly ConcurrentDictionary<string, RateLimitBucket> RateLimitBuckets =
+    internal static readonly ConcurrentDictionary<string, RateLimitBucket> RateLimitBuckets =
         new();
 
-    private const int MaxRequestsPerMinute = 100;
+    internal const int MaxRequestsPerMinute = 100;
     private const int WindowSizeMinutes = 1;
 
     public RateLimitingMiddleware(RequestDelegate next, ILogger<RateLimitingMiddleware> logger)
@@ -107,7 +107,7 @@ public class RateLimitingMiddleware
         }
     }
 
-    private class RateLimitBucket
+    internal class RateLimitBucket
     {
         public DateTime WindowStart { get; set; }
         public int RequestCount { get; set; }
