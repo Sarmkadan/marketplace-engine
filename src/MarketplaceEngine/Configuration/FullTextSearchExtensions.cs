@@ -8,6 +8,7 @@ using MarketplaceEngine.DTOs;
 using MarketplaceEngine.Exceptions;
 using MarketplaceEngine.Services;
 using Microsoft.Extensions.DependencyInjection;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MarketplaceEngine.Configuration;
 
@@ -24,8 +25,11 @@ public static class FullTextSearchExtensions
     /// </summary>
     /// <param name="services">The service collection to configure.</param>
     /// <returns>The same <see cref="IServiceCollection"/> for chaining.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="services"/> is <see langword="null"/>.</exception>
     public static IServiceCollection AddFullTextSearch(this IServiceCollection services)
     {
+        ArgumentNullException.ThrowIfNull(services);
+
         services.AddSingleton<FullTextSearchService>();
         return services;
     }
@@ -35,8 +39,11 @@ public static class FullTextSearchExtensions
     /// endpoints onto the supplied <see cref="WebApplication"/>.
     /// </summary>
     /// <param name="app">The web application to extend.</param>
-    public static void MapFullTextSearchEndpoints(this WebApplication app)
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="app"/> is <see langword="null"/>.</exception>
+    public static void MapFullTextSearchEndpoints([DisallowNull] this WebApplication app)
     {
+        ArgumentNullException.ThrowIfNull(app);
+
         var group = app.MapGroup("/api/v1/search")
             .WithTags("Search");
 
