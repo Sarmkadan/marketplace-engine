@@ -19,13 +19,21 @@ public static class SellerDashboardServiceExtensions
     /// <summary>
     /// Gets a simplified dashboard view containing only the most essential metrics for quick overview.
     /// </summary>
-    /// <param name="service">The dashboard service instance</param>
-    /// <param name="sellerId">The seller identifier</param>
-    /// <returns>Simplified dashboard with key metrics only</returns>
+    /// <param name="service">The dashboard service instance.</param>
+    /// <param name="sellerId">The seller identifier.</param>
+    /// <returns>Simplified dashboard with key metrics only.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="service"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentException"><paramref name="sellerId"/> is equal to <see cref="Guid"/>.Empty.</exception>
     public static async Task<SimplifiedSellerDashboardDto> GetSimplifiedDashboardAsync(
         this SellerDashboardService service,
         Guid sellerId)
     {
+        ArgumentNullException.ThrowIfNull(service);
+        if (sellerId == Guid.Empty)
+        {
+            throw new ArgumentException("Value cannot be empty.", nameof(sellerId));
+        }
+
         var dashboard = await service.GetDashboardAsync(sellerId);
 
         return new SimplifiedSellerDashboardDto
@@ -43,13 +51,21 @@ public static class SellerDashboardServiceExtensions
     /// <summary>
     /// Gets revenue summary with calculated platform fee percentage and profit margin.
     /// </summary>
-    /// <param name="service">The dashboard service instance</param>
-    /// <param name="sellerId">The seller identifier</param>
-    /// <returns>Revenue summary with financial metrics</returns>
+    /// <param name="service">The dashboard service instance.</param>
+    /// <param name="sellerId">The seller identifier.</param>
+    /// <returns>Revenue summary with financial metrics.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="service"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentException"><paramref name="sellerId"/> is equal to <see cref="Guid"/>.Empty.</exception>
     public static async Task<SellerRevenueSummaryDto> GetRevenueSummaryAsync(
         this SellerDashboardService service,
         Guid sellerId)
     {
+        ArgumentNullException.ThrowIfNull(service);
+        if (sellerId == Guid.Empty)
+        {
+            throw new ArgumentException("Value cannot be empty.", nameof(sellerId));
+        }
+
         var revenue = await service.GetRevenueAsync(sellerId);
 
         var platformFeePercentage = revenue.TotalGrossRevenue > 0
@@ -76,13 +92,21 @@ public static class SellerDashboardServiceExtensions
     /// <summary>
     /// Gets listing performance summary with calculated engagement rate and conversion metrics.
     /// </summary>
-    /// <param name="service">The dashboard service instance</param>
-    /// <param name="sellerId">The seller identifier</param>
-    /// <returns>Listing performance summary with calculated metrics</returns>
+    /// <param name="service">The dashboard service instance.</param>
+    /// <param name="sellerId">The seller identifier.</param>
+    /// <returns>Listing performance summary with calculated metrics.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="service"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentException"><paramref name="sellerId"/> is equal to <see cref="Guid"/>.Empty.</exception>
     public static async Task<SellerListingPerformanceDto> GetListingPerformanceAsync(
         this SellerDashboardService service,
         Guid sellerId)
     {
+        ArgumentNullException.ThrowIfNull(service);
+        if (sellerId == Guid.Empty)
+        {
+            throw new ArgumentException("Value cannot be empty.", nameof(sellerId));
+        }
+
         var stats = await service.GetListingStatsAsync(sellerId);
 
         var totalListings = stats.ActiveListings + stats.InactiveListings;
@@ -111,15 +135,27 @@ public static class SellerDashboardServiceExtensions
     /// <summary>
     /// Gets a comparison dashboard showing this seller's metrics against marketplace averages.
     /// </summary>
-    /// <param name="service">The dashboard service instance</param>
-    /// <param name="sellerId">The seller identifier</param>
-    /// <param name="marketplaceAverage">Marketplace average metrics</param>
-    /// <returns>Comparison dashboard with relative performance metrics</returns>
+    /// <param name="service">The dashboard service instance.</param>
+    /// <param name="sellerId">The seller identifier.</param>
+    /// <param name="marketplaceAverage">Marketplace average metrics.</param>
+    /// <returns>Comparison dashboard with relative performance metrics.</returns>
+    /// <exception cref="ArgumentNullException">
+    /// <paramref name="service"/> is <see langword="null"/>.
+    /// <paramref name="marketplaceAverage"/> is <see langword="null"/>.
+    /// </exception>
+    /// <exception cref="ArgumentException"><paramref name="sellerId"/> is equal to <see cref="Guid"/>.Empty.</exception>
     public static async Task<SellerComparisonDashboardDto> GetComparisonDashboardAsync(
         this SellerDashboardService service,
         Guid sellerId,
         MarketplaceAverageMetrics marketplaceAverage)
     {
+        ArgumentNullException.ThrowIfNull(service);
+        ArgumentNullException.ThrowIfNull(marketplaceAverage);
+        if (sellerId == Guid.Empty)
+        {
+            throw new ArgumentException("Value cannot be empty.", nameof(sellerId));
+        }
+
         var dashboard = await service.GetDashboardAsync(sellerId);
         var revenue = await service.GetRevenueAsync(sellerId);
         var stats = await service.GetListingStatsAsync(sellerId);
