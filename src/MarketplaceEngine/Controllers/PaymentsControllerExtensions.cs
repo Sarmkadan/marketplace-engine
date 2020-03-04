@@ -12,17 +12,36 @@ namespace MarketplaceEngine.Controllers;
 /// </summary>
 public static class PaymentsControllerExtensions
 {
+    private sealed class BatchOperationResult
+    {
+        public int SuccessCount { get; init; }
+        public int ErrorCount { get; init; }
+        public List<string> Errors { get; init; } = new();
+        public List<Guid>? PaymentIds { get; init; }
+
+        public BatchOperationResult(int successCount, int errorCount, List<string> errors, List<Guid>? paymentIds = null)
+        {
+            SuccessCount = successCount;
+            ErrorCount = errorCount;
+            Errors = errors;
+            PaymentIds = paymentIds;
+        }
+    }
+
     /// <summary>
     /// Initiates multiple payments in a single request for batch purchases.
     /// </summary>
     /// <param name="controller">The payments controller instance.</param>
     /// <param name="requests">Collection of payment initiation requests.</param>
     /// <returns>Collection of created payment results with status codes.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="requests"/> is <see langword="null"/></exception>
     public static async Task<IActionResult> InitiateBatchPayments(
         this PaymentsController controller,
         [FromBody] List<InitiatePaymentRequest> requests)
     {
-        if (requests == null || requests.Count == 0)
+        ArgumentNullException.ThrowIfNull(requests);
+
+        if (requests.Count == 0)
         {
             return new BadRequestObjectResult("At least one payment request is required.");
         }
@@ -32,6 +51,8 @@ public static class PaymentsControllerExtensions
 
         foreach (var request in requests)
         {
+            ArgumentNullException.ThrowIfNull(request);
+
             try
             {
                 var result = await controller.InitiatePayment(request);
@@ -48,13 +69,11 @@ public static class PaymentsControllerExtensions
 
         if (errors.Count > 0)
         {
-            return new BadRequestObjectResult(new
-            {
-                SuccessCount = paymentDtos.Count,
-                ErrorCount = errors.Count,
-                Errors = errors,
-                PaymentIds = paymentDtos.Select(p => p.Id).ToList()
-            });
+            return new BadRequestObjectResult(new BatchOperationResult(
+                successCount: paymentDtos.Count,
+                errorCount: errors.Count,
+                errors: errors,
+                paymentIds: paymentDtos.Select(p => p.Id).ToList()));
         }
 
         return new ObjectResult(paymentDtos.Select(p => p.Id).ToList())
@@ -73,16 +92,14 @@ public static class PaymentsControllerExtensions
         this PaymentsController controller,
         Guid id)
     {
+        ArgumentNullException.ThrowIfNull(controller);
+
         var paymentResult = await controller.GetPayment(id);
 
-        if (paymentResult is NotFoundResult)
+        return paymentResult switch
         {
-            return new NotFoundResult();
-        }
-
-        if (paymentResult is ObjectResult objectResult && objectResult.Value is PaymentDto paymentDto)
-        {
-            var statusInfo = new
+            NotFoundResult => new NotFoundResult(),
+            ObjectResult { Value: PaymentDto paymentDto } => new OkObjectResult(new
             {
                 PaymentId = paymentDto.Id,
                 Status = paymentDto.Status,
@@ -92,12 +109,9 @@ public static class PaymentsControllerExtensions
                 Currency = paymentDto.Currency,
                 BuyerId = paymentDto.BuyerId,
                 SellerId = paymentDto.SellerId
-            };
-
-            return new OkObjectResult(statusInfo);
-        }
-
-        return new NotFoundResult();
+            }),
+            _ => new NotFoundResult()
+        };
     }
 
     /// <summary>
@@ -107,12 +121,15 @@ public static class PaymentsControllerExtensions
     /// <param name="paymentIds">Collection of payment IDs to cancel.</param>
     /// <param name="requesterId">ID of the user requesting cancellation.</param>
     /// <returns>Summary of cancellation results.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="paymentIds"/> is <see langword="null"/></exception>
     public static async Task<IActionResult> CancelBatchPayments(
         this PaymentsController controller,
         [FromBody] List<Guid> paymentIds,
         [FromQuery] Guid requesterId)
     {
-        if (paymentIds == null || paymentIds.Count == 0)
+        ArgumentNullException.ThrowIfNull(paymentIds);
+
+        if (paymentIds.Count == 0)
         {
             return new BadRequestObjectResult("At least one payment ID is required.");
         }
@@ -135,12 +152,10 @@ public static class PaymentsControllerExtensions
 
         if (errors.Count > 0)
         {
-            return new BadRequestObjectResult(new
-            {
-                SuccessCount = successCount,
-                ErrorCount = errors.Count,
-                Errors = errors
-            });
+            return new BadRequestObjectResult(new BatchOperationResult(
+                successCount: successCount,
+                errorCount: errors.Count,
+                errors: errors));
         }
 
         return new OkObjectResult(new { SuccessCount = successCount });
@@ -160,6 +175,8 @@ public static class PaymentsControllerExtensions
         [FromQuery] DateTime? startDate,
         [FromQuery] DateTime? endDate)
     {
+        ArgumentNullException.ThrowIfNull(controller);
+
         // This would ideally use a service method, but since we're extending the controller
         // we'll implement a basic version that queries all payments and filters in-memory
         // In a real implementation, this would call a service method
