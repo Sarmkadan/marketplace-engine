@@ -2,7 +2,7 @@
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
-// =============================================================================
+// =====================================================================
 
 using MarketplaceEngine.DTOs;
 using MarketplaceEngine.Exceptions;
@@ -58,8 +58,11 @@ public static class RecommendationExtensions
     /// (v2), see <c>RecommendationsController</c>.
     /// </remarks>
     /// <param name="app">The web application to configure.</param>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="app"/> is <see langword="null"/>.</exception>
     public static void MapRecommendationEndpoints(this WebApplication app)
     {
+        ArgumentNullException.ThrowIfNull(app);
+
         var api = app.MapGroup("/api/v1/recommendations")
             .WithName("Recommendations API")
             .WithTags("Recommendations");
@@ -87,19 +90,15 @@ public static class RecommendationExtensions
 
     // ── Endpoint handlers ────────────────────────────────────────────────────
 
-    private static async Task<IResult> GetTrending(RecommendationService service, int count = 20)
-    {
-        var feed = await service.GetTrendingListingsAsync(count);
-        return Results.Ok(feed);
-    }
+    private static async Task<IResult> GetTrending(RecommendationService service, int count = 20) =>
+        Results.Ok(await service.GetTrendingListingsAsync(count));
 
     private static async Task<IResult> GetForUser(
         Guid userId, RecommendationService service, int count = 20)
     {
         try
         {
-            var feed = await service.GetRecommendationsForUserAsync(userId, count);
-            return Results.Ok(feed);
+            return Results.Ok(await service.GetRecommendationsForUserAsync(userId, count));
         }
         catch (ResourceNotFoundException)
         {
@@ -112,8 +111,7 @@ public static class RecommendationExtensions
     {
         try
         {
-            var feed = await service.GetAffinityRecommendationsAsync(userId, count);
-            return Results.Ok(feed);
+            return Results.Ok(await service.GetAffinityRecommendationsAsync(userId, count));
         }
         catch (ResourceNotFoundException)
         {
@@ -126,8 +124,7 @@ public static class RecommendationExtensions
     {
         try
         {
-            var feed = await service.GetSimilarListingsAsync(listingId, count);
-            return Results.Ok(feed);
+            return Results.Ok(await service.GetSimilarListingsAsync(listingId, count));
         }
         catch (ResourceNotFoundException)
         {
@@ -135,9 +132,20 @@ public static class RecommendationExtensions
         }
     }
 
-    private static async Task<IResult> TrackActivity(
-        TrackActivityRequest request, RecommendationService service)
+    /// <summary>
+    /// Handles POST /api/v1/recommendations/track endpoint.
+    /// Records a user activity signal after validating the signal type.
+    /// </summary>
+    /// <param name="request">The activity tracking request containing user, listing, and signal type.</param>
+    /// <param name="service">The recommendation service for processing the signal.</param>
+    /// <returns>204 No Content on success, 400 Bad Request on invalid signal type.</returns>
+    private static async Task<IResult> TrackActivity(TrackActivityRequest request, RecommendationService service)
     {
+        if (request is null)
+        {
+            return Results.BadRequest(new { error = "Request body is required." });
+        }
+
         if (!Enum.TryParse<SignalType>(request.SignalType, ignoreCase: true, out var signalType))
         {
             return Results.BadRequest(new
