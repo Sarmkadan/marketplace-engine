@@ -16,202 +16,233 @@ namespace MarketplaceEngine.Controllers;
 /// </summary>
 public static class ReviewsControllerExtensions
 {
-    /// <summary>
-    /// Retrieves paginated reviews for a seller with filtering by minimum score.
-    /// </summary>
-    /// <param name="controller">The reviews controller instance.</param>
-    /// <param name="sellerId">The seller identifier.</param>
-    /// <param name="minScore">Minimum score threshold (inclusive).</param>
-    /// <param name="page">Page number (1-based).</param>
-    /// <param name="pageSize">Number of items per page.</param>
-    /// <returns>Paginated response with filtered reviews.</returns>
-    public static async Task<IActionResult> GetSellerReviewsByMinScore(
-        this ReviewsController controller,
-        Guid sellerId,
-        int minScore = 1,
-        int page = 1,
-        int pageSize = 20)
-    {
-        if (minScore < 1 || minScore > 5)
-            return controller.BadRequest("Minimum score must be between 1 and 5.");
+	/// <summary>
+	/// Retrieves paginated reviews for a seller with filtering by minimum score.
+	/// </summary>
+	/// <param name="controller">The reviews controller instance.</param>
+	/// <param name="sellerId">The seller identifier.</param>
+	/// <param name="minScore">Minimum score threshold (inclusive).</param>
+	/// <param name="page">Page number (1-based).</param>
+	/// <param name="pageSize">Number of items per page.</param>
+	/// <returns>Paginated response with filtered reviews.</returns>
+	/// <exception cref="ArgumentNullException"><paramref name="controller"/> is <see langword="null"/>.</exception>
+	public static async Task<IActionResult> GetSellerReviewsByMinScore(
+		this ReviewsController controller,
+		Guid sellerId,
+		int minScore = 1,
+		int page = 1,
+		int pageSize = 20)
+	{
+		ArgumentNullException.ThrowIfNull(controller);
 
-        if (page < 1 || pageSize < 1 || pageSize > 100)
-            return controller.BadRequest("Invalid pagination parameters.");
+		if (minScore < 1 || minScore > 5)
+			return controller.BadRequest("Minimum score must be between 1 and 5.");
 
-        var actionResult = await controller.GetSellerReviews(sellerId, page, pageSize);
+		if (page < 1 || pageSize < 1 || pageSize > 100)
+			return controller.BadRequest("Invalid pagination parameters.");
 
-        if (actionResult is not OkObjectResult okResult)
-            return actionResult;
+		var actionResult = await controller.GetSellerReviews(sellerId, page, pageSize);
 
-        var paginatedResponse = okResult.Value as PaginatedResponse<ReviewDto>;
-        if (paginatedResponse == null)
-            return controller.BadRequest("Invalid response format.");
+		if (actionResult is not OkObjectResult okResult)
+			return actionResult;
 
-        var filteredReviews = paginatedResponse.Items.Where(r => r.Score >= minScore).ToList();
+		if (okResult.Value is not PaginatedResponse<ReviewDto> paginatedResponse)
+			return controller.BadRequest("Invalid response format.");
 
-        var response = new PaginatedResponse<ReviewDto>
-        {
-            Items = filteredReviews,
-            Page = paginatedResponse.Page,
-            PageSize = paginatedResponse.PageSize,
-            Total = filteredReviews.Count
-        };
+		var filteredReviews = paginatedResponse.Items.Where(r => r.Score >= minScore).ToList();
 
-        return controller.Ok(response);
-    }
+		var response = new PaginatedResponse<ReviewDto>
+		{
+			Items = filteredReviews,
+			Page = paginatedResponse.Page,
+			PageSize = paginatedResponse.PageSize,
+			Total = filteredReviews.Count
+		};
 
-    /// <summary>
-    /// Retrieves reviews for multiple sellers in a single batch request.
-    /// </summary>
-    /// <param name="controller">The reviews controller instance.</param>
-    /// <param name="sellerIds">Collection of seller identifiers.</param>
-    /// <param name="page">Page number (1-based).</param>
-    /// <param name="pageSize">Number of items per page.</param>
-    /// <returns>Dictionary mapping seller IDs to their paginated reviews.</returns>
-    public static async Task<IActionResult> GetMultipleSellersReviews(
-        this ReviewsController controller,
-        IEnumerable<Guid> sellerIds,
-        int page = 1,
-        int pageSize = 20)
-    {
-        if (page < 1 || pageSize < 1 || pageSize > 100)
-            return controller.BadRequest("Invalid pagination parameters.");
+		return controller.Ok(response);
+	}
 
-        var sellerIdList = sellerIds.ToList();
-        if (!sellerIdList.Any())
-            return controller.BadRequest("At least one seller ID is required.");
+	/// <summary>
+	/// Retrieves reviews for multiple sellers in a single batch request.
+	/// </summary>
+	/// <param name="controller">The reviews controller instance.</param>
+	/// <param name="sellerIds">Collection of seller identifiers.</param>
+	/// <param name="page">Page number (1-based).</param>
+	/// <param name="pageSize">Number of items per page.</param>
+	/// <returns>Dictionary mapping seller IDs to their paginated reviews.</returns>
+	/// <exception cref="ArgumentNullException"><paramref name="controller"/> is <see langword="null"/>.</exception>
+	/// <exception cref="ArgumentNullException"><paramref name="sellerIds"/> is <see langword="null"/>.</exception>
+	public static async Task<IActionResult> GetMultipleSellersReviews(
+		this ReviewsController controller,
+		IEnumerable<Guid> sellerIds,
+		int page = 1,
+		int pageSize = 20)
+	{
+		ArgumentNullException.ThrowIfNull(controller);
+		ArgumentNullException.ThrowIfNull(sellerIds);
 
-        var tasks = sellerIdList.Select(async sellerId =>
-        {
-            var actionResult = await controller.GetSellerReviews(sellerId, page, pageSize);
+		if (page < 1 || pageSize < 1 || pageSize > 100)
+			return controller.BadRequest("Invalid pagination parameters.");
 
-            if (actionResult is OkObjectResult okResult && okResult.Value is PaginatedResponse<ReviewDto> paginatedResponse)
-            {
-                return new
-                {
-                    SellerId = sellerId,
-                    Reviews = paginatedResponse.Items,
-                    Total = paginatedResponse.Total,
-                    Page = paginatedResponse.Page,
-                    PageSize = paginatedResponse.PageSize
-                };
-            }
+		var sellerIdList = sellerIds.ToList();
+		if (!sellerIdList.Any())
+			return controller.BadRequest("At least one seller ID is required.");
 
-            return new
-            {
-                SellerId = sellerId,
-                Reviews = new List<ReviewDto>(),
-                Total = 0,
-                Page = page,
-                PageSize = pageSize
-            };
-        }).ToList();
+		var tasks = sellerIdList.Select(async sellerId =>
+		{
+			var actionResult = await controller.GetSellerReviews(sellerId, page, pageSize);
 
-        var results = await Task.WhenAll(tasks);
+			if (actionResult is OkObjectResult okResult && okResult.Value is PaginatedResponse<ReviewDto> paginatedResponse)
+			{
+				return new SellerReviewResult
+				{
+					SellerId = sellerId,
+					Reviews = paginatedResponse.Items,
+					Total = paginatedResponse.Total,
+					Page = paginatedResponse.Page,
+					PageSize = paginatedResponse.PageSize
+				};
+			}
 
-        var response = results.ToDictionary(
-            r => r.SellerId,
-            r => new PaginatedResponse<ReviewDto>
-            {
-                Items = r.Reviews,
-                Page = r.Page,
-                PageSize = r.PageSize,
-                Total = r.Total
-            }
-        );
+			return new SellerReviewResult
+			{
+				SellerId = sellerId,
+				Reviews = [],
+				Total = 0,
+				Page = page,
+				PageSize = pageSize
+			};
+		}).ToList();
 
-        return controller.Ok(response);
-    }
+		var results = await Task.WhenAll(tasks);
 
-    /// <summary>
-    /// Retrieves reviews for a listing with optional score range filtering.
-    /// </summary>
-    /// <param name="controller">The reviews controller instance.</param>
-    /// <param name="listingId">The listing identifier.</param>
-    /// <param name="minScore">Minimum score threshold (inclusive).</param>
-    /// <param name="maxScore">Maximum score threshold (inclusive).</param>
-    /// <returns>Filtered list of reviews for the listing.</returns>
-    public static async Task<IActionResult> GetListingReviewsByScoreRange(
-        this ReviewsController controller,
-        Guid listingId,
-        int? minScore = null,
-        int? maxScore = null)
-    {
-        var actionResult = await controller.GetListingReviews(listingId);
+		var response = results.ToDictionary(
+			r => r.SellerId,
+			r => new PaginatedResponse<ReviewDto>
+			{
+				Items = r.Reviews,
+				Page = r.Page,
+				PageSize = r.PageSize,
+				Total = r.Total
+			}
+		);
 
-        if (actionResult is not OkObjectResult okResult)
-            return actionResult;
+		return controller.Ok(response);
+	}
 
-        var reviews = okResult.Value as List<ReviewDto>;
-        if (reviews == null)
-            return controller.BadRequest("Invalid response format.");
+	private sealed class SellerReviewResult
+	{
+		public Guid SellerId { get; set; }
+		public List<ReviewDto> Reviews { get; set; } = [];
+		public int Total { get; set; }
+		public int Page { get; set; }
+		public int PageSize { get; set; }
+	}
 
-        var filteredReviews = reviews.AsEnumerable();
+	/// <summary>
+	/// Retrieves reviews for a listing with optional score range filtering.
+	/// </summary>
+	/// <param name="controller">The reviews controller instance.</param>
+	/// <param name="listingId">The listing identifier.</param>
+	/// <param name="minScore">Minimum score threshold (inclusive).</param>
+	/// <param name="maxScore">Maximum score threshold (inclusive).</param>
+	/// <returns>Filtered list of reviews for the listing.</returns>
+	/// <exception cref="ArgumentNullException"><paramref name="controller"/> is <see langword="null"/>.</exception>
+	public static async Task<IActionResult> GetListingReviewsByScoreRange(
+		this ReviewsController controller,
+		Guid listingId,
+		int? minScore = null,
+		int? maxScore = null)
+	{
+		ArgumentNullException.ThrowIfNull(controller);
 
-        if (minScore.HasValue)
-        {
-            if (minScore < 1 || minScore > 5)
-                return controller.BadRequest("Minimum score must be between 1 and 5.");
-            filteredReviews = filteredReviews.Where(r => r.Score >= minScore.Value);
-        }
+		var actionResult = await controller.GetListingReviews(listingId);
 
-        if (maxScore.HasValue)
-        {
-            if (maxScore < 1 || maxScore > 5)
-                return controller.BadRequest("Maximum score must be between 1 and 5.");
-            filteredReviews = filteredReviews.Where(r => r.Score <= maxScore.Value);
-        }
+		if (actionResult is not OkObjectResult okResult)
+			return actionResult;
 
-        return controller.Ok(filteredReviews.ToList());
-    }
+		if (okResult.Value is not List<ReviewDto> reviews)
+			return controller.BadRequest("Invalid response format.");
 
-    /// <summary>
-    /// Retrieves summary statistics for multiple sellers in a single batch request.
-    /// </summary>
-    /// <param name="controller">The reviews controller instance.</param>
-    /// <param name="sellerIds">Collection of seller identifiers.</param>
-    /// <returns>Dictionary mapping seller IDs to their review summaries.</returns>
-    public static async Task<IActionResult> GetMultipleSellersSummaries(
-        this ReviewsController controller,
-        IEnumerable<Guid> sellerIds)
-    {
-        var sellerIdList = sellerIds.ToList();
-        if (!sellerIdList.Any())
-            return controller.BadRequest("At least one seller ID is required.");
+		var filteredReviews = reviews.AsEnumerable();
 
-        var tasks = sellerIdList.Select(async sellerId =>
-        {
-            var summaryActionResult = await controller.GetSellerSummary(sellerId);
+		if (minScore.HasValue)
+		{
+			if (minScore < 1 || minScore > 5)
+				return controller.BadRequest("Minimum score must be between 1 and 5.");
 
-            if (summaryActionResult is OkObjectResult summaryOkResult && summaryOkResult.Value is ReviewSummaryDto summaryDto)
-            {
-                return new
-                {
-                    SellerId = sellerId,
-                    Summary = summaryDto
-                };
-            }
+			filteredReviews = filteredReviews.Where(r => r.Score >= minScore.Value);
+		}
 
-            return new
-            {
-                SellerId = sellerId,
-                Summary = new ReviewSummaryDto
-                {
-                    SellerId = sellerId,
-                    AverageScore = 0,
-                    TotalReviews = 0,
-                    ScoreDistribution = new Dictionary<int, int>()
-                }
-            };
-        }).ToList();
+		if (maxScore.HasValue)
+		{
+			if (maxScore < 1 || maxScore > 5)
+				return controller.BadRequest("Maximum score must be between 1 and 5.");
 
-        var results = await Task.WhenAll(tasks);
+			filteredReviews = filteredReviews.Where(r => r.Score <= maxScore.Value);
+		}
 
-        var response = results.ToDictionary(
-            r => r.SellerId,
-            r => r.Summary
-        );
+		return controller.Ok(filteredReviews.ToList());
+	}
 
-        return controller.Ok(response);
-    }
+	/// <summary>
+	/// Retrieves summary statistics for multiple sellers in a single batch request.
+	/// </summary>
+	/// <param name="controller">The reviews controller instance.</param>
+	/// <param name="sellerIds">Collection of seller identifiers.</param>
+	/// <returns>Dictionary mapping seller IDs to their review summaries.</returns>
+	/// <exception cref="ArgumentNullException"><paramref name="controller"/> is <see langword="null"/>.</exception>
+	/// <exception cref="ArgumentNullException"><paramref name="sellerIds"/> is <see langword="null"/>.</exception>
+	public static async Task<IActionResult> GetMultipleSellersSummaries(
+		this ReviewsController controller,
+		IEnumerable<Guid> sellerIds)
+	{
+		ArgumentNullException.ThrowIfNull(controller);
+		ArgumentNullException.ThrowIfNull(sellerIds);
+
+		var sellerIdList = sellerIds.ToList();
+		if (!sellerIdList.Any())
+			return controller.BadRequest("At least one seller ID is required.");
+
+		var tasks = sellerIdList.Select(async sellerId =>
+		{
+			var summaryActionResult = await controller.GetSellerSummary(sellerId);
+
+			if (summaryActionResult is OkObjectResult summaryOkResult && summaryOkResult.Value is ReviewSummaryDto summaryDto)
+			{
+				return new SellerSummaryResult
+				{
+					SellerId = sellerId,
+					Summary = summaryDto
+				};
+			}
+
+			return new SellerSummaryResult
+			{
+				SellerId = sellerId,
+				Summary = new ReviewSummaryDto
+				{
+					SellerId = sellerId,
+					AverageScore = 0,
+					TotalReviews = 0,
+					ScoreDistribution = new Dictionary<int, int>()
+				}
+			};
+		}).ToList();
+
+		var results = await Task.WhenAll(tasks);
+
+		var response = results.ToDictionary(
+			r => r.SellerId,
+			r => r.Summary
+		);
+
+		return controller.Ok(response);
+	}
+
+	private sealed class SellerSummaryResult
+	{
+		public Guid SellerId { get; set; }
+		public ReviewSummaryDto Summary { get; set; } = null!;
+	}
 }
