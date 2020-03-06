@@ -19,6 +19,7 @@ public static class HttpClientServiceExtensions
     /// <returns>The retrieved data, or null if the request fails.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="httpClientService"/> or <paramref name="url"/> is null.</exception>
     /// <exception cref="ArgumentException"><paramref name="url"/> is empty or whitespace.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="maxRetries"/> or <paramref name="delayMilliseconds"/> is negative or zero.</exception>
     public static async Task<T?> GetWithRetryAsync<T>(this HttpClientService httpClientService, string url, int maxRetries = 3, int delayMilliseconds = 500)
     {
         ArgumentNullException.ThrowIfNull(httpClientService);
