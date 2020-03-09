@@ -15,12 +15,21 @@ using Xunit;
 
 namespace MarketplaceEngine.Tests;
 
+/// <summary>
+/// Contains unit tests for the <see cref="ModerationService"/> class, validating moderation workflows
+/// such as reporting users and listings, assigning/approving/rejecting reports, and applying bulk actions.
+/// </summary>
 public class ModerationServiceTests
 {
     private readonly Mock<IUserRepository> _userRepoMock;
     private readonly Mock<IListingRepository> _listingRepoMock;
     private readonly ModerationService _sut;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ModerationServiceTests"/> class.
+    /// Sets up mocks for <see cref="IUserRepository"/> and <see cref="IListingRepository"/>
+    /// and initializes the system under test (<see cref="ModerationService"/>).
+    /// </summary>
     public ModerationServiceTests()
     {
         _userRepoMock = new Mock<IUserRepository>();
@@ -40,6 +49,10 @@ public class ModerationServiceTests
 
     // ── ReportUserAsync ────────────────────────────────────────────────────
 
+    /// <summary>
+    /// Validates that <see cref="ModerationService.ReportUserAsync"/> throws <see cref="ResourceNotFoundException"/>
+    /// when the reporting user is not found.
+    /// </summary>
     [Fact]
     public async Task ReportUserAsync_WhenReporterNotFound_ThrowsResourceNotFoundException()
     {
@@ -51,6 +64,10 @@ public class ModerationServiceTests
         await act.Should().ThrowAsync<ResourceNotFoundException>();
     }
 
+    /// <summary>
+    /// Validates that <see cref="ModerationService.ReportUserAsync"/> throws <see cref="UnauthorizedException"/>
+    /// when the reporting user is not active.
+    /// </summary>
     [Fact]
     public async Task ReportUserAsync_WhenReporterIsInactive_ThrowsUnauthorizedException()
     {
@@ -64,6 +81,10 @@ public class ModerationServiceTests
         await act.Should().ThrowAsync<UnauthorizedException>().WithMessage("*file reports*");
     }
 
+    /// <summary>
+    /// Validates that <see cref="ModerationService.ReportUserAsync"/> throws <see cref="UnauthorizedException"/>
+    /// when the reporter's email is not verified.
+    /// </summary>
     [Fact]
     public async Task ReportUserAsync_WhenReporterEmailNotVerified_ThrowsUnauthorizedException()
     {
@@ -77,6 +98,10 @@ public class ModerationServiceTests
         await act.Should().ThrowAsync<UnauthorizedException>().WithMessage("*email not verified*");
     }
 
+    /// <summary>
+    /// Validates that <see cref="ModerationService.ReportUserAsync"/> throws <see cref="ResourceNotFoundException"/>
+    /// when the target user to be reported is not found.
+    /// </summary>
     [Fact]
     public async Task ReportUserAsync_WhenTargetNotFound_ThrowsResourceNotFoundException()
     {
@@ -91,6 +116,10 @@ public class ModerationServiceTests
         await act.Should().ThrowAsync<ResourceNotFoundException>();
     }
 
+    /// <summary>
+    /// Validates that <see cref="ModerationService.ReportUserAsync"/> returns a pending report
+    /// when provided with valid data for a valid reporter and target.
+    /// </summary>
     [Fact]
     public async Task ReportUserAsync_WithValidData_ReturnsSubmittedReport()
     {
@@ -108,6 +137,10 @@ public class ModerationServiceTests
         result.Status.Should().Be(ModerationStatus.Pending);
     }
 
+    /// <summary>
+    /// Validates that <see cref="ModerationService.ReportUserAsync"/> throws <see cref="ArgumentException"/>
+    /// when the provided reason for the report is too short.
+    /// </summary>
     [Fact]
     public async Task ReportUserAsync_WithShortReason_ThrowsArgumentException()
     {
@@ -124,6 +157,10 @@ public class ModerationServiceTests
 
     // ── ReportListingAsync ─────────────────────────────────────────────────
 
+    /// <summary>
+    /// Validates that <see cref="ModerationService.ReportListingAsync"/> throws <see cref="ResourceNotFoundException"/>
+    /// when the listing to be reported is not found.
+    /// </summary>
     [Fact]
     public async Task ReportListingAsync_WhenListingNotFound_ThrowsResourceNotFoundException()
     {
@@ -138,6 +175,10 @@ public class ModerationServiceTests
         await act.Should().ThrowAsync<ResourceNotFoundException>().WithMessage("*Listing*not found*");
     }
 
+    /// <summary>
+    /// Validates that <see cref="ModerationService.ReportListingAsync"/> returns a pending report
+    /// when provided with valid data.
+    /// </summary>
     [Fact]
     public async Task ReportListingAsync_WithValidData_ReturnsSubmittedReport()
     {
@@ -163,6 +204,10 @@ public class ModerationServiceTests
 
     // ── AssignReportAsync ──────────────────────────────────────────────────
 
+    /// <summary>
+    /// Validates that <see cref="ModerationService.AssignReportAsync"/> throws <see cref="ResourceNotFoundException"/>
+    /// when the moderator to be assigned to the report is not found.
+    /// </summary>
     [Fact]
     public async Task AssignReportAsync_WhenModeratorNotFound_ThrowsResourceNotFoundException()
     {
@@ -181,6 +226,10 @@ public class ModerationServiceTests
         await act.Should().ThrowAsync<ResourceNotFoundException>();
     }
 
+    /// <summary>
+    /// Validates that <see cref="ModerationService.AssignReportAsync"/> throws <see cref="UnauthorizedException"/>
+    /// when the user assigned to the report is not a moderator or administrator.
+    /// </summary>
     [Fact]
     public async Task AssignReportAsync_WhenUserIsRegularUser_ThrowsUnauthorizedException()
     {
@@ -201,6 +250,10 @@ public class ModerationServiceTests
         await act.Should().ThrowAsync<UnauthorizedException>().WithMessage("*moderation reports*");
     }
 
+    /// <summary>
+    /// Validates that <see cref="ModerationService.AssignReportAsync"/> sets the report status
+    /// to <see cref="ModerationStatus.InReview"/> and assigns the moderator when the moderator is valid.
+    /// </summary>
     [Fact]
     public async Task AssignReportAsync_WhenModeratorIsValid_SetsReportInReview()
     {
@@ -222,6 +275,10 @@ public class ModerationServiceTests
         result.ReviewedBy.Should().Be(moderator.Id);
     }
 
+    /// <summary>
+    /// Validates that <see cref="ModerationService.AssignReportAsync"/> sets the report status
+    /// to <see cref="ModerationStatus.InReview"/> when assigned to an administrator.
+    /// </summary>
     [Fact]
     public async Task AssignReportAsync_WhenAdministrator_SetsReportInReview()
     {
@@ -244,6 +301,10 @@ public class ModerationServiceTests
 
     // ── ApproveReportAsync ─────────────────────────────────────────────────
 
+    /// <summary>
+    /// Validates that <see cref="ModerationService.ApproveReportAsync"/> throws <see cref="InvalidOperationException"/>
+    /// when the report has not been assigned to anyone for review.
+    /// </summary>
     [Fact]
     public async Task ApproveReportAsync_WhenNotAssigned_ThrowsInvalidOperationException()
     {
@@ -261,6 +322,10 @@ public class ModerationServiceTests
         await act.Should().ThrowAsync<InvalidOperationException>().WithMessage("*assigned*");
     }
 
+    /// <summary>
+    /// Validates that <see cref="ModerationService.ApproveReportAsync"/> sets the report status
+    /// to <see cref="ModerationStatus.Approved"/> and updates the review notes when successfully approved.
+    /// </summary>
     [Fact]
     public async Task ApproveReportAsync_WhenAssigned_SetsStatusApproved()
     {
@@ -284,6 +349,10 @@ public class ModerationServiceTests
 
     // ── RejectReportAsync ──────────────────────────────────────────────────
 
+    /// <summary>
+    /// Validates that <see cref="ModerationService.RejectReportAsync"/> throws <see cref="InvalidOperationException"/>
+    /// when the report has not been assigned to anyone for review.
+    /// </summary>
     [Fact]
     public async Task RejectReportAsync_WhenNotAssigned_ThrowsInvalidOperationException()
     {
@@ -301,6 +370,10 @@ public class ModerationServiceTests
         await act.Should().ThrowAsync<InvalidOperationException>();
     }
 
+    /// <summary>
+    /// Validates that <see cref="ModerationService.RejectReportAsync"/> sets the report status
+    /// to <see cref="ModerationStatus.Rejected"/> and updates the review notes when successfully rejected.
+    /// </summary>
     [Fact]
     public async Task RejectReportAsync_WhenAssigned_SetsStatusRejected()
     {
@@ -322,6 +395,10 @@ public class ModerationServiceTests
 
     // ── EscalateReportAsync ────────────────────────────────────────────────
 
+    /// <summary>
+    /// Validates that <see cref="ModerationService.EscalateReportAsync"/> increments the report priority
+    /// if the current priority is below 5.
+    /// </summary>
     [Fact]
     public void EscalateReportAsync_WhenPriorityBelow5_IncreasesPriority()
     {
@@ -339,6 +416,10 @@ public class ModerationServiceTests
         result.Priority.Should().Be(3);
     }
 
+    /// <summary>
+    /// Validates that <see cref="ModerationService.EscalateReportAsync"/> keeps the report priority at 5
+    /// if it is already at the maximum value of 5.
+    /// </summary>
     [Fact]
     public void EscalateReportAsync_WhenAlreadyAtMaxPriority_DoesNotExceed5()
     {
@@ -358,6 +439,10 @@ public class ModerationServiceTests
 
     // ── SuspendUserAsync ───────────────────────────────────────────────────
 
+    /// <summary>
+    /// Validates that <see cref="ModerationService.SuspendUserAsync"/> deactivates the target user
+    /// and sets the report status to <see cref="ModerationStatus.UserSuspended"/>.
+    /// </summary>
     [Fact]
     public async Task SuspendUserAsync_WhenTargetUserExists_DeactivatesUser()
     {
@@ -382,6 +467,10 @@ public class ModerationServiceTests
 
     // ── ApplyBulkActionAsync ───────────────────────────────────────────────
 
+    /// <summary>
+    /// Validates that <see cref="ModerationService.ApplyBulkActionAsync"/> sets the listing status to
+    /// <see cref="ListingStatus.Active"/> when the "approve" action is provided.
+    /// </summary>
     [Fact]
     public async Task ApplyBulkActionAsync_WithApproveAction_SetsListingActive()
     {
@@ -401,6 +490,10 @@ public class ModerationServiceTests
         _listingRepoMock.Verify(r => r.UpdateAsync(It.Is<Listing>(l => l.Status == ListingStatus.Active)), Times.Once);
     }
 
+    /// <summary>
+    /// Validates that <see cref="ModerationService.ApplyBulkActionAsync"/> sets the listing status to
+    /// <see cref="ListingStatus.Flagged"/> when the "remove" action is provided.
+    /// </summary>
     [Fact]
     public async Task ApplyBulkActionAsync_WithRemoveAction_FlagsListing()
     {
@@ -420,6 +513,10 @@ public class ModerationServiceTests
         _listingRepoMock.Verify(r => r.UpdateAsync(It.Is<Listing>(l => l.Status == ListingStatus.Flagged)), Times.Once);
     }
 
+    /// <summary>
+    /// Validates that <see cref="ModerationService.ApplyBulkActionAsync"/> throws <see cref="Exceptions.ValidationException"/>
+    /// when an unknown bulk action is provided.
+    /// </summary>
     [Fact]
     public async Task ApplyBulkActionAsync_WithUnknownAction_ThrowsValidationException()
     {
@@ -438,6 +535,10 @@ public class ModerationServiceTests
         await act.Should().ThrowAsync<Exceptions.ValidationException>().WithMessage("*Unknown action*");
     }
 
+    /// <summary>
+    /// Validates that <see cref="ModerationService.ApplyBulkActionAsync"/> throws <see cref="ResourceNotFoundException"/>
+    /// when the target listing for the bulk action is not found.
+    /// </summary>
     [Fact]
     public async Task ApplyBulkActionAsync_WhenListingNotFound_ThrowsResourceNotFoundException()
     {
