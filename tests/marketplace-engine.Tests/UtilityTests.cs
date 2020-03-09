@@ -66,6 +66,11 @@ public class UtilityTests
     /// </summary>
     public int PageSizeForCalculateTotalPagesTest { get; set; }
 
+    /// <summary>
+    /// Tests that the <see cref="ValidationUtility.IsValidEmail(string?)"/> method correctly validates various email input formats.
+    /// </summary>
+    /// <param name="email">The email string to validate.</param>
+    /// <param name="expected">The expected boolean result of the validation.</param>
     [Theory]
     [InlineData("user@example.com", true)]
     [InlineData("user.name+tag@sub.domain.co", true)]
@@ -80,6 +85,9 @@ public class UtilityTests
         result.Should().Be(expected);
     }
 
+    /// <summary>
+    /// Tests that <see cref="ValidationUtility.IsValidPrice(decimal)"/> returns false when the price is below the minimum allowed value.
+    /// </summary>
     [Fact]
     public void IsValidPrice_BelowMinimum_ReturnsFalse()
     {
@@ -90,6 +98,9 @@ public class UtilityTests
         result.Should().BeFalse();
     }
 
+    /// <summary>
+    /// Tests that <see cref="ValidationUtility.SanitizeInput(string?)"/> correctly removes null control characters from the input string.
+    /// </summary>
     [Fact]
     public void SanitizeInput_WithNullControlCharacters_RemovesThem()
     {
@@ -103,6 +114,9 @@ public class UtilityTests
         result.Should().Be("HelloWorldTest");
     }
 
+    /// <summary>
+    /// Tests that <see cref="StringUtility.Truncate(string, int)"/> truncates the string to the specified length and appends an ellipsis when it exceeds the maximum length.
+    /// </summary>
     [Fact]
     public void Truncate_WhenTextExceedsMaxLength_TruncatesAndAppendsEllipsis()
     {
@@ -117,6 +131,9 @@ public class UtilityTests
         result.Should().EndWith("...");
     }
 
+    /// <summary>
+    /// Tests that <see cref="StringUtility.ToSlug(string)"/> converts a title with special characters and spaces into a URL-friendly slug.
+    /// </summary>
     [Fact]
     public void ToSlug_WithSpecialCharactersAndSpaces_ReturnsUrlFriendlySlug()
     {
@@ -133,6 +150,9 @@ public class UtilityTests
         slug.Should().MatchRegex("^[a-z0-9-]+$");
     }
 
+    /// <summary>
+    /// Tests that <see cref="StringUtility.MaskEmail(string)"/> masks the local part of a typical email address while preserving the domain.
+    /// </summary>
     [Fact]
     public void MaskEmail_WithTypicalEmail_MasksLocalPartAndPreservesDomain()
     {
@@ -147,6 +167,9 @@ public class UtilityTests
         masked.Should().Contain("*");
     }
 
+    /// <summary>
+    /// Tests that <see cref="PaginationUtility.CalculateOffset(int, int)"/> correctly calculates the offset for page 2 with a page size of 10.
+    /// </summary>
     [Fact]
     public void CalculateOffset_ForPage2WithSize10_Returns10()
     {
@@ -157,6 +180,9 @@ public class UtilityTests
         offset.Should().Be(10);
     }
 
+    /// <summary>
+    /// Tests that <see cref="PaginationUtility.CalculateTotalPages(int, int)"/> correctly calculates the total number of pages, rounding up for non-divisible totals.
+    /// </summary>
     [Fact]
     public void CalculateTotalPages_WithNonDivisibleTotal_CeilsUp()
     {
