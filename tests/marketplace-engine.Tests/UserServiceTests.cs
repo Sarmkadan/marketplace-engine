@@ -16,11 +16,17 @@ using Xunit;
 
 namespace MarketplaceEngine.Tests;
 
+/// <summary>
+/// Contains unit tests for the <see cref="UserService"/> class.
+/// </summary>
 public class UserServiceTests
 {
     private readonly Mock<IUserRepository> _userRepoMock;
     private readonly UserService _sut;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="UserServiceTests"/> class.
+    /// </summary>
     public UserServiceTests()
     {
         _userRepoMock = new Mock<IUserRepository>();
@@ -29,6 +35,10 @@ public class UserServiceTests
 
     // ── RegisterUserAsync ──────────────────────────────────────────────────
 
+    /// <summary>
+    /// Tests that <see cref="UserService.RegisterUserAsync"/> returns a created user when provided with a unique email.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     [Fact]
     public async Task RegisterUserAsync_WithUniqueEmail_ReturnsCreatedUser()
     {
@@ -50,6 +60,10 @@ public class UserServiceTests
         result.Email.Should().Be("new@example.com");
     }
 
+    /// <summary>
+    /// Tests that <see cref="UserService.RegisterUserAsync"/> throws <see cref="DuplicateResourceException"/> when provided with a duplicate email.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     [Fact]
     public async Task RegisterUserAsync_WithDuplicateEmail_ThrowsDuplicateResourceException()
     {
@@ -61,6 +75,10 @@ public class UserServiceTests
         await act.Should().ThrowAsync<DuplicateResourceException>();
     }
 
+    /// <summary>
+    /// Tests that <see cref="UserService.RegisterUserAsync"/> throws <see cref="ArgumentException"/> when provided with a short full name.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     [Fact]
     public async Task RegisterUserAsync_WithShortFullName_ThrowsArgumentException()
     {
@@ -73,6 +91,10 @@ public class UserServiceTests
 
     // ── GetUserAsync ───────────────────────────────────────────────────────
 
+    /// <summary>
+    /// Tests that <see cref="UserService.GetUserAsync"/> throws <see cref="ResourceNotFoundException"/> when the user is not found.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     [Fact]
     public async Task GetUserAsync_WhenUserNotFound_ThrowsResourceNotFoundException()
     {
@@ -84,6 +106,10 @@ public class UserServiceTests
         await act.Should().ThrowAsync<ResourceNotFoundException>().WithMessage("*User*not found*");
     }
 
+    /// <summary>
+    /// Tests that <see cref="UserService.GetUserAsync"/> returns the user when the user exists.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     [Fact]
     public async Task GetUserAsync_WhenUserExists_ReturnsUser()
     {
@@ -98,6 +124,10 @@ public class UserServiceTests
 
     // ── VerifyEmailAsync ───────────────────────────────────────────────────
 
+    /// <summary>
+    /// Tests that <see cref="UserService.VerifyEmailAsync"/> returns true when provided with a valid token.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     [Fact]
     public async Task VerifyEmailAsync_WithValidToken_ReturnsTrue()
     {
@@ -113,6 +143,10 @@ public class UserServiceTests
         result.Should().BeTrue();
     }
 
+    /// <summary>
+    /// Tests that <see cref="UserService.VerifyEmailAsync"/> returns false when provided with the wrong token.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     [Fact]
     public async Task VerifyEmailAsync_WithWrongToken_ReturnsFalse()
     {
@@ -127,6 +161,10 @@ public class UserServiceTests
         result.Should().BeFalse();
     }
 
+    /// <summary>
+    /// Tests that <see cref="UserService.VerifyEmailAsync"/> returns false when provided with an expired token.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     [Fact]
     public async Task VerifyEmailAsync_WithExpiredToken_ReturnsFalse()
     {
@@ -149,6 +187,10 @@ public class UserServiceTests
 
     // ── PromoteToPremiumAsync ──────────────────────────────────────────────
 
+    /// <summary>
+    /// Tests that <see cref="UserService.PromoteToPremiumAsync"/> throws <see cref="InvalidOperationException"/> when the user has insufficient sales.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     [Fact]
     public async Task PromoteToPremiumAsync_WhenInsufficientSales_ThrowsInvalidOperationException()
     {
@@ -168,6 +210,10 @@ public class UserServiceTests
         await act.Should().ThrowAsync<InvalidOperationException>().WithMessage("*5 sales*");
     }
 
+    /// <summary>
+    /// Tests that <see cref="UserService.PromoteToPremiumAsync"/> throws <see cref="InvalidOperationException"/> when the user's rating is below the threshold.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     [Fact]
     public async Task PromoteToPremiumAsync_WhenRatingBelowThreshold_ThrowsInvalidOperationException()
     {
@@ -187,6 +233,10 @@ public class UserServiceTests
         await act.Should().ThrowAsync<InvalidOperationException>().WithMessage("*4+*stars*");
     }
 
+    /// <summary>
+    /// Tests that <see cref="UserService.PromoteToPremiumAsync"/> throws <see cref="InvalidOperationException"/> when the user has no rating.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     [Fact]
     public async Task PromoteToPremiumAsync_WhenNoRating_ThrowsInvalidOperationException()
     {
@@ -206,6 +256,10 @@ public class UserServiceTests
         await act.Should().ThrowAsync<InvalidOperationException>();
     }
 
+    /// <summary>
+    /// Tests that <see cref="UserService.PromoteToPremiumAsync"/> promotes the user when they are eligible.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     [Fact]
     public async Task PromoteToPremiumAsync_WhenEligible_PromotesUser()
     {
@@ -229,6 +283,10 @@ public class UserServiceTests
 
     // ── DeactivateAccountAsync ─────────────────────────────────────────────
 
+    /// <summary>
+    /// Tests that <see cref="UserService.DeactivateAccountAsync"/> sets the user's active status to false when the user exists.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     [Fact]
     public async Task DeactivateAccountAsync_WhenUserExists_SetsIsActiveFalse()
     {
@@ -244,6 +302,10 @@ public class UserServiceTests
 
     // ── ValidateUserAccessAsync ────────────────────────────────────────────
 
+    /// <summary>
+    /// Tests that <see cref="UserService.ValidateUserAccessAsync"/> throws <see cref="UnauthorizedException"/> when the user is inactive.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     [Fact]
     public async Task ValidateUserAccessAsync_WhenUserInactive_ThrowsUnauthorizedException()
     {
@@ -263,6 +325,10 @@ public class UserServiceTests
         await act.Should().ThrowAsync<UnauthorizedException>();
     }
 
+    /// <summary>
+    /// Tests that <see cref="UserService.ValidateUserAccessAsync"/> throws <see cref="UnauthorizedException"/> when the user is not verified.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     [Fact]
     public async Task ValidateUserAccessAsync_WhenUserNotVerified_ThrowsUnauthorizedException()
     {
@@ -282,6 +348,10 @@ public class UserServiceTests
         await act.Should().ThrowAsync<UnauthorizedException>().WithMessage("*email not verified*");
     }
 
+    /// <summary>
+    /// Tests that <see cref="UserService.ValidateUserAccessAsync"/> does not throw when the user is active and verified.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     [Fact]
     public async Task ValidateUserAccessAsync_WhenUserIsActiveAndVerified_DoesNotThrow()
     {
@@ -303,6 +373,10 @@ public class UserServiceTests
 
     // ── UpdateProfileAsync ─────────────────────────────────────────────────
 
+    /// <summary>
+    /// Tests that <see cref="UserService.UpdateProfileAsync"/> updates the user's name when provided with a new full name.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     [Fact]
     public async Task UpdateProfileAsync_WithNewFullName_UpdatesName()
     {
@@ -316,6 +390,10 @@ public class UserServiceTests
         result.FullName.Should().Be("New Name");
     }
 
+    /// <summary>
+    /// Tests that <see cref="UserService.UpdateProfileAsync"/> clears the user's phone when provided with blank input.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     [Fact]
     public async Task UpdateProfileAsync_WithBlankPhone_ClearsPhone()
     {
@@ -337,6 +415,10 @@ public class UserServiceTests
 
     // ── RecordSaleAsync ────────────────────────────────────────────────────
 
+    /// <summary>
+    /// Tests that <see cref="UserService.RecordSaleAsync"/> increments the user's total sales count.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     [Fact]
     public async Task RecordSaleAsync_WhenCalled_IncrementsTotalSales()
     {
