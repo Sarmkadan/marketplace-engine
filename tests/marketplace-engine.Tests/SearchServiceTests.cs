@@ -16,12 +16,18 @@ using Xunit;
 
 namespace MarketplaceEngine.Tests;
 
+/// <summary>
+/// Contains unit tests for the <see cref="SearchService"/> class, validating its search functionality across listings and users.
+/// </summary>
 public class SearchServiceTests
 {
     private readonly Mock<IListingRepository> _listingRepoMock;
     private readonly Mock<IUserRepository> _userRepoMock;
     private readonly SearchService _sut;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SearchServiceTests"/> class, setting up the necessary mocks for <see cref="IListingRepository"/> and <see cref="IUserRepository"/>.
+    /// </summary>
     public SearchServiceTests()
     {
         _listingRepoMock = new Mock<IListingRepository>();
@@ -49,6 +55,9 @@ public class SearchServiceTests
 
     // ── SearchListingsAsync ────────────────────────────────────────────────
 
+    /// <summary>
+    /// Verifies that <see cref="SearchService.SearchListingsAsync"/> throws a <see cref="Exceptions.ValidationException"/> when provided with an empty search query.
+    /// </summary>
     [Fact]
     public async Task SearchListingsAsync_WithEmptyQuery_ThrowsValidationException()
     {
@@ -57,6 +66,9 @@ public class SearchServiceTests
         await act.Should().ThrowAsync<Exceptions.ValidationException>();
     }
 
+    /// <summary>
+    /// Verifies that <see cref="SearchService.SearchListingsAsync"/> throws a <see cref="Exceptions.ValidationException"/> when provided with a single-character search query.
+    /// </summary>
     [Fact]
     public async Task SearchListingsAsync_WithSingleCharQuery_ThrowsValidationException()
     {
@@ -65,6 +77,9 @@ public class SearchServiceTests
         await act.Should().ThrowAsync<Exceptions.ValidationException>().WithMessage("*at least*");
     }
 
+    /// <summary>
+    /// Verifies that <see cref="SearchService.SearchListingsAsync"/> throws a <see cref="Exceptions.ValidationException"/> when the search query exceeds the maximum allowed length.
+    /// </summary>
     [Fact]
     public async Task SearchListingsAsync_WithOverlongQuery_ThrowsValidationException()
     {
@@ -75,6 +90,9 @@ public class SearchServiceTests
         await act.Should().ThrowAsync<Exceptions.ValidationException>().WithMessage("*cannot exceed*");
     }
 
+    /// <summary>
+    /// Verifies that <see cref="SearchService.SearchListingsAsync"/> correctly delegates to the listing repository when provided with a valid search query.
+    /// </summary>
     [Fact]
     public async Task SearchListingsAsync_WithValidQuery_DelegatesToRepository()
     {
@@ -89,6 +107,9 @@ public class SearchServiceTests
 
     // ── SearchByTagsAsync ──────────────────────────────────────────────────
 
+    /// <summary>
+    /// Verifies that <see cref="SearchService.SearchByTagsAsync"/> throws a <see cref="Exceptions.ValidationException"/> when provided with an empty list of tags.
+    /// </summary>
     [Fact]
     public async Task SearchByTagsAsync_WithEmptyTagList_ThrowsValidationException()
     {
@@ -97,6 +118,9 @@ public class SearchServiceTests
         await act.Should().ThrowAsync<Exceptions.ValidationException>();
     }
 
+    /// <summary>
+    /// Verifies that <see cref="SearchService.SearchByTagsAsync"/> throws a <see cref="Exceptions.ValidationException"/> when provided with a null list of tags.
+    /// </summary>
     [Fact]
     public async Task SearchByTagsAsync_WithNullTagList_ThrowsValidationException()
     {
@@ -105,6 +129,9 @@ public class SearchServiceTests
         await act.Should().ThrowAsync<Exceptions.ValidationException>();
     }
 
+    /// <summary>
+    /// Verifies that <see cref="SearchService.SearchByTagsAsync"/> correctly delegates to the listing repository when provided with a valid list of tags.
+    /// </summary>
     [Fact]
     public async Task SearchByTagsAsync_WithValidTags_DelegatesToRepository()
     {
@@ -119,6 +146,9 @@ public class SearchServiceTests
 
     // ── FindNearbyListingsAsync ────────────────────────────────────────────
 
+    /// <summary>
+    /// Verifies that <see cref="SearchService.FindNearbyListingsAsync"/> throws a <see cref="Exceptions.ValidationException"/> when the latitude is below -90.
+    /// </summary>
     [Fact]
     public async Task FindNearbyListingsAsync_WithLatitudeBelowMinus90_ThrowsValidationException()
     {
@@ -127,6 +157,9 @@ public class SearchServiceTests
         await act.Should().ThrowAsync<Exceptions.ValidationException>().WithMessage("*Latitude*");
     }
 
+    /// <summary>
+    /// Verifies that <see cref="SearchService.FindNearbyListingsAsync"/> throws a <see cref="Exceptions.ValidationException"/> when the latitude is above 90.
+    /// </summary>
     [Fact]
     public async Task FindNearbyListingsAsync_WithLatitudeAbove90_ThrowsValidationException()
     {
@@ -135,6 +168,9 @@ public class SearchServiceTests
         await act.Should().ThrowAsync<Exceptions.ValidationException>().WithMessage("*Latitude*");
     }
 
+    /// <summary>
+    /// Verifies that <see cref="SearchService.FindNearbyListingsAsync"/> throws a <see cref="Exceptions.ValidationException"/> when the longitude is below -180.
+    /// </summary>
     [Fact]
     public async Task FindNearbyListingsAsync_WithLongitudeBelowMinus180_ThrowsValidationException()
     {
@@ -143,6 +179,9 @@ public class SearchServiceTests
         await act.Should().ThrowAsync<Exceptions.ValidationException>().WithMessage("*Longitude*");
     }
 
+    /// <summary>
+    /// Verifies that <see cref="SearchService.FindNearbyListingsAsync"/> throws a <see cref="Exceptions.ValidationException"/> when the radius is below the minimum allowed value.
+    /// </summary>
     [Fact]
     public async Task FindNearbyListingsAsync_WithRadiusBelowMinimum_ThrowsValidationException()
     {
@@ -151,6 +190,9 @@ public class SearchServiceTests
         await act.Should().ThrowAsync<Exceptions.ValidationException>().WithMessage("*Radius*");
     }
 
+    /// <summary>
+    /// Verifies that <see cref="SearchService.FindNearbyListingsAsync"/> throws a <see cref="Exceptions.ValidationException"/> when the radius is above the maximum allowed value.
+    /// </summary>
     [Fact]
     public async Task FindNearbyListingsAsync_WithRadiusAboveMaximum_ThrowsValidationException()
     {
@@ -159,6 +201,9 @@ public class SearchServiceTests
         await act.Should().ThrowAsync<Exceptions.ValidationException>().WithMessage("*Radius*");
     }
 
+    /// <summary>
+    /// Verifies that <see cref="SearchService.FindNearbyListingsAsync"/> correctly delegates to the listing repository when provided with valid parameters.
+    /// </summary>
     [Fact]
     public async Task FindNearbyListingsAsync_WithValidParameters_DelegatesToRepository()
     {
@@ -172,6 +217,9 @@ public class SearchServiceTests
 
     // ── SearchByCategoryAsync ──────────────────────────────────────────────
 
+    /// <summary>
+    /// Verifies that <see cref="SearchService.SearchByCategoryAsync"/> throws a <see cref="Exceptions.ValidationException"/> when provided with an empty category GUID.
+    /// </summary>
     [Fact]
     public async Task SearchByCategoryAsync_WithEmptyGuid_ThrowsValidationException()
     {
@@ -180,6 +228,9 @@ public class SearchServiceTests
         await act.Should().ThrowAsync<Exceptions.ValidationException>().WithMessage("*Category*");
     }
 
+    /// <summary>
+    /// Verifies that <see cref="SearchService.SearchByCategoryAsync"/> returns paginated results when provided with a valid category ID.
+    /// </summary>
     [Fact]
     public async Task SearchByCategoryAsync_WithValidCategoryId_ReturnsPaginatedResults()
     {
@@ -193,6 +244,9 @@ public class SearchServiceTests
         items.Should().HaveCount(10);
     }
 
+    /// <summary>
+    /// Verifies that <see cref="SearchService.SearchByCategoryAsync"/> returns the correct slice of results for a specific page number.
+    /// </summary>
     [Fact]
     public async Task SearchByCategoryAsync_WithPage2_ReturnsCorrectSlice()
     {
@@ -216,6 +270,9 @@ public class SearchServiceTests
 
     // ── AdvancedSearchAsync ────────────────────────────────────────────────
 
+    /// <summary>
+    /// Verifies that <see cref="SearchService.AdvancedSearchAsync"/> filters results correctly when provided with a keyword.
+    /// </summary>
     [Fact]
     public async Task AdvancedSearchAsync_WithKeywordFilter_ReturnsMatchingListings()
     {
@@ -234,6 +291,9 @@ public class SearchServiceTests
             l.Title.Contains("Guitar", StringComparison.OrdinalIgnoreCase).Should().BeTrue());
     }
 
+    /// <summary>
+    /// Verifies that <see cref="SearchService.AdvancedSearchAsync"/> filters results correctly based on the specified price range.
+    /// </summary>
     [Fact]
     public async Task AdvancedSearchAsync_WithPriceRangeFilter_ReturnsListingsInRange()
     {
@@ -251,6 +311,9 @@ public class SearchServiceTests
         result[0].Title.Should().Contain("Mid");
     }
 
+    /// <summary>
+    /// Verifies that <see cref="SearchService.AdvancedSearchAsync"/> filters results correctly based on the specified category.
+    /// </summary>
     [Fact]
     public async Task AdvancedSearchAsync_WithCategoryFilter_ReturnsOnlyMatchingCategory()
     {
@@ -270,6 +333,9 @@ public class SearchServiceTests
         result.Should().AllSatisfy(l => l.CategoryId.Should().Be(targetCategory));
     }
 
+    /// <summary>
+    /// Verifies that <see cref="SearchService.AdvancedSearchAsync"/> filters results correctly based on the specified tags.
+    /// </summary>
     [Fact]
     public async Task AdvancedSearchAsync_WithTagsFilter_ReturnsListingsWithMatchingTags()
     {
@@ -287,6 +353,9 @@ public class SearchServiceTests
         result[0].Tags.Should().Contain("vintage");
     }
 
+    /// <summary>
+    /// Verifies that <see cref="SearchService.AdvancedSearchAsync"/> returns all active listings ordered by view count when no filters are provided.
+    /// </summary>
     [Fact]
     public async Task AdvancedSearchAsync_WithNoFilters_ReturnsAllActiveListingsByViewCount()
     {
@@ -305,6 +374,9 @@ public class SearchServiceTests
 
     // ── GetTrendingListingsAsync ───────────────────────────────────────────
 
+    /// <summary>
+    /// Verifies that <see cref="SearchService.GetTrendingListingsAsync"/> sorts listings in descending order, first by view count and then by interest count.
+    /// </summary>
     [Fact]
     public async Task GetTrendingListingsAsync_SortsDescendingByViewCountThenInterestCount()
     {
@@ -321,6 +393,9 @@ public class SearchServiceTests
         result[2].InterestCount.Should().Be(5);
     }
 
+    /// <summary>
+    /// Verifies that <see cref="SearchService.GetTrendingListingsAsync"/> clamps the result limit to 20 if the requested limit exceeds 100.
+    /// </summary>
     [Fact]
     public async Task GetTrendingListingsAsync_WithLimitExceeding100_ClampsToTwenty()
     {
@@ -334,6 +409,9 @@ public class SearchServiceTests
 
     // ── GetSearchSuggestionsAsync ──────────────────────────────────────────
 
+    /// <summary>
+    /// Verifies that <see cref="SearchService.GetSearchSuggestionsAsync"/> returns search suggestions based on a matching prefix.
+    /// </summary>
     [Fact]
     public async Task GetSearchSuggestionsAsync_WithMatchingPrefix_ReturnsSuggestions()
     {
@@ -351,6 +429,9 @@ public class SearchServiceTests
         result.Should().AllSatisfy(s => s.Should().StartWith("Acoustic"));
     }
 
+    /// <summary>
+    /// Verifies that <see cref="SearchService.GetSearchSuggestionsAsync"/> throws a <see cref="Exceptions.ValidationException"/> when provided with an empty prefix.
+    /// </summary>
     [Fact]
     public async Task GetSearchSuggestionsAsync_WithEmptyPrefix_ThrowsValidationException()
     {
@@ -361,6 +442,9 @@ public class SearchServiceTests
 
     // ── SearchUsersAsync ───────────────────────────────────────────────────
 
+    /// <summary>
+    /// Verifies that <see cref="SearchService.SearchUsersAsync"/> correctly delegates to the user repository when provided with a valid search query.
+    /// </summary>
     [Fact]
     public async Task SearchUsersAsync_WithValidQuery_DelegatesToUserRepository()
     {
