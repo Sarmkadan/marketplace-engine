@@ -543,6 +543,38 @@ foreach (var report in pendingReports.Items)
 }
 ```
 
+## ListingCreatedEventExtensions
+
+Provides extension methods for `ListingCreatedEvent` to simplify common operations and validations. Includes methods to get formatted IDs, create event summaries, and validate title/category fields.
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.Infrastructure.Events;
+
+// Assuming you have a ListingCreatedEvent instance
+var listingCreatedEvent = new ListingCreatedEvent
+{
+    ListingId = Guid.NewGuid(),
+    SellerId = Guid.NewGuid(),
+    Title = "Used Laptop",
+    Category = "Electronics",
+    OccurredAt = DateTime.UtcNow
+};
+
+// Get formatted IDs
+string listingId = listingCreatedEvent.GetListingId();
+string sellerId = listingCreatedEvent.GetSellerId();
+
+// Create event summary for logging
+string summary = listingCreatedEvent.ToEventSummary();
+// Output: [ListingCreated] Listing: [guid], Seller: [guid], Title: 'Used Laptop', Category: 'Electronics', Occurred: 2026-07-12 14:30:00
+
+// Validate required fields
+bool hasValidTitle = listingCreatedEvent.HasValidTitle();   // Returns true
+bool hasValidCategory = listingCreatedEvent.HasValidCategory(); // Returns true
+```
+
 ---
 
 ## API Reference
