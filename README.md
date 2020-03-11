@@ -600,6 +600,74 @@ Console.WriteLine($"Seller: {dashboard.SellerName} ({dashboard.ActiveListings} a
 Console.WriteLine($"Revenue: ${dashboard.TotalRevenue}, Rating: {dashboard.AverageRating}/5.0");
 ```
 
+## SellerRevenueSummaryDto
+
+Comprehensive revenue summary for sellers, providing detailed financial breakdowns including gross revenue, platform fees, net revenue, and profit margins. This DTO includes monthly breakdown data for tracking revenue trends over time, making it ideal for financial reporting and analytics.
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.DTOs;
+using System;
+
+// Create a seller revenue summary
+var revenueSummary = new SellerRevenueSummaryDto
+{
+    SellerId = Guid.Parse("123e4567-e89b-12d3-a456-426614174000"),
+    TotalGrossRevenue = 12500.75m,
+    TotalNetRevenue = 11875.71m,
+    TotalPlatformFees = 625.04m,
+    PlatformFeePercentage = 5.0,
+    ProfitMarginPercentage = 49.8,
+    PendingPayout = 2500.00m,
+    MonthlyBreakdown = new List<MonthlyRevenueDto>
+    {
+        new MonthlyRevenueDto
+        {
+            Month = 6,
+            Year = 2026,
+            GrossRevenue = 4200.50m,
+            NetRevenue = 3990.48m,
+            PlatformFees = 210.02m,
+            ProfitMargin = 52.3
+        },
+        new MonthlyRevenueDto
+        {
+            Month = 5,
+            Year = 2026,
+            GrossRevenue = 3800.25m,
+            NetRevenue = 3610.24m,
+            PlatformFees = 190.01m,
+            ProfitMargin = 48.9
+        },
+        new MonthlyRevenueDto
+        {
+            Month = 4,
+            Year = 2026,
+            GrossRevenue = 4500.00m,
+            NetRevenue = 4275.00m,
+            PlatformFees = 225.00m,
+            ProfitMargin = 47.5
+        }
+    }
+};
+
+// Display summary information
+Console.WriteLine($"Seller Revenue Summary (ID: {revenueSummary.SellerId})");
+Console.WriteLine($"Total Gross: ${revenueSummary.TotalGrossRevenue}");
+Console.WriteLine($"Total Net: ${revenueSummary.TotalNetRevenue}");
+Console.WriteLine($"Platform Fees: ${revenueSummary.TotalPlatformFees} ({revenueSummary.PlatformFeePercentage}%)");
+Console.WriteLine($"Profit Margin: {revenueSummary.ProfitMarginPercentage}%");
+Console.WriteLine($"Pending Payout: ${revenueSummary.PendingPayout}");
+Console.WriteLine($"\nMonthly Breakdown:");
+foreach (var month in revenueSummary.MonthlyBreakdown.OrderByDescending(m => m.Year).ThenByDescending(m => m.Month))
+{
+    Console.WriteLine($"  {new DateTime(month.Year, month.Month, 1).ToString("MMM yyyy")}: " +
+                     $"Gross=${month.GrossRevenue}, Net=${month.NetRevenue}, " +
+                     $"Fees=${month.PlatformFees}, Margin={month.ProfitMargin}%");
+}
+```
+
 ---
 
 ## API Reference
