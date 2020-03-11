@@ -575,6 +575,31 @@ bool hasValidTitle = listingCreatedEvent.HasValidTitle();   // Returns true
 bool hasValidCategory = listingCreatedEvent.HasValidCategory(); // Returns true
 ```
 
+## SimplifiedSellerDashboardDto
+
+Simplified dashboard view containing only the most essential metrics for a seller's quick overview. This DTO aggregates key performance indicators, including listing counts, financial data, and user activity, into a compact object for efficient retrieval in dashboard APIs.
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.DTOs;
+
+// Assuming you have an instance of the dashboard DTO
+var dashboard = new SimplifiedSellerDashboardDto
+{
+    SellerId = Guid.NewGuid(),
+    SellerName = "John Doe's Shop",
+    ActiveListings = 15,
+    TotalRevenue = 1500.50m,
+    PendingPayout = 250.75m,
+    AverageRating = 4.8,
+    LastActivityAt = DateTime.UtcNow
+};
+
+Console.WriteLine($"Seller: {dashboard.SellerName} ({dashboard.ActiveListings} active listings)");
+Console.WriteLine($"Revenue: ${dashboard.TotalRevenue}, Rating: {dashboard.AverageRating}/5.0");
+```
+
 ---
 
 ## API Reference
