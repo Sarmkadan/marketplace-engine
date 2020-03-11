@@ -7,12 +7,19 @@ using Xunit;
 
 namespace MarketplaceEngine.Tests;
 
+/// <summary>
+/// Tests for the <see cref="ExternalListingSyncService"/> class.
+/// </summary>
 public class ExternalListingSyncServiceTests
 {
     private readonly Mock<IListingProvider> _providerMock;
     private readonly Mock<ILogger<ExternalListingSyncService>> _loggerMock;
     private readonly ExternalListingSyncService _sut;
 
+    /// <summary>
+    /// Initializes the test fixture by creating mocks for the listing provider and logger,
+    /// and instantiating the system under test.
+    /// </summary>
     public ExternalListingSyncServiceTests()
     {
         _providerMock = new Mock<IListingProvider>();
@@ -20,6 +27,13 @@ public class ExternalListingSyncServiceTests
         _sut = new ExternalListingSyncService(_providerMock.Object, _loggerMock.Object);
     }
 
+    /// <summary>
+    /// Verifies that <see cref="ExternalListingSyncService.SyncListingsAsync(string, Guid)"/>
+    /// returns a collection of mapped listings when the provider returns external listings.
+    /// </summary>
+    /// <param name="category">The category of listings to sync.</param>
+    /// <param name="sellerId">The identifier of the seller.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
     [Fact]
     public async Task SyncListingsAsync_WhenProviderReturnsListings_ReturnsMappedListings()
     {
@@ -43,6 +57,13 @@ public class ExternalListingSyncServiceTests
         result[0].SellerId.Should().Be(sellerId);
     }
 
+    /// <summary>
+    /// Verifies that <see cref="ExternalListingSyncService.UpdateAvailabilityAsync(string, Listing)"/>
+    /// logs an informational message when the external listing is no longer available.
+    /// </summary>
+    /// <param name="externalId">The external identifier of the listing.</param>
+    /// <param name="listing">The local listing instance.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
     [Fact]
     public async Task UpdateAvailabilityAsync_WhenNotAvailable_LogsInformation()
     {
