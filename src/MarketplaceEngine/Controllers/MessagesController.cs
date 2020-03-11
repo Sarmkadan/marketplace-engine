@@ -52,11 +52,31 @@ public class MessagesController : ControllerBase
     {
         _logger.LogInformation("Fetching conversations for user: {UserId}", userId);
 
-        // Hotfix: Placeholder for GetUserConversationsAsync, which is not implemented in MessagingService
-        // A proper implementation would involve fetching messages, grouping them into conversations,
-        // and populating ConversationDto with sender/recipient details and unread counts.
+        var sent = await _messageRepository.GetSentMessagesAsync(userId);
+        var received = await _messageRepository.GetReceivedMessagesAsync(userId);
+
         var dtos = new List<ConversationDto>();
-        await Task.CompletedTask; // Simulate async operation
+
+        foreach (var group in sent.Concat(received).GroupBy(m => m.SenderId == userId ? m.RecipientId : m.SenderId))
+        {
+            var otherUserId = group.Key;
+            var lastMessage = group.OrderByDescending(m => m.CreatedAt).First();
+            var unreadCount = group.Count(m => m.RecipientId == userId && !m.IsRead);
+
+            var otherUser = await _userRepository.GetByIdAsync(otherUserId);
+
+            dtos.Add(new ConversationDto
+            {
+                ConversationId = otherUserId,
+                OtherUserId = otherUserId,
+                OtherUserName = otherUser is not null ? otherUser.GetDisplayName() : string.Empty,
+                LastMessage = lastMessage.Body,
+                LastMessageAt = lastMessage.CreatedAt,
+                UnreadCount = unreadCount
+            });
+        }
+
+        dtos = dtos.OrderByDescending(d => d.LastMessageAt).ToList();
 
         return Ok(dtos);
     }

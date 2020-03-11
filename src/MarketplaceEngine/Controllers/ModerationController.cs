@@ -261,13 +261,24 @@ public class ModerationController : ControllerBase
             return Ok(cached);
         }
 
-        // In production, these would query actual report data
+        var approvedReports = await _moderationService.GetReportsByStatusAsync(ModerationStatus.Approved);
+        var rejectedReports = await _moderationService.GetReportsByStatusAsync(ModerationStatus.Rejected);
+        var (pendingCount, _, _) = await _moderationService.GetReportStatsAsync();
+
+        var resolvedReports = approvedReports.Concat(rejectedReports)
+            .Where(r => r.ResolvedAt.HasValue)
+            .ToList();
+
+        var averageResolutionHours = resolvedReports.Count > 0
+            ? resolvedReports.Average(r => (r.ResolvedAt!.Value - r.CreatedAt).TotalHours)
+            : 0;
+
         var stats = new ModerationStatsDto
         {
-            PendingReports = 0,
-            ApprovedReports = 0,
-            RejectedReports = 0,
-            AverageResolutionTime = 0
+            PendingReports = pendingCount,
+            ApprovedReports = approvedReports.Count,
+            RejectedReports = rejectedReports.Count,
+            AverageResolutionTime = Math.Round(averageResolutionHours, 2)
         };
 
         await _cacheService.SetAsync(cacheKey, stats, TimeSpan.FromMinutes(5));

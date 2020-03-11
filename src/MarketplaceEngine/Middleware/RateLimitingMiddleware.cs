@@ -6,6 +6,7 @@
 
 using System.Collections.Concurrent;
 using System.Net;
+using System.Threading;
 
 namespace MarketplaceEngine.Middleware;
 
@@ -38,8 +39,9 @@ public class RateLimitingMiddleware
 
     public async Task InvokeAsync(HttpContext context)
     {
-        // Get client IP address - handles X-Forwarded-For header for proxied requests
-        var clientIp = context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+        // Get client IP address - prefers the X-Forwarded-For header for proxied requests,
+        // falling back to the direct connection address
+        var clientIp = GetClientIp(context);
 
         // Skip rate limiting for health check endpoint
         if (context.Request.Path.StartsWithSegments("/api/v1/health"))
@@ -64,6 +66,23 @@ public class RateLimitingMiddleware
         await _next(context);
     }
 
+    private static string GetClientIp(HttpContext context)
+    {
+        var forwardedFor = context.Request.Headers["X-Forwarded-For"].ToString();
+        if (!string.IsNullOrWhiteSpace(forwardedFor))
+        {
+            // X-Forwarded-For may contain a comma-separated chain of proxies;
+            // the first entry is the original client.
+            var candidate = forwardedFor.Split(',')[0].Trim();
+            if (!string.IsNullOrWhiteSpace(candidate))
+            {
+                return candidate;
+            }
+        }
+
+        return context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+    }
+
     private static bool IsRateLimitAllowed(string clientIp)
     {
         var now = DateTime.UtcNow;
@@ -71,17 +90,19 @@ public class RateLimitingMiddleware
 
         var bucket = RateLimitBuckets.AddOrUpdate(
             clientIp,
-            new RateLimitBucket { WindowStart = now, RequestCount = 1 },
+            _ => new RateLimitBucket { WindowStart = now, RequestCount = 1 },
             (_, existing) =>
             {
-                // If window has expired, create new bucket
+                // If window has expired, start a fresh bucket
                 if (existing.WindowStart < windowStart)
                 {
                     return new RateLimitBucket { WindowStart = now, RequestCount = 1 };
                 }
 
-                // Increment request count
-                existing.RequestCount++;
+                // Atomically increment the shared counter; the update factory
+                // may be invoked multiple times under contention, so mutating
+                // the existing instance without an atomic operation would lose counts.
+                existing.Increment();
                 return existing;
             });
 
@@ -109,7 +130,16 @@ public class RateLimitingMiddleware
 
     internal class RateLimitBucket
     {
+        private int _requestCount;
+
         public DateTime WindowStart { get; set; }
-        public int RequestCount { get; set; }
+
+        public int RequestCount
+        {
+            get => _requestCount;
+            set => _requestCount = value;
+        }
+
+        public void Increment() => Interlocked.Increment(ref _requestCount);
     }
 }
