@@ -4,6 +4,7 @@
 // CTO & Software Architect
 // =============================================================================
 
+using System.Collections.Concurrent;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -29,6 +30,7 @@ public class TokenService
 {
     private readonly ILogger<TokenService> _logger;
     private readonly string _tokenSecret;
+    private readonly ConcurrentDictionary<string, byte> _revokedTokens = new();
     private const int TokenLengthBytes = 32;
     private const int TokenExpirationDays = 30;
 
@@ -58,11 +60,13 @@ public class TokenService
     }
 
     /// <summary>
-    /// Validates an API token format and expiration.
+    /// Validates an API token format, expiration, and revocation status.
     /// In production, verify signature against stored hash.
     /// </summary>
     public bool IsTokenValid(ApiToken token)
     {
+        ArgumentNullException.ThrowIfNull(token);
+
         if (string.IsNullOrWhiteSpace(token.Token))
         {
             _logger.LogWarning("Token validation failed: token is empty");
@@ -72,6 +76,12 @@ public class TokenService
         if (DateTime.UtcNow > token.ExpiresAt)
         {
             _logger.LogWarning("Token validation failed: token expired at {ExpiresAt}", token.ExpiresAt);
+            return false;
+        }
+
+        if (_revokedTokens.ContainsKey(token.Token))
+        {
+            _logger.LogWarning("Token validation failed: token has been revoked");
             return false;
         }
 
@@ -88,12 +98,15 @@ public class TokenService
     }
 
     /// <summary>
-    /// Revokes a token (removes it from valid list).
-    /// In production, store revoked token hashes in a blacklist cache.
+    /// Revokes a token, adding it to the in-memory blacklist checked by <see cref="IsTokenValid"/>.
+    /// In production, store revoked token hashes in a distributed blacklist cache.
     /// </summary>
+    /// <exception cref="ArgumentException"><paramref name="tokenValue"/> is null or whitespace.</exception>
     public void RevokeToken(string tokenValue)
     {
-        // In production, add to revocation list/blacklist
+        ArgumentException.ThrowIfNullOrWhiteSpace(tokenValue);
+
+        _revokedTokens[tokenValue] = 0;
         _logger.LogInformation("Token revoked");
     }
 
@@ -129,7 +142,7 @@ public class TokenService
 public class ApiKeyValidator
 {
     private readonly ILogger<ApiKeyValidator> _logger;
-    private readonly Dictionary<string, Guid> _validApiKeys = new();
+    private readonly ConcurrentDictionary<string, Guid> _validApiKeys = new();
 
     public ApiKeyValidator(ILogger<ApiKeyValidator> logger)
     {
@@ -140,8 +153,11 @@ public class ApiKeyValidator
     /// Registers a valid API key for a user.
     /// In production, load from secure configuration or database.
     /// </summary>
+    /// <exception cref="ArgumentException"><paramref name="apiKey"/> is null or whitespace.</exception>
     public void RegisterApiKey(string apiKey, Guid userId)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(apiKey);
+
         _validApiKeys[apiKey] = userId;
         _logger.LogInformation("API key registered for user: {UserId}", userId);
     }
@@ -173,7 +189,7 @@ public class ApiKeyValidator
     /// </summary>
     public void RevokeApiKey(string apiKey)
     {
-        _validApiKeys.Remove(apiKey);
+        _validApiKeys.TryRemove(apiKey, out _);
         _logger.LogInformation("API key revoked");
     }
 }

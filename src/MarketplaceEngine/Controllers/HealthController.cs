@@ -7,6 +7,8 @@
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
 using System.Reflection;
+using MarketplaceEngine.Data;
+using MarketplaceEngine.Infrastructure.Caching;
 
 namespace MarketplaceEngine.Controllers;
 
@@ -19,10 +21,12 @@ namespace MarketplaceEngine.Controllers;
 public class HealthController : ControllerBase
 {
     private readonly ILogger<HealthController> _logger;
+    private readonly CacheService _cacheService;
 
-    public HealthController(ILogger<HealthController> logger)
+    public HealthController(ILogger<HealthController> logger, CacheService cacheService)
     {
         _logger = logger;
+        _cacheService = cacheService;
     }
 
     /// <summary>
@@ -59,7 +63,7 @@ public class HealthController : ControllerBase
             Dependencies = new Dictionary<string, string>
             {
                 { "Database", CheckDatabase() },
-                { "Cache", CheckCache() },
+                { "Cache", await CheckCacheAsync() },
                 { "ExternalServices", CheckExternalServices() }
             }
         };
@@ -92,11 +96,12 @@ public class HealthController : ControllerBase
 
     private string CheckDatabase()
     {
-        // In a real implementation, this would check actual database connectivity
+        // The application uses an in-memory data store instead of an external database.
+        // Verify the store is reachable and initialized.
         try
         {
-            // Simulate database check
-            return "Connected";
+            var context = MarketplaceDbContext.GetInstance();
+            return context.Users is not null ? "Connected" : "Disconnected";
         }
         catch
         {
@@ -104,13 +109,16 @@ public class HealthController : ControllerBase
         }
     }
 
-    private string CheckCache()
+    private async Task<string> CheckCacheAsync()
     {
-        // In a real implementation, this would check actual cache connectivity
+        // Round-trips a probe value through the cache service to confirm it is functioning.
         try
         {
-            // Simulate cache check
-            return "Available";
+            var probeKey = $"health:probe:{Guid.NewGuid()}";
+            await _cacheService.SetAsync(probeKey, true, TimeSpan.FromSeconds(5));
+            var result = await _cacheService.GetAsync<bool>(probeKey);
+            await _cacheService.RemoveAsync(probeKey);
+            return result ? "Available" : "Unavailable";
         }
         catch
         {
@@ -120,16 +128,8 @@ public class HealthController : ControllerBase
 
     private string CheckExternalServices()
     {
-        // In a real implementation, this would check external service connectivity
-        try
-        {
-            // Simulate external service check
-            return "All services operational";
-        }
-        catch
-        {
-            return "Some services unavailable";
-        }
+        // No external service dependencies are configured for this deployment.
+        return "No external dependencies configured";
     }
 }
 
