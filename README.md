@@ -76,6 +76,52 @@ Console.WriteLine($"Is Listings Above Average: {sellerComparison.IsListingsAbove
 Console.WriteLine($"Is Rating Above Average: {sellerComparison.IsRatingAboveAverage}");
 ```
 
+## PaymentDtoExtensions
+
+Provides extension methods for `PaymentDto` to calculate and format payment-related values such as platform revenue, seller payout, and payment status. Includes utility methods for formatting monetary values and tracking payment lifecycle events.
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.DTOs;
+
+var payment = new PaymentDto
+{
+    TotalAmount = 100.00m,
+    PlatformFeePercentage = 10,
+    Status = MarketplaceEngine.Domain.Enums.PaymentStatus.Completed,
+    CreatedAt = DateTime.UtcNow,
+    CompletedAt = DateTime.UtcNow
+};
+
+// Calculate platform revenue and seller payout
+decimal platformRevenue = PaymentDtoExtensions.GetPlatformRevenue(payment);
+decimal sellerPayout = PaymentDtoExtensions.GetSellerPayout(payment);
+
+// Format monetary values for display
+string formattedAmount = PaymentDtoExtensions.FormatAmount(payment);
+string formattedFee = PaymentDtoExtensions.FormatPlatformFee(payment);
+string formattedPayout = PaymentDtoExtensions.FormatSellerPayout(payment);
+
+// Check payment status
+bool isCompleted = PaymentDtoExtensions.IsCompleted(payment);
+bool isPending = PaymentDtoExtensions.IsPending(payment);
+
+// Get formatted timestamps
+string createdAt = PaymentDtoExtensions.GetCreatedAtString(payment);
+string? completedAt = PaymentDtoExtensions.GetCompletedAtString(payment);
+
+// Get payment status enum
+var status = PaymentDtoExtensions.GetPaymentStatus(payment);
+
+Console.WriteLine($"Platform Revenue: {platformRevenue:C}");
+Console.WriteLine($"Seller Payout: {sellerPayout:C}");
+Console.WriteLine($"Formatted Amount: {formattedAmount}");
+Console.WriteLine($"Is Completed: {isCompleted}");
+Console.WriteLine($"Created At: {createdAt}");
+Console.WriteLine($"Status: {status}");
+```
+
 ## ListingCreatedEventExtensions
 
 ...
