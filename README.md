@@ -43,5 +43,4 @@ foreach (var topListing in sellerListingPerformance.TopListings)
     Console.WriteLine($"  - Listing ID: {topListing.ListingId}, Views: {topListing.Views}, Interest Count: {topListing.InterestCount}");
 }
 ```
-
 ```
