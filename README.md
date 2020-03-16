@@ -43,3 +43,22 @@ foreach (var topListing in sellerListingPerformance.TopListings)
     Console.WriteLine($"  - Listing ID: {topListing.ListingId}, Views: {topListing.Views}, Interest Count: {topListing.InterestCount}");
 }
 ```
+
+## ModerationServiceExtensions
+
+The `ModerationServiceExtensions` class provides a set of extension methods for moderation-related tasks, including reporting, assigning, and processing moderation reports.
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.Services;
+
+var reports = await ModerationServiceExtensions.ReportListingsBatchAsync(new List<Guid> { Guid.NewGuid(), Guid.NewGuid() });
+Console.WriteLine($"Reports: {reports.Count}");
+
+var assignedReports = await ModerationServiceExtensions.AssignReportsToModeratorAsync(reports, Guid.NewGuid());
+Console.WriteLine($"Assigned Reports: {assignedReports.Count}");
+
+var processedReports = await ModerationServiceExtensions.ProcessReportsBatchAsync(assignedReports);
+Console.WriteLine($"Processed Reports: {processedReports.Count}");
+```
