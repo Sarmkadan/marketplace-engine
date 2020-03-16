@@ -62,3 +62,19 @@ Console.WriteLine($"Assigned Reports: {assignedReports.Count}");
 var processedReports = await ModerationServiceExtensions.ProcessReportsBatchAsync(assignedReports);
 Console.WriteLine($"Processed Reports: {processedReports.Count}");
 ```
+
+## ListingServiceBenchmarks
+
+The `ListingServiceBenchmarks` class measures performance of listing creation and search operations in the marketplace engine. It provides benchmarking capabilities for critical listing workflows.
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.Benchmarks;
+
+var benchmarks = new ListingServiceBenchmarks();
+benchmarks.Setup();
+await benchmarks.CreateListingBenchmark();
+await benchmarks.SearchListingsBenchmark();
+ListingServiceBenchmarks.Main();
+```
