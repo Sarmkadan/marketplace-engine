@@ -2,6 +2,36 @@
 
 ...
 
+## ApiToken
+
+Represents an API token, which is a unique identifier for a user's authentication session. It contains a token value, user ID, issuance date, expiration date, and a list of scopes that define the token's permissions.
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.Infrastructure.Security;
+
+var tokenService = new TokenService(ILogger<TokenService>.CreateLogger(), "secret");
+var token = tokenService.GenerateToken(Guid.NewGuid(), new List<string> { "read", "write" });
+
+Console.WriteLine($"Token: {token.Token}");
+Console.WriteLine($"User ID: {token.UserId}");
+Console.WriteLine($"Issued At: {token.IssuedAt}");
+Console.WriteLine($"Expires At: {token.ExpiresAt}");
+Console.WriteLine($"Scopes: {string.Join(", ", token.Scopes)}");
+
+if (tokenService.IsTokenValid(token))
+{
+    Console.WriteLine("Token is valid");
+}
+else
+{
+    Console.WriteLine("Token is invalid");
+}
+
+tokenService.RevokeToken(token.Token);
+```
+
 ## SellerListingPerformanceDto
 
 Represents a seller's listing performance metrics, including active and inactive listings, featured listings, total views, total interest count, engagement rate, conversion rate, and top listings.
