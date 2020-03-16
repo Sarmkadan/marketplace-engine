@@ -78,3 +78,31 @@ await benchmarks.CreateListingBenchmark();
 await benchmarks.SearchListingsBenchmark();
 ListingServiceBenchmarks.Main();
 ```
+
+## PermissionService
+
+The `PermissionService` class provides methods for checking user permissions and roles, implementing role-based access control (RBAC). It allows you to verify if a user has a specific role, can edit or delete listings, moderate, create listings, message other users, or submit reports.
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.Infrastructure.Security;
+using Microsoft.Extensions.Logging;
+
+var logger = LoggerFactory.Create(builder => builder.AddConsole()).CreateLogger<PermissionService>();
+var permissionService = new PermissionService(logger);
+
+var userRole = UserRole.Administrator;
+var requiredRole = UserRole.Administrator;
+var listingSellerId = Guid.NewGuid();
+var userId = Guid.NewGuid();
+var recipientId = Guid.NewGuid();
+
+Console.WriteLine($"Has Role: {permissionService.HasRole(userRole, requiredRole)}");
+Console.WriteLine($"Can Edit Listing: {permissionService.CanEditListing(userRole, listingSellerId, userId)}");
+Console.WriteLine($"Can Delete Listing: {permissionService.CanDeleteListing(userRole, listingSellerId, userId)}");
+Console.WriteLine($"Can Moderate: {permissionService.CanModerate(userRole)}");
+Console.WriteLine($"Can Create Listing: {permissionService.CanCreateListing(userRole)}");
+Console.WriteLine($"Can Message: {permissionService.CanMessage(userRole, recipientId, userId)}");
+Console.WriteLine($"Can Submit Report: {permissionService.CanSubmitReport(userRole)}");
+```
