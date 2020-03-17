@@ -136,3 +136,57 @@ Console.WriteLine($"Can Create Listing: {permissionService.CanCreateListing(user
 Console.WriteLine($"Can Message: {permissionService.CanMessage(userRole, recipientId, userId)}");
 Console.WriteLine($"Can Submit Report: {permissionService.CanSubmitReport(userRole)}");
 ```
+
+## IEvent
+
+The `IEvent` interface defines the contract for all events in the marketplace engine's event bus system. Events represent occurrences within the application that different components can react to asynchronously. Each event includes a unique identifier, timestamp, and event type information.
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.Infrastructure.Events;
+using Microsoft.Extensions.Logging;
+using System;
+
+// Define a custom event that implements IEvent
+public class ListingCreatedEvent : IEvent
+{
+    public Guid EventId { get; } = Guid.NewGuid();
+    public DateTime OccurredAt { get; } = DateTime.UtcNow;
+    public string EventType => nameof(ListingCreatedEvent);
+    
+    public Guid ListingId { get; set; }
+    public Guid SellerId { get; set; }
+    public string Title { get; set; } = string.Empty;
+}
+
+// Create event bus and subscribe to events
+var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
+var logger = loggerFactory.CreateLogger<EventBus>();
+var eventBus = new EventBus(logger);
+
+// Subscribe a handler to ListingCreatedEvent
+Func<ListingCreatedEvent, Task> handler = async (@event) =>
+{
+    Console.WriteLine($"Handling ListingCreatedEvent: {{{nameof(@event.ListingId)}={@event.ListingId}, {nameof(@event.Title)}=@event.Title}}");
+    await Task.CompletedTask;
+};
+
+eventBus.Subscribe<ListingCreatedEvent>(handler);
+
+// Publish an event
+var listingEvent = new ListingCreatedEvent
+{
+    ListingId = Guid.NewGuid(),
+    SellerId = Guid.NewGuid(),
+    Title = "Premium Widget"
+};
+
+await eventBus.PublishAsync(listingEvent);
+
+// Unsubscribe when done
+eventBus.Unsubscribe<ListingCreatedEvent>(handler);
+
+// Or unsubscribe all handlers for a specific event type
+eventBus.UnsubscribeAll<ListingCreatedEvent>();
+```
