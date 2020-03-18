@@ -2,6 +2,34 @@
 
 ...
 
+## IListingProvider
+
+The `IListingProvider` interface defines a contract for external listing data providers. It allows integration with dropshipping APIs, supplier catalogs, and other third-party services. Implementations of this interface can be used to fetch listings, check their availability, and sync them into the marketplace.
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.Infrastructure.Integration;
+
+var provider = new DropshipProviderClient(
+    new HttpClientService(),
+    new LoggerFactory().CreateLogger<DropshipProviderClient>(),
+    "https://api.example.com",
+    "your-api-key-here");
+
+var listings = await provider.GetListingsAsync("Electronics", 1);
+foreach (var listing in listings)
+{
+    Console.WriteLine($"Title: {listing.Title}, Price: {listing.Price}, Stock Quantity: {listing.StockQuantity}");
+}
+
+var listing = await provider.GetListingAsync("EXT-12345");
+Console.WriteLine($"Title: {listing.Title}, Price: {listing.Price}, Stock Quantity: {listing.StockQuantity}");
+
+var available = await provider.IsListingAvailableAsync("EXT-12345");
+Console.WriteLine($"Is Listing Available: {available}");
+```
+
 ## ListingCreatedEvent
 
 The `ListingCreatedEvent` is raised when a new listing is created, triggering actions like notifications, indexing, and recommendations. It contains metadata about the listing, including its unique identifier, seller information, title, and category.
@@ -126,4 +154,6 @@ var webhookEvent = new WebhookEvent
 Console.WriteLine($"Event Type: {webhookEvent.EventType}");
 Console.WriteLine($"Timestamp: {webhookEvent.Timestamp}");
 Console.WriteLine($"Data: {JsonSerializer.Serialize(webhookEvent.Data)}");
+```
+
 ```
