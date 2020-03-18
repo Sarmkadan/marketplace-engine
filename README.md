@@ -57,3 +57,48 @@ await handler.HandleAsync(listingEvent);
 
 // Output: Processing listing creation: [listing-guid], Category: Electronics
 ```
+
+## HttpClientService
+
+`HttpClientService` is a thin wrapper around `HttpClient` that adds built‑in retry logic, timeout handling, and simple logging for external API calls. It exposes convenient generic methods for the common HTTP verbs and lets callers configure authentication and custom headers in a fluent way.
+
+### Usage Example
+
+```csharp
+using System;
+using System.Net.Http;
+using Microsoft.Extensions.Logging;
+using MarketplaceEngine.Infrastructure.Integration;
+
+// Define a response DTO for demonstration
+public class SampleResponse
+{
+    public string? Message { get; set; }
+    public int Code { get; set; }
+}
+
+// Top‑level statements (C# 9+)
+var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
+ILogger<HttpClientService> logger = loggerFactory.CreateLogger<HttpClientService>();
+
+using var httpClient = new HttpClient();
+var api = new HttpClientService(httpClient, logger);
+
+// Configure headers
+api.SetAuthorizationHeader("Bearer", "your-token-here");
+api.AddHeader("X-Correlation-Id", Guid.NewGuid().ToString());
+
+// GET request
+SampleResponse? getResult = await api.GetAsync<SampleResponse>("https://api.example.com/status");
+
+// POST request
+var postPayload = new { Name = "NewItem", Quantity = 10 };
+var postResult = await api.PostAsync<SampleResponse>("https://api.example.com/items", postPayload);
+
+// PUT request
+var putPayload = new { Name = "UpdatedItem", Quantity = 20 };
+var putResult = await api.PutAsync<SampleResponse>("https://api.example.com/items/1", putPayload);
+
+// DELETE request
+await api.DeleteAsync("https://api.example.com/items/1");
+```
