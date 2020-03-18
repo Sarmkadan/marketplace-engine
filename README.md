@@ -102,3 +102,28 @@ var putResult = await api.PutAsync<SampleResponse>("https://api.example.com/item
 // DELETE request
 await api.DeleteAsync("https://api.example.com/items/1");
 ```
+
+## WebhookEvent
+
+The `WebhookEvent` represents an incoming webhook notification from an external system. It contains metadata about the event, including the event type, timestamp, and data payload.
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.Infrastructure.Integration;
+
+var webhookEvent = new WebhookEvent
+{
+    EventType = "payment.completed",
+    Timestamp = DateTime.UtcNow,
+    Data = new Dictionary<string, object?>
+    {
+        ["transactionId"] = "TX12345",
+        ["amount"] = 19.99m
+    }
+};
+
+Console.WriteLine($"Event Type: {webhookEvent.EventType}");
+Console.WriteLine($"Timestamp: {webhookEvent.Timestamp}");
+Console.WriteLine($"Data: {JsonSerializer.Serialize(webhookEvent.Data)}");
+```
