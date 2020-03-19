@@ -1,6 +1,45 @@
 # Marketplace Engine
 
-...
+## MarketplaceConfiguration
+
+The `MarketplaceConfiguration` class provides centralized configuration settings for the Marketplace Engine, including cache management, API rate limiting, background job scheduling, and dropshipping integration. It consolidates common application parameters into a single, strongly-typed configuration object.
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.Infrastructure.Configuration;
+
+var config = new MarketplaceConfiguration
+{
+    // Cache settings
+    DefaultTtlMinutes = 30,
+    MaxCacheSizeMb = 512,
+    ListingCacheTtlMinutes = 15,
+    UserCacheTtlMinutes = 60,
+    CategoryCacheTtlMinutes = 120,
+    SearchResultCacheTtlMinutes = 10,
+    
+    // Rate limiting
+    MaxRequestsPerMinute = 1000,
+    MaxRequestsPerHour = 60000,
+    ExemptPaths = new[] { "/api/health", "/api/status" },
+    
+    // Background jobs
+    PollingIntervalMs = 5000,
+    MaxConcurrentJobs = 10,
+    JobTimeoutSeconds = 300,
+    
+    // Dropshipping integration
+    DropshipApiBaseUrl = "https://api.dropship.example.com",
+    DropshipApiKey = "your-api-key-here",
+    ApiTimeoutSeconds = 30,
+    MaxRetries = 3,
+    RetryDelayMs = 1000
+};
+
+Console.WriteLine($"Cache TTL: {config.DefaultTtlMinutes} minutes");
+Console.WriteLine($"Max cache size: {config.MaxCacheSizeMb} MB");
+```
 
 ## IBackgroundJob
 
