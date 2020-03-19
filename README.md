@@ -176,6 +176,63 @@ Console.WriteLine("\nMultiple listings (XML):");
 Console.WriteLine(xmlOutput);
 ```
 
+## RecommendationOptions
+
+The `RecommendationOptions` class provides configuration settings for the collaborative filtering recommendation engine. It controls parameters for user similarity calculations, trending algorithms, caching behavior, activity tracking limits, and feature flags that determine how personalized and diverse recommendation feeds should be. All settings can be overridden via the `Marketplace:Recommendations` section of `appsettings.json`.
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.Recommendations;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using System;
+
+// Create with default values
+var options = RecommendationOptions.CreateDefault();
+
+// Configure collaborative filtering
+options.MinOverlapForNeighbour = 5;
+options.MaxNeighbours = 100;
+options.MinSimilarityThreshold = 0.15;
+
+// Configure trending window and signal weights
+options.TrendingWindowHours = 72;
+options.ViewWeight = 1.0;
+options.SaveWeight = 4.0;
+options.EnquiryWeight = 6.0;
+options.PurchaseWeight = 12.0;
+
+// Configure caching durations
+options.UserFeedCacheTtlMinutes = 10;
+options.TrendingFeedCacheTtlMinutes = 15;
+options.ItemSimilarityCacheTtlMinutes = 60;
+
+// Configure activity tracking limits
+options.MaxSignalsPerUser = 1000;
+options.ActivityHistoryDays = 180;
+options.MinAffinitySignals = 5;
+
+// Configure feature flags
+options.EnablePersonalisation = true;
+options.EnableDiversification = true;
+options.MaxCategoryConcentration = 0.35;
+
+// Create from configuration (ASP.NET Core style)
+var configuration = new ConfigurationBuilder()
+    .AddJsonFile("appsettings.json")
+    .Build();
+var configuredOptions = RecommendationOptions.FromConfiguration(configuration);
+
+// Register with DI container
+var services = new ServiceCollection();
+services.Configure<RecommendationOptions>(configuration.GetSection("Marketplace:Recommendations"));
+
+Console.WriteLine($"Recommendation settings: MinOverlap={options.MinOverlapForNeighbour}, " +
+                $"MaxNeighbours={options.MaxNeighbours}, " +
+                $"TrendingWindow={options.TrendingWindowHours}h");
+```
+
 ## UserActivityTracker
 
 The `UserActivityTracker` class provides an in-memory store for tracking user activity signals across marketplace listings. It maintains chronological interaction histories for individual users and a reverse index mapping listings to their audiences, enabling both user-based and item-based collaborative filtering scenarios. The tracker is designed for single-instance deployments and includes configurable signal retention limits.
