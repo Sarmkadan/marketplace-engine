@@ -104,4 +104,76 @@ var stats = await cacheService.GetStatisticsAsync();
 Console.WriteLine($"Cache contains {stats.TotalItems} items, using {stats.TotalMemoryMb} MB");
 ```
 
+## IOutputFormatter
+
+The `IOutputFormatter` interface defines a contract for formatting marketplace listings into different output formats such as JSON, CSV, and XML. It provides methods to format both individual listings and collections of listings, enabling flexible data export and API response generation.
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.Infrastructure.Formatters;
+using MarketplaceEngine.DTOs;
+using System;
+using System.Collections.Generic;
+
+// Create sample listings
+var listings = new List<ListingDto>
+{
+    new ListingDto
+    {
+        Id = 1,
+        Title = "Premium Widget",
+        Description = "High quality widget for all purposes",
+        Price = 29.99m,
+        SellerId = 101,
+        SellerName = "Acme Corp",
+        CategoryId = 5,
+        Status = "Active",
+        ViewCount = 150,
+        CreatedAt = DateTime.UtcNow
+    },
+    new ListingDto
+    {
+        Id = 2,
+        Title = "Basic Gadget",
+        Description = "Simple gadget for everyday use",
+        Price = 9.99m,
+        SellerId = 102,
+        SellerName = "Tech Solutions",
+        CategoryId = 3,
+        Status = "Active",
+        ViewCount = 75,
+        CreatedAt = DateTime.UtcNow.AddDays(-1)
+    }
+};
+
+// Create formatter factory
+var factory = new FormatterFactory();
+
+// Get a JSON formatter
+var jsonFormatter = factory.GetFormatter(OutputFormat.Json);
+
+// Format a single listing
+var singleListingJson = jsonFormatter.FormatListing(listings[0]);
+Console.WriteLine("Single listing (JSON):");
+Console.WriteLine(singleListingJson);
+
+// Format multiple listings
+var multipleListingsJson = jsonFormatter.FormatListings(listings);
+Console.WriteLine("\nMultiple listings (JSON):");
+Console.WriteLine(multipleListingsJson);
+
+// Get a CSV formatter
+var csvFormatter = factory.GetFormatter(OutputFormat.Csv);
+var csvOutput = csvFormatter.FormatListings(listings);
+Console.WriteLine("\nMultiple listings (CSV):");
+Console.WriteLine(csvOutput);
+
+// Get an XML formatter
+var xmlFormatter = factory.GetFormatter(OutputFormat.Xml);
+var xmlOutput = xmlFormatter.FormatListings(listings);
+Console.WriteLine("\nMultiple listings (XML):");
+Console.WriteLine(xmlOutput);
+```
+
 ...
