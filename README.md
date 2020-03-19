@@ -176,6 +176,60 @@ Console.WriteLine("\nMultiple listings (XML):");
 Console.WriteLine(xmlOutput);
 ```
 
+## UserActivityTracker
+
+The `UserActivityTracker` class provides an in-memory store for tracking user activity signals across marketplace listings. It maintains chronological interaction histories for individual users and a reverse index mapping listings to their audiences, enabling both user-based and item-based collaborative filtering scenarios. The tracker is designed for single-instance deployments and includes configurable signal retention limits.
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.Recommendations;
+using System;
+
+// Initialize activity tracker with recommendation options
+var options = new RecommendationOptions
+{
+    MaxSignalsPerUser = 1000,
+    SignalRetentionWindow = TimeSpan.FromDays(30)
+};
+var tracker = new UserActivityTracker(options, logger);
+
+// Record user interactions with listings
+var userId = Guid.NewGuid();
+var listingId = Guid.NewGuid();
+
+var viewSignal = new UserActivitySignal
+{
+    UserId = userId,
+    ListingId = listingId,
+    SignalType = UserActivityType.View,
+    OccurredAt = DateTime.UtcNow
+};
+
+var purchaseSignal = new UserActivitySignal
+{
+    UserId = userId,
+    ListingId = listingId,
+    SignalType = UserActivityType.Purchase,
+    OccurredAt = DateTime.UtcNow.AddSeconds(-30)
+};
+
+await tracker.RecordAsync(viewSignal);
+await tracker.RecordAsync(purchaseSignal);
+
+// Retrieve user interaction history
+var userHistory = await tracker.GetUserHistoryAsync(userId);
+Console.WriteLine($"User has {userHistory.Count} recorded interactions");
+
+// Get audience for a specific listing
+var audience = await tracker.GetListingAudienceAsync(listingId);
+Console.WriteLine($"Listing has {audience.Count} unique viewers");
+
+// Retrieve signals within a specific time window
+var recentSignals = await tracker.GetSignalsInWindowAsync(TimeSpan.FromHours(1));
+Console.WriteLine($"Found {recentSignals.Count} signals in the last hour");
+```
+
 ## MarketplaceException
 
 The `MarketplaceException` class is the base exception type for all marketplace-related errors in the Marketplace Engine. It extends the standard `Exception` class with additional properties for error tracking and validation error handling, making it ideal for scenarios like API validation failures, business rule violations, and service-level errors.
