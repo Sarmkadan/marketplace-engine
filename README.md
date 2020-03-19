@@ -176,4 +176,54 @@ Console.WriteLine("\nMultiple listings (XML):");
 Console.WriteLine(xmlOutput);
 ```
 
+## MarketplaceException
+
+The `MarketplaceException` class is the base exception type for all marketplace-related errors in the Marketplace Engine. It extends the standard `Exception` class with additional properties for error tracking and validation error handling, making it ideal for scenarios like API validation failures, business rule violations, and service-level errors.
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.Exceptions;
+using System;
+using System.Collections.Generic;
+
+// Create a simple marketplace exception
+var exception = new MarketplaceException("Product not found", "PRODUCT_NOT_FOUND");
+Console.WriteLine($"Error: {exception.Message}, Code: {exception.ErrorCode}");
+
+// Create an exception with validation errors
+var validationErrors = new Dictionary<string, string[]>
+{
+    { "Price", new[] { "Price must be greater than 0", "Price must be a valid decimal" } },
+    { "Title", new[] { "Title is required", "Title must be at least 5 characters" } }
+};
+var validationException = new MarketplaceException(
+    "Product validation failed",
+    validationErrors,
+    "VALIDATION_ERROR"
+);
+Console.WriteLine($"Validation errors: {validationException.ValidationErrors?.Count}");
+
+// Create an exception with inner exception
+try
+{
+    // Some operation that can fail
+}
+catch (Exception ex)
+{
+    var wrappedException = new MarketplaceException(
+        "Failed to process product listing",
+        ex,
+        "PROCESSING_ERROR"
+    );
+}
+
+// Create exception with context using the static factory method
+var contextException = MarketplaceException.CreateWithContext(
+    "Invalid category specified",
+    "category:electronics"
+);
+Console.WriteLine($"Context exception: {contextException.Message}");
+```
+
 ...
