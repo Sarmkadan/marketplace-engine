@@ -337,4 +337,67 @@ var contextException = MarketplaceException.CreateWithContext(
 Console.WriteLine($"Context exception: {contextException.Message}");
 ```
 
-...
+## CollaborativeFilteringEngine
+
+The `CollaborativeFilteringEngine` class implements a recommendation engine that combines user-based collaborative filtering, item-based collaborative filtering, category-affinity scoring, and popularity-based trending to provide personalized recommendations. It uses cosine similarity on interaction vectors for user-based recommendations, co-interaction co-occurrence for item similarity, weighted category preferences for affinity scoring, and signal velocity for trending recommendations.
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.Recommendations;
+using MarketplaceEngine.DTOs;
+using System;
+using System.Threading;
+
+// Initialize the recommendation engine with required dependencies
+// (In a real application, these would be injected via DI container)
+var options = RecommendationOptions.CreateDefault();
+var cacheService = new CacheService("RecommendationsCache");
+var activityTracker = new UserActivityTracker(options, null);
+var listingRepository = new ListingRepository(); // Mock implementation
+var logger = new Logger<CollaborativeFilteringEngine>(null);
+
+var engine = new CollaborativeFilteringEngine(
+    activityTracker,
+    listingRepository,
+    cacheService,
+    options,
+    logger);
+
+// Record user activity signals
+var userId = Guid.NewGuid();
+var listingId = Guid.NewGuid();
+
+await engine.RecordSignalAsync(new UserActivitySignal
+{
+    UserId = userId,
+    ListingId = listingId,
+    SignalType = SignalType.View,
+    OccurredAt = DateTime.UtcNow
+});
+
+// Get personalized recommendations for a user
+var userRecommendations = await engine.ComputeForUserAsync(userId, 10);
+Console.WriteLine($"Found {userRecommendations.Count} personalized recommendations");
+
+// Get similar listings to a specific listing
+var similarListings = await engine.ComputeSimilarAsync(listingId, 5);
+Console.WriteLine($"Found {similarListings.Count} similar listings");
+
+// Get trending listings
+var trendingListings = await engine.ComputeTrendingAsync(10);
+Console.WriteLine($"Found {trendingListings.Count} trending listings");
+
+// Get recommendations based on category affinity
+var affinityRecommendations = await engine.ComputeByAffinityAsync(userId, 8);
+Console.WriteLine($"Found {affinityRecommendations.Count} affinity-based recommendations");
+
+// Record additional signals to refine future recommendations
+await engine.RecordSignalAsync(new UserActivitySignal
+{
+    UserId = userId,
+    ListingId = Guid.NewGuid(), // Different listing
+    SignalType = SignalType.Purchase,
+    OccurredAt = DateTime.UtcNow.AddMinutes(-15)
+});
+```
