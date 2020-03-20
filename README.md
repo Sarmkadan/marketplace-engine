@@ -456,3 +456,43 @@ await engine.RecordSignalAsync(new UserActivitySignal
     OccurredAt = DateTime.UtcNow.AddMinutes(-15)
 });
 ```
+
+## Review
+
+The `Review` class represents a customer's feedback on a listing, allowing reviewers to rate their experience, provide comments, and flag content for moderation. It manages the review lifecycle including seller replies, status tracking, and validation logic to ensure high-quality, authentic feedback within the marketplace.
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.Domain.Models;
+using System;
+
+// Create a new review
+var review = new Review
+{
+    Id = Guid.NewGuid(),
+    ReviewerId = Guid.NewGuid(),
+    SellerId = Guid.NewGuid(),
+    ListingId = Guid.NewGuid(),
+    Score = 5,
+    Comment = "Great service and fast shipping!",
+    Status = ReviewStatus.Pending,
+    CreatedAt = DateTime.UtcNow
+};
+
+// Validate the review content
+review.ValidateReview();
+
+// Add a seller reply
+review.AddSellerReply("Thank you for your kind words!");
+
+// Flag for review if necessary
+review.FlagForReview();
+
+// Mark the review as removed/hidden if it violates policies
+review.Remove();
+
+Console.WriteLine($"Review status: {review.Status}");
+Console.WriteLine($"Seller reply: {review.SellerReply}");
+```
+
