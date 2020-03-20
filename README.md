@@ -233,6 +233,61 @@ Console.WriteLine($"Recommendation settings: MinOverlap={options.MinOverlapForNe
                 $"TrendingWindow={options.TrendingWindowHours}h");
 ```
 
+## IRecommendationEngine
+
+The `IRecommendationEngine` interface defines the contract for recommendation engine implementations in the Marketplace Engine. It supports multiple recommendation strategies including collaborative filtering, item-based similarity, category-affinity, and trending-based recommendations with graceful fallbacks for cold-start scenarios. Implementations record user signals and compute personalized recommendations that power the marketplace's feed and discovery features.
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.Recommendations;
+using System;
+using System.Threading;
+
+// Initialize the recommendation engine with required dependencies
+// (In a real application, these would be injected via DI container)
+var options = RecommendationOptions.CreateDefault();
+var cacheService = new CacheService("RecommendationsCache");
+var activityTracker = new UserActivityTracker(options, null);
+var listingRepository = new ListingRepository(); // Mock implementation
+var logger = new Logger<CollaborativeFilteringEngine>(null);
+
+var engine = new CollaborativeFilteringEngine(
+    activityTracker,
+    listingRepository,
+    cacheService,
+    options,
+    logger);
+
+// Record user activity signals to build recommendation data
+var userId = Guid.NewGuid();
+var listingId = Guid.NewGuid();
+
+await engine.RecordSignalAsync(new UserActivitySignal
+{
+    UserId = userId,
+    ListingId = listingId,
+    SignalType = SignalType.View,
+    OccurredAt = DateTime.UtcNow
+});
+
+// Get personalized recommendations for a user
+var userRecommendations = await engine.ComputeForUserAsync(userId, 10);
+Console.WriteLine($"Found {userRecommendations.Count} personalized recommendations");
+
+// Get similar listings to a specific listing
+var similarListings = await engine.ComputeSimilarAsync(listingId, 5);
+Console.WriteLine($"Found {similarListings.Count} similar listings");
+
+// Get trending listings based on recent activity
+var trendingListings = await engine.ComputeTrendingAsync(10);
+Console.WriteLine($"Found {trendingListings.Count} trending listings");
+
+// Get recommendations based on category affinity
+var affinityRecommendations = await engine.ComputeByAffinityAsync(userId, 8);
+Console.WriteLine($"Found {affinityRecommendations.Count} affinity-based recommendations");
+```
+
 ## UserActivityTracker
 
 The `UserActivityTracker` class provides an in-memory store for tracking user activity signals across marketplace listings. It maintains chronological interaction histories for individual users and a reverse index mapping listings to their audiences, enabling both user-based and item-based collaborative filtering scenarios. The tracker is designed for single-instance deployments and includes configurable signal retention limits.
