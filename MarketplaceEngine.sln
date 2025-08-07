@@ -1,0 +1,25 @@
+
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31919.166
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MarketplaceEngine", "src\MarketplaceEngine\MarketplaceEngine.csproj", "{C7E8F3A2-B5D9-4E6F-9C3A-2E1F4D6A9B8C}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "marketplace-engine.Tests", "tests\marketplace-engine.Tests\marketplace-engine.Tests.csproj", "{B4F6A8C2-D1E3-4F5A-8B9C-0E2D4F6A8C0E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C7E8F3A2-B5D9-4E6F-9C3A-2E1F4D6A9B8C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C7E8F3A2-B5D9-4E6F-9C3A-2E1F4D6A9B8C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C7E8F3A2-B5D9-4E6F-9C3A-2E1F4D6A9B8C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C7E8F3A2-B5D9-4E6F-9C3A-2E1F4D6A9B8C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B4F6A8C2-D1E3-4F5A-8B9C-0E2D4F6A8C0E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B4F6A8C2-D1E3-4F5A-8B9C-0E2D4F6A8C0E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B4F6A8C2-D1E3-4F5A-8B9C-0E2D4F6A8C0E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B4F6A8C2-D1E3-4F5A-8B9C-0E2D4F6A8C0E}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
