@@ -4,6 +4,7 @@
 // =============================================================================
 
 using System.Net.Http.Headers;
+using System.Text.Json;
 
 namespace MarketplaceEngine.Infrastructure.Integration;
 
