@@ -12,6 +12,9 @@ var builder = WebApplication.CreateBuilder(args);
 // Add Marketplace services and repositories to DI container
 builder.Services.AddMarketplaceServices();
 
+// Add recommendation engine (collaborative filtering + activity tracking)
+builder.Services.AddRecommendationEngine(builder.Configuration);
+
 // Add API documentation (Swagger/OpenAPI)
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -59,6 +62,9 @@ app.MapControllers();
 
 // Map marketplace endpoints (Phase 1)
 app.MapMarketplaceEndpoints();
+
+// Map recommendation engine endpoints
+app.MapRecommendationEndpoints();
 
 // Start background job queue
 var backgroundQueue = app.Services.GetRequiredService<BackgroundJobQueue>();
