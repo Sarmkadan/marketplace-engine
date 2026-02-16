@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -106,7 +107,7 @@ public class DropshipProviderClient : IListingProvider
         try
         {
             var listing = await GetListingAsync(externalId);
-            return listing != null && listing.StockQuantity > 0;
+            return listing is not null && listing.StockQuantity > 0;
         }
         catch
         {
