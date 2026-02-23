@@ -22,7 +22,7 @@ public class UserDto
     public int ReviewCount { get; set; }
     public bool EmailVerified { get; set; }
     public DateTime CreatedAt { get; set; }
-    public DateTime UpdatedAt { get; set; }
+    public DateTime? UpdatedAt { get; set; }
 
     public UserDto() { }
 
@@ -30,14 +30,14 @@ public class UserDto
     {
         Id = user.Id;
         Email = user.Email;
-        DisplayName = user.DisplayName;
-        Bio = user.Bio;
+        DisplayName = user.FullName; // Hotfix: Use FullName as DisplayName
+        Bio = user.Bio ?? string.Empty; // Handle nullable Bio
         Role = user.Role.ToString();
-        AverageRating = user.Rating?.Score ?? 0;
-        ReviewCount = user.Rating?.ReviewCount ?? 0;
-        EmailVerified = user.EmailVerified;
+        AverageRating = user.Rating?.AverageRating ?? 0; // Use AverageRating from Rating
+        ReviewCount = user.Rating?.TotalReviews ?? 0; // Hotfix: Use TotalReviews from Rating
+        EmailVerified = user.IsVerified; // Hotfix: Use IsVerified from User
         CreatedAt = user.CreatedAt;
-        UpdatedAt = user.UpdatedAt;
+        UpdatedAt = user.UpdatedAt; // Hotfix: Use nullable UpdatedAt
     }
 }
 

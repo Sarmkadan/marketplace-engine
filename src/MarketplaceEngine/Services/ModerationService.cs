@@ -170,11 +170,38 @@ public class ModerationService
     }
 
     // Gets pending reports
-    public async Task<List<ModerationReport>> GetPendingReportsAsync()
+    public async Task<List<ModerationReport>> GetPendingReportsAsync(int page, int pageSize)
     {
         await Task.Delay(5);
+        // Hotfix: No actual persistence for ModerationReports, returning empty list
         return new List<ModerationReport>();
     }
+
+    // Hotfix: GetReportAsync for ModerationController to compile
+    public async Task<ModerationReport?> GetReportAsync(Guid id)
+    {
+        await Task.Delay(5);
+        // Hotfix: No actual persistence for ModerationReports, always returning null
+        return null;
+    }
+
+    // Hotfix: UpdateReportAsync for ModerationController to compile
+    public async Task<ModerationReport> UpdateReportAsync(ModerationReport report)
+    {
+        await Task.Delay(5);
+        // Hotfix: No actual persistence for ModerationReports, returning the input report
+        return report;
+    }
+
+    // Hotfix: CreateReportAsync for ModerationController to compile
+    public async Task<ModerationReport> CreateReportAsync(ModerationReport report)
+    {
+        await Task.Delay(5);
+        // Hotfix: No actual persistence for ModerationReports, returning the input report
+        return report;
+    }
+
+    // Gets reports by status
 
     // Gets reports by status
     public async Task<List<ModerationReport>> GetReportsByStatusAsync(ModerationStatus status)

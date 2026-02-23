@@ -25,7 +25,7 @@ public class ListingDto
     public string Status { get; set; } = string.Empty;
     public int ViewCount { get; set; }
     public DateTime CreatedAt { get; set; }
-    public DateTime UpdatedAt { get; set; }
+    public DateTime? UpdatedAt { get; set; }
 
     public ListingDto() { }
 
@@ -36,7 +36,7 @@ public class ListingDto
         Description = listing.Description;
         Price = listing.Price?.Amount ?? 0;
         SellerId = listing.SellerId;
-        SellerName = listing.SellerName;
+        SellerName = string.Empty; // Hotfix: Listing model does not have SellerName
         CategoryId = listing.CategoryId;
         Status = listing.Status.ToString();
         ViewCount = listing.ViewCount;
@@ -55,6 +55,7 @@ public class CreateListingRequest
     public decimal Price { get; set; }
     public Guid SellerId { get; set; }
     public Guid CategoryId { get; set; }
+    public List<string>? ImageUrls { get; set; } // Hotfix: Add ImageUrls property
 }
 
 /// <summary>
