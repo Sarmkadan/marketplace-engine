@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -19,7 +20,7 @@ public static class EnumUtility
     public static string GetDescription<T>(T value) where T : Enum
     {
         var field = value.GetType().GetField(value.ToString());
-        if (field == null)
+        if (field is null)
             return value.ToString();
 
         var attribute = (DescriptionAttribute?)Attribute.GetCustomAttribute(field, typeof(DescriptionAttribute));

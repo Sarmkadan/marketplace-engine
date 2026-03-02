@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -56,7 +57,7 @@ public class BasicListingExample
             // Example 2: Retrieve listing details
             Console.WriteLine("2. Retrieving listing details...");
             var listing = await listingService.GetListingAsync(newListing.Id);
-            if (listing != null)
+            if (listing is not null)
             {
                 Console.WriteLine($"✓ Retrieved listing:");
                 Console.WriteLine($"  ID: {listing.Id}");
@@ -108,7 +109,7 @@ public class BasicListingExample
             // Example 6: Update listing price
             Console.WriteLine("6. Updating listing price...");
             var listingToUpdate = await listingService.GetListingAsync(newListing.Id);
-            if (listingToUpdate != null)
+            if (listingToUpdate is not null)
             {
                 listingToUpdate.UpdatePrice(new Money(949.99m, "USD"));
                 await listingService.UpdateListingAsync(listingToUpdate);
@@ -118,7 +119,7 @@ public class BasicListingExample
             // Example 7: Mark listing as inactive
             Console.WriteLine("7. Marking listing as inactive...");
             var listingToDeactivate = await listingService.GetListingAsync(secondListing.Id);
-            if (listingToDeactivate != null)
+            if (listingToDeactivate is not null)
             {
                 listingToDeactivate.Deactivate();
                 await listingService.UpdateListingAsync(listingToDeactivate);
@@ -128,7 +129,7 @@ public class BasicListingExample
             // Example 8: Feature a listing
             Console.WriteLine("8. Featuring a listing...");
             var listingToFeature = await listingService.GetListingAsync(newListing.Id);
-            if (listingToFeature != null)
+            if (listingToFeature is not null)
             {
                 listingToFeature.SetFeatured(true);
                 await listingService.UpdateListingAsync(listingToFeature);

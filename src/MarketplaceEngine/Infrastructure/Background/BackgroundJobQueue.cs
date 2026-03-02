@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -39,7 +40,7 @@ public class BackgroundJobQueue
     /// </summary>
     public void Enqueue(IBackgroundJob job)
     {
-        if (job == null)
+        if (job is null)
             return;
 
         _queue.Enqueue(job);
@@ -52,7 +53,7 @@ public class BackgroundJobQueue
     /// </summary>
     public void Start()
     {
-        if (_workerTask != null)
+        if (_workerTask is not null)
             return;
 
         _workerTask = ProcessQueueAsync(_cancellationTokenSource.Token);
@@ -67,7 +68,7 @@ public class BackgroundJobQueue
     {
         _cancellationTokenSource.Cancel();
 
-        if (_workerTask != null)
+        if (_workerTask is not null)
         {
             try
             {

@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -50,7 +51,7 @@ public class Listing
         if (Description.Length > 5000)
             throw new ArgumentException("Description cannot exceed 5000 characters", nameof(Description));
 
-        if (Price == null || Price.Amount <= 0)
+        if (Price is null || Price.Amount <= 0)
             throw new ArgumentException("Price must be greater than zero", nameof(Price));
 
         if (CategoryId == Guid.Empty)

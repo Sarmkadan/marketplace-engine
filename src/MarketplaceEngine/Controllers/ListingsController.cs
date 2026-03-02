@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -52,7 +53,7 @@ public class ListingsController : ControllerBase
         var cacheKey = $"listings:page:{page}:size:{pageSize}:status:{status}";
         var cachedResult = await _cacheService.GetAsync<PaginatedResponse<ListingDto>>(cacheKey);
 
-        if (cachedResult != null)
+        if (cachedResult is not null)
         {
             _logger.LogInformation("Cache hit for listings");
             return Ok(cachedResult);
@@ -91,13 +92,13 @@ public class ListingsController : ControllerBase
         var cacheKey = $"listing:{id}";
         var cached = await _cacheService.GetAsync<ListingDto>(cacheKey);
 
-        if (cached != null)
+        if (cached is not null)
         {
             return Ok(cached);
         }
 
         var listing = await _listingService.GetListingAsync(id);
-        if (listing == null)
+        if (listing is null)
         {
             _logger.LogWarning("Listing not found: {ListingId}", id);
             return NotFound(new { error = "Listing not found" });
@@ -160,7 +161,7 @@ public class ListingsController : ControllerBase
         var cacheKey = $"search:{q}:limit:{limit}";
         var cached = await _cacheService.GetAsync<List<ListingDto>>(cacheKey);
 
-        if (cached != null)
+        if (cached is not null)
         {
             return Ok(new SearchResultDto { Query = q, Results = cached });
         }

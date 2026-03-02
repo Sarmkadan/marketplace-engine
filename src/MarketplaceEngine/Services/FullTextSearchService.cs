@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -268,7 +269,7 @@ public class FullTextSearchService
             {
                 Label = r.label,
                 Value = $"{r.min}-{(r.max == decimal.MaxValue ? string.Empty : r.max.ToString())}",
-                Count = listings.Count(l => l.Price != null
+                Count = listings.Count(l => l.Price is not null
                                          && l.Price.Amount >= r.min
                                          && l.Price.Amount < r.max)
             })
