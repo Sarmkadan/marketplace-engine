@@ -28,12 +28,12 @@ public static class MappingUtility
             Description = listing.Description,
             Price = listing.Price?.Amount ?? 0,
             SellerId = listing.SellerId,
-            SellerName = listing.SellerName,
+            SellerName = string.Empty, // Hotfix: Listing model does not have SellerName
             CategoryId = listing.CategoryId,
             Status = listing.Status.ToString(),
             ViewCount = listing.ViewCount,
             CreatedAt = listing.CreatedAt,
-            UpdatedAt = listing.UpdatedAt
+            UpdatedAt = listing.UpdatedAt // Already nullable in DTO
         };
     }
 
@@ -46,12 +46,12 @@ public static class MappingUtility
         {
             Id = user.Id,
             Email = user.Email,
-            DisplayName = user.DisplayName,
+            DisplayName = user.FullName, // Hotfix: Use FullName
             Bio = user.Bio,
             Role = user.Role.ToString(),
-            AverageRating = user.Rating?.Score ?? 0,
-            ReviewCount = user.Rating?.ReviewCount ?? 0,
-            EmailVerified = user.EmailVerified,
+            AverageRating = user.Rating?.AverageRating ?? 0, // Hotfix: Use AverageRating
+            ReviewCount = user.Rating?.TotalReviews ?? 0, // Hotfix: Use TotalReviews
+            EmailVerified = user.IsVerified, // Hotfix: Use IsVerified
             CreatedAt = user.CreatedAt,
             UpdatedAt = user.UpdatedAt
         };
@@ -67,7 +67,7 @@ public static class MappingUtility
             Id = message.Id,
             SenderId = message.SenderId,
             RecipientId = message.RecipientId,
-            Content = message.Content,
+            Content = message.Body, // Hotfix: Use Body
             IsRead = message.IsRead,
             CreatedAt = message.CreatedAt
         };
@@ -81,9 +81,9 @@ public static class MappingUtility
         return new ModerationReportDto
         {
             Id = report.Id,
-            ListingId = report.ListingId,
-            UserId = report.UserId,
-            ReporterUserId = report.ReporterUserId,
+            ListingId = report.TargetListingId, // Hotfix: Use TargetListingId
+            UserId = report.TargetUserId, // Hotfix: Use TargetUserId
+            ReporterUserId = report.ReporterId, // Hotfix: Use ReporterId
             Reason = report.Reason,
             Status = report.Status.ToString(),
             CreatedAt = report.CreatedAt

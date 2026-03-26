@@ -6,6 +6,7 @@
 
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json; // Hotfix: Add missing using directive
 
 namespace MarketplaceEngine.Infrastructure.Integration;
 
