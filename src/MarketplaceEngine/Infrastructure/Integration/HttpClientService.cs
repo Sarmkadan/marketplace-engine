@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -49,7 +50,7 @@ public class HttpClientService
     {
         return await ExecuteWithRetryAsync(async () =>
         {
-            var content = data != null
+            var content = data is not null
                 ? new StringContent(JsonSerializer.Serialize(data), System.Text.Encoding.UTF8, "application/json")
                 : null;
 

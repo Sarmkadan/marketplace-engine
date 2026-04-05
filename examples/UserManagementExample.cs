@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -66,7 +67,7 @@ public class UserManagementExample
             // Example 2: Get user details
             Console.WriteLine("2. Retrieving user details...");
             var userDetails = await userService.GetUserAsync(seller.Id);
-            if (userDetails != null)
+            if (userDetails is not null)
             {
                 Console.WriteLine($"✓ User Details:");
                 Console.WriteLine($"  ID: {userDetails.Id}");
@@ -109,7 +110,7 @@ public class UserManagementExample
             // Example 6: Simulate user ratings
             Console.WriteLine("6. Adding ratings to user...");
             var sellerWithRatings = await userService.GetUserAsync(seller.Id);
-            if (sellerWithRatings != null)
+            if (sellerWithRatings is not null)
             {
                 Console.WriteLine($"✓ Seller Ratings:");
                 Console.WriteLine($"  Average Rating: {sellerWithRatings.Rating.AverageRating}");
@@ -147,7 +148,7 @@ public class UserManagementExample
             // Example 10: Get user by username
             Console.WriteLine("10. Finding user by username...");
             var foundUser = await userService.GetUserByUsernameAsync("john_seller");
-            if (foundUser != null)
+            if (foundUser is not null)
             {
                 Console.WriteLine($"✓ Found: {foundUser.FullName} ({foundUser.Email})\n");
             }
@@ -155,14 +156,14 @@ public class UserManagementExample
             // Example 11: Get user by email
             Console.WriteLine("11. Finding user by email...");
             var emailUser = await userService.GetUserByEmailAsync("seller@example.com");
-            if (emailUser != null)
+            if (emailUser is not null)
             {
                 Console.WriteLine($"✓ Found: {emailUser.FullName} (ID: {emailUser.Id})\n");
             }
 
             // Example 12: Update user profile
             Console.WriteLine("12. Updating user profile...");
-            if (sellerWithRatings != null)
+            if (sellerWithRatings is not null)
             {
                 await userService.UpdateUserProfileAsync(
                     userId: seller.Id,

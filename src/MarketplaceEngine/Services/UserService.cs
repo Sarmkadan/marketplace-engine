@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -27,7 +28,7 @@ public class UserService
     public async Task<User> RegisterUserAsync(string email, string fullName, string? phone = null)
     {
         var existingUser = await _userRepository.GetByEmailAsync(email);
-        if (existingUser != null)
+        if (existingUser is not null)
             throw new DuplicateResourceException("User", "email", email);
 
         var user = new User
@@ -50,7 +51,7 @@ public class UserService
     public async Task<User> GetUserAsync(Guid userId)
     {
         var user = await _userRepository.GetByIdAsync(userId);
-        if (user == null)
+        if (user is null)
             throw new ResourceNotFoundException("User", userId);
 
         return user;
@@ -60,7 +61,7 @@ public class UserService
     public async Task<User> GetUserByEmailAsync(string email)
     {
         var user = await _userRepository.GetByEmailAsync(email);
-        if (user == null)
+        if (user is null)
             throw new ResourceNotFoundException("User", email);
 
         return user;
@@ -75,13 +76,13 @@ public class UserService
         if (!string.IsNullOrEmpty(fullName))
             user.FullName = fullName;
 
-        if (phone != null)
+        if (phone is not null)
             user.Phone = string.IsNullOrWhiteSpace(phone) ? null : phone;
 
-        if (bio != null)
+        if (bio is not null)
             user.Bio = string.IsNullOrWhiteSpace(bio) ? null : bio;
 
-        if (location != null)
+        if (location is not null)
             user.Location = location;
 
         user.ValidateProfile();
@@ -106,7 +107,7 @@ public class UserService
     public async Task<User> ResendVerificationTokenAsync(string email)
     {
         var user = await _userRepository.GetByEmailAsync(email);
-        if (user == null)
+        if (user is null)
             throw new ResourceNotFoundException("User", email);
 
         if (user.IsVerified)
@@ -124,7 +125,7 @@ public class UserService
         if (user.TotalSales < 5)
             throw new InvalidOperationException("User must have at least 5 sales to be promoted to premium");
 
-        if (user.Rating == null || user.Rating.Score < 4)
+        if (user.Rating is null || user.Rating.Score < 4)
             throw new InvalidOperationException("User must have a rating of 4+ stars to be promoted to premium");
 
         user.PromoteToPremiumSeller();

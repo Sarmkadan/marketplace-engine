@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -45,7 +46,7 @@ public class CategoriesController : ControllerBase
         var cacheKey = "categories:all";
         var cached = await _cacheService.GetAsync<List<CategoryDto>>(cacheKey);
 
-        if (cached != null)
+        if (cached is not null)
         {
             _logger.LogDebug("Cache hit for categories");
             return Ok(cached);
@@ -78,13 +79,13 @@ public class CategoriesController : ControllerBase
         var cacheKey = $"category:{id}";
         var cached = await _cacheService.GetAsync<CategoryDto>(cacheKey);
 
-        if (cached != null)
+        if (cached is not null)
         {
             return Ok(cached);
         }
 
         var category = await _categoryService.GetCategoryAsync(id);
-        if (category == null)
+        if (category is null)
         {
             return NotFound(new { error = "Category not found" });
         }
@@ -119,7 +120,7 @@ public class CategoriesController : ControllerBase
         var cacheKey = $"category:{id}:listings:page:{page}:size:{pageSize}";
         var cached = await _cacheService.GetAsync<PaginatedResponse<ListingDto>>(cacheKey);
 
-        if (cached != null)
+        if (cached is not null)
         {
             return Ok(cached);
         }
@@ -151,7 +152,7 @@ public class CategoriesController : ControllerBase
         var cacheKey = $"category:{id}:statistics";
         var cached = await _cacheService.GetAsync<CategoryStatisticsDto>(cacheKey);
 
-        if (cached != null)
+        if (cached is not null)
         {
             return Ok(cached);
         }

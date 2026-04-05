@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -71,7 +72,7 @@ public class WebhookService
 
             // Deserialize webhook payload
             var webhookEvent = JsonSerializer.Deserialize<WebhookEvent>(rawPayload);
-            if (webhookEvent == null)
+            if (webhookEvent is null)
             {
                 _logger.LogWarning("Failed to deserialize webhook payload");
                 return;

@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -29,7 +30,7 @@ public class MarketplaceDbContext
     // Gets singleton instance of the database context
     public static MarketplaceDbContext GetInstance()
     {
-        if (_instance == null)
+        if (_instance is null)
         {
             lock (_lock)
             {
