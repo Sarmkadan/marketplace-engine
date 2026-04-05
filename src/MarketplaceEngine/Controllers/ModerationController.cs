@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -73,7 +74,7 @@ public class ModerationController : ControllerBase
         _logger.LogInformation("Fetching report details: {ReportId}", id);
 
         var report = await _moderationService.GetReportAsync(id);
-        if (report == null)
+        if (report is null)
         {
             return NotFound();
         }
@@ -97,7 +98,7 @@ public class ModerationController : ControllerBase
             return BadRequest("Action notes are required");
 
         var report = await _moderationService.GetReportAsync(id);
-        if (report == null)
+        if (report is null)
         {
             return NotFound();
         }
@@ -134,7 +135,7 @@ public class ModerationController : ControllerBase
             return BadRequest("Rejection reason is required");
 
         var report = await _moderationService.GetReportAsync(id);
-        if (report == null)
+        if (report is null)
         {
             return NotFound();
         }
@@ -196,7 +197,7 @@ public class ModerationController : ControllerBase
         var cacheKey = "moderation:statistics";
         var cached = await _cacheService.GetAsync<ModerationStatsDto>(cacheKey);
 
-        if (cached != null)
+        if (cached is not null)
         {
             return Ok(cached);
         }

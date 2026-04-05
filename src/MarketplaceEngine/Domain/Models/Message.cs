@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -101,7 +102,7 @@ public class Message
     // Adds a reply to this message
     public void AddReply(Message reply)
     {
-        if (reply == null)
+        if (reply is null)
             throw new ArgumentNullException(nameof(reply));
 
         reply.ParentMessageId = Id;

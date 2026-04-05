@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -66,7 +67,7 @@ public class CacheService
     /// </summary>
     public async Task SetAsync<T>(string key, T value, TimeSpan? ttl = null)
     {
-        if (string.IsNullOrWhiteSpace(key) || value == null)
+        if (string.IsNullOrWhiteSpace(key) || value is null)
             return;
 
         var expiresAt = DateTime.UtcNow.Add(ttl ?? TimeSpan.FromMinutes(5));

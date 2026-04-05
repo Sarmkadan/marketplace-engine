@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -54,7 +55,7 @@ public sealed class Rating : IEquatable<Rating>
 
     public bool Equals(Rating? other)
     {
-        return other != null &&
+        return other is not null &&
                Score == other.Score &&
                TotalReviews == other.TotalReviews;
     }

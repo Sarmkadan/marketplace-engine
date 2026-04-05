@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -31,7 +32,7 @@ public class ModerationService
         await ValidateReporterAsync(reporterId);
 
         var targetUser = await _userRepository.GetByIdAsync(targetUserId);
-        if (targetUser == null)
+        if (targetUser is null)
             throw new ResourceNotFoundException("User", targetUserId);
 
         var report = new ModerationReport
@@ -56,7 +57,7 @@ public class ModerationService
         await ValidateReporterAsync(reporterId);
 
         var listing = await _listingRepository.GetByIdAsync(listingId);
-        if (listing == null)
+        if (listing is null)
             throw new ResourceNotFoundException("Listing", listingId);
 
         var report = new ModerationReport
@@ -78,7 +79,7 @@ public class ModerationService
     public async Task<ModerationReport> AssignReportAsync(ModerationReport report, Guid moderatorId)
     {
         var moderator = await _userRepository.GetByIdAsync(moderatorId);
-        if (moderator == null)
+        if (moderator is null)
             throw new ResourceNotFoundException("User", moderatorId);
 
         if (moderator.Role != UserRole.Moderator && moderator.Role != UserRole.Administrator)
@@ -114,7 +115,7 @@ public class ModerationService
         if (report.TargetListingId.HasValue && report.TargetListingId != Guid.Empty)
         {
             var listing = await _listingRepository.GetByIdAsync(report.TargetListingId.Value);
-            if (listing != null)
+            if (listing is not null)
             {
                 listing.Flag();
                 await _listingRepository.UpdateAsync(listing);
@@ -131,7 +132,7 @@ public class ModerationService
         if (report.TargetUserId.HasValue && report.TargetUserId != Guid.Empty)
         {
             var user = await _userRepository.GetByIdAsync(report.TargetUserId.Value);
-            if (user != null)
+            if (user is not null)
             {
                 user.Deactivate();
                 await _userRepository.UpdateAsync(user);
@@ -148,7 +149,7 @@ public class ModerationService
         if (report.TargetUserId.HasValue && report.TargetUserId != Guid.Empty)
         {
             var user = await _userRepository.GetByIdAsync(report.TargetUserId.Value);
-            if (user != null)
+            if (user is not null)
             {
                 user.Deactivate();
                 // Mark user as banned by setting special flag
@@ -186,7 +187,7 @@ public class ModerationService
     public async Task<List<ModerationReport>> GetModeratorAssignmentsAsync(Guid moderatorId)
     {
         var moderator = await _userRepository.GetByIdAsync(moderatorId);
-        if (moderator == null)
+        if (moderator is null)
             throw new ResourceNotFoundException("User", moderatorId);
 
         await Task.Delay(5);
@@ -203,7 +204,7 @@ public class ModerationService
     private async Task ValidateReporterAsync(Guid reporterId)
     {
         var reporter = await _userRepository.GetByIdAsync(reporterId);
-        if (reporter == null)
+        if (reporter is null)
             throw new ResourceNotFoundException("User", reporterId);
 
         if (!reporter.IsActive)

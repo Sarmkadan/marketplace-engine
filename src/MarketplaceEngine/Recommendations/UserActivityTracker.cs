@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -70,7 +71,7 @@ public sealed class UserActivityTracker : IUserActivityTracker
         Guid userId, TimeSpan? window = null, CancellationToken cancellationToken = default)
     {
         if (!_byUser.TryGetValue(userId, out var signals))
-            return Task.FromResult<IReadOnlyList<UserActivitySignal>>(Array.Empty<UserActivitySignal>());
+            return Task.FromResult<IReadOnlyList<UserActivitySignal>>([]);
 
         List<UserActivitySignal> snapshot;
         lock (_writeLock)
@@ -88,7 +89,7 @@ public sealed class UserActivityTracker : IUserActivityTracker
         Guid listingId, CancellationToken cancellationToken = default)
     {
         if (!_byListing.TryGetValue(listingId, out var audience))
-            return Task.FromResult<IReadOnlyList<Guid>>(Array.Empty<Guid>());
+            return Task.FromResult<IReadOnlyList<Guid>>([]);
 
         List<Guid> snapshot;
         lock (_writeLock)

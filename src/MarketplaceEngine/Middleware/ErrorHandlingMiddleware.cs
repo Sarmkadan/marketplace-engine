@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -64,7 +65,7 @@ public class ErrorHandlingMiddleware
                 context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
                 response.Code = "VALIDATION_ERROR";
                 response.Message = ex.Message;
-                if (ex.ValidationErrors != null)
+                if (ex.ValidationErrors is not null)
                 {
                     response.Details = ex.ValidationErrors.ToDictionary(
                         kvp => kvp.Key,
