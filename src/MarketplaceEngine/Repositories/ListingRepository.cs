@@ -18,6 +18,7 @@ public class ListingRepository : IListingRepository
 {
     private readonly MarketplaceDbContext _context;
     private const string ResourceType = "Listing";
+    private static readonly object _lock = new();
 
     public ListingRepository()
     {
@@ -27,13 +28,19 @@ public class ListingRepository : IListingRepository
     public async Task<Listing?> GetByIdAsync(Guid id)
     {
         await Task.Delay(5); // Simulate async operation
-        return _context.Listings.FirstOrDefault(l => l.Id == id);
+        lock (_lock)
+        {
+            return _context.Listings.FirstOrDefault(l => l.Id == id);
+        }
     }
 
     public async Task<List<Listing>> GetAllAsync()
     {
         await Task.Delay(5);
-        return _context.Listings.ToList();
+        lock (_lock)
+        {
+            return _context.Listings.ToList();
+        }
     }
 
     public async Task<Listing> AddAsync(Listing entity)
@@ -43,7 +50,10 @@ public class ListingRepository : IListingRepository
 
         entity.Id = Guid.NewGuid();
         entity.CreatedAt = DateTime.UtcNow;
-        _context.Listings.Add(entity);
+        lock (_lock)
+        {
+            _context.Listings.Add(entity);
+        }
 
         await Task.Delay(5);
         return entity;
@@ -54,13 +64,17 @@ public class ListingRepository : IListingRepository
         if (entity is null)
             throw new ArgumentNullException(nameof(entity));
 
-        var existing = _context.Listings.FirstOrDefault(l => l.Id == entity.Id);
-        if (existing is null)
-            throw new ResourceNotFoundException(ResourceType, entity.Id);
+        Listing? existing;
+        lock (_lock)
+        {
+            existing = _context.Listings.FirstOrDefault(l => l.Id == entity.Id);
+            if (existing is null)
+                throw new ResourceNotFoundException(ResourceType, entity.Id);
 
-        entity.UpdatedAt = DateTime.UtcNow;
-        var index = _context.Listings.IndexOf(existing);
-        _context.Listings[index] = entity;
+            entity.UpdatedAt = DateTime.UtcNow;
+            var index = _context.Listings.IndexOf(existing);
+            _context.Listings[index] = entity; // Hotfix: Ensure atomic update of listing in shared collection
+        }
 
         await Task.Delay(5);
         return entity;
@@ -68,71 +82,100 @@ public class ListingRepository : IListingRepository
 
     public async Task DeleteAsync(Guid id)
     {
-        var listing = await GetByIdAsync(id);
-        if (listing is null)
-            throw new ResourceNotFoundException(ResourceType, id);
+        Listing? listing;
+        lock (_lock)
+        {
+            listing = _context.Listings.FirstOrDefault(l => l.Id == id);
+            if (listing is null)
+                throw new ResourceNotFoundException(ResourceType, id);
 
-        _context.Listings.Remove(listing);
+            _context.Listings.Remove(listing);
+        }
+
         await Task.Delay(5);
     }
 
     public async Task<bool> ExistsAsync(Guid id)
     {
         await Task.Delay(5);
-        return _context.Listings.Any(l => l.Id == id);
+        lock (_lock)
+        {
+            return _context.Listings.Any(l => l.Id == id);
+        }
     }
 
     public async Task<int> CountAsync()
     {
         await Task.Delay(5);
-        return _context.Listings.Count;
+        lock (_lock)
+        {
+            return _context.Listings.Count;
+        }
     }
 
     public async Task<List<Listing>> GetBySellerIdAsync(Guid sellerId)
     {
         await Task.Delay(5);
-        return _context.Listings.Where(l => l.SellerId == sellerId).ToList();
+        lock (_lock)
+        {
+            return _context.Listings.Where(l => l.SellerId == sellerId).ToList();
+        }
     }
 
     public async Task<List<Listing>> GetByCategoryIdAsync(Guid categoryId)
     {
         await Task.Delay(5);
-        return _context.Listings.Where(l => l.CategoryId == categoryId).ToList();
+        lock (_lock)
+        {
+            return _context.Listings.Where(l => l.CategoryId == categoryId).ToList();
+        }
     }
 
     public async Task<List<Listing>> GetByStatusAsync(ListingStatus status)
     {
         await Task.Delay(5);
-        return _context.Listings.Where(l => l.Status == status).ToList();
+        lock (_lock)
+        {
+            return _context.Listings.Where(l => l.Status == status).ToList();
+        }
     }
 
     public async Task<List<Listing>> GetActiveListingsAsync()
     {
         await Task.Delay(5);
-        return _context.Listings
-            .Where(l => l.Status == ListingStatus.Active && l.PublishedAt.HasValue)
-            .OrderByDescending(l => l.PublishedAt)
-            .ToList();
+        lock (_lock)
+        {
+            return _context.Listings
+                .Where(l => l.Status == ListingStatus.Active && l.PublishedAt.HasValue)
+                .OrderByDescending(l => l.PublishedAt)
+                .ToList();
+        }
     }
 
     public async Task<List<Listing>> GetFeaturedListingsAsync(int limit = 10)
     {
         await Task.Delay(5);
-        return _context.Listings
-            .Where(l => l.IsFeatured && l.Status == ListingStatus.Active)
-            .OrderByDescending(l => l.ViewCount)
-            .Take(limit)
-            .ToList();
+        lock (_lock)
+        {
+            return _context.Listings
+                .Where(l => l.IsFeatured && l.Status == ListingStatus.Active)
+                .OrderByDescending(l => l.ViewCount)
+                .Take(limit)
+                .ToList();
+        }
     }
 
     public async Task<List<Listing>> GetRecentListingsAsync(int days = 7)
     {
         await Task.Delay(5);
         var cutoffDate = DateTime.UtcNow.AddDays(-days);
-        return _context.Listings
-            .Where(l => l.PublishedAt >= cutoffDate && l.Status == ListingStatus.Active)
-            .OrderByDescending(l => l.PublishedAt)
-            .ToList();
+        lock (_lock)
+        {
+            return _context.Listings
+                .Where(l => l.PublishedAt >= cutoffDate && l.Status == ListingStatus.Active)
+                .OrderByDescending(l => l.PublishedAt)
+                .ToList();
+        }
     }
 
     public async Task<List<Listing>> SearchAsync(string query)
@@ -142,12 +185,15 @@ public class ListingRepository : IListingRepository
 
         await Task.Delay(5);
         var searchTerm = query.ToLowerInvariant();
-        return _context.Listings
-            .Where(l => l.Status == ListingStatus.Active &&
-                       (l.Title.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-                        l.Description.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)))
-            .OrderByDescending(l => l.ViewCount)
-            .ToList();
+        lock (_lock)
+        {
+            return _context.Listings
+                .Where(l => l.Status == ListingStatus.Active &&
+                           (l.Title.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                            l.Description.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)))
+                .OrderByDescending(l => l.ViewCount)
+                .ToList();
+        }
     }
 
     public async Task<List<Listing>> GetByTagsAsync(List<string> tags)
@@ -157,20 +203,26 @@ public class ListingRepository : IListingRepository
 
         await Task.Delay(5);
         var normalizedTags = tags.Select(t => t.ToLowerInvariant()).ToList();
-        return _context.Listings
-            .Where(l => l.Tags.Any(t => normalizedTags.Contains(t)) && l.Status == ListingStatus.Active)
-            .ToList();
+        lock (_lock)
+        {
+            return _context.Listings
+                .Where(l => l.Tags.Any(t => normalizedTags.Contains(t)) && l.Status == ListingStatus.Active)
+                .ToList();
+        }
     }
 
     public async Task<List<Listing>> GetNearbyAsync(double latitude, double longitude, double radiusKm)
     {
         await Task.Delay(5);
-        return _context.Listings
-            .Where(l => l.Location is not null &&
-                       l.Status == ListingStatus.Active &&
-                       l.Location.DistanceTo(new Domain.ValueObjects.Location(
-                           "Temp", "Temp", "US", null, latitude, longitude)) <= radiusKm)
-            .ToList();
+        lock (_lock)
+        {
+            return _context.Listings
+                .Where(l => l.Location is not null &&
+                           l.Status == ListingStatus.Active &&
+                           l.Location.DistanceTo(new Domain.ValueObjects.Location(
+                               "Temp", "Temp", "US", null, latitude, longitude)) <= radiusKm)
+                .ToList();
+        }
     }
 
     public async Task<(List<Listing> items, int total)> GetPagedAsync(int pageNumber, int pageSize)
@@ -180,10 +232,14 @@ public class ListingRepository : IListingRepository
         if (pageSize > 100) pageSize = 100;
 
         await Task.Delay(5);
-        var allListings = _context.Listings
-            .Where(l => l.Status == ListingStatus.Active)
-            .OrderByDescending(l => l.PublishedAt)
-            .ToList();
+        List<Listing> allListings;
+        lock (_lock)
+        {
+            allListings = _context.Listings
+                .Where(l => l.Status == ListingStatus.Active)
+                .OrderByDescending(l => l.PublishedAt)
+                .ToList();
+        }
 
         var total = allListings.Count;
         var items = allListings
