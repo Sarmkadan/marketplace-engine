@@ -26,9 +26,9 @@ public class ModerationReportDto
     public ModerationReportDto(ModerationReport report)
     {
         Id = report.Id;
-        ListingId = report.ListingId;
-        UserId = report.UserId;
-        ReporterUserId = report.ReporterUserId;
+        ListingId = report.TargetListingId; // Hotfix: Use TargetListingId
+        UserId = report.TargetUserId; // Hotfix: Use TargetUserId
+        ReporterUserId = report.ReporterId; // Hotfix: Use ReporterId
         Reason = report.Reason;
         Status = report.Status.ToString();
         CreatedAt = report.CreatedAt;
@@ -58,12 +58,12 @@ public class ModerationReportDetailsDto
     public ModerationReportDetailsDto(ModerationReport report)
     {
         Id = report.Id;
-        ListingId = report.ListingId;
-        UserId = report.UserId;
-        ReporterUserId = report.ReporterUserId;
+        ListingId = report.TargetListingId; // Hotfix: Use TargetListingId
+        UserId = report.TargetUserId; // Hotfix: Use TargetUserId
+        ReporterUserId = report.ReporterId; // Hotfix: Use ReporterId
         Reason = report.Reason;
         Status = report.Status.ToString();
-        ResolutionNotes = report.ResolutionNotes;
+        ResolutionNotes = report.ReviewNotes; // Hotfix: Use ReviewNotes
         CreatedAt = report.CreatedAt;
         ResolvedAt = report.ResolvedAt;
     }
@@ -90,9 +90,9 @@ public class RejectReportRequest
 /// </summary>
 public class CreateReportRequest
 {
-    public Guid? ListingId { get; set; }
-    public Guid? UserId { get; set; }
-    public Guid ReporterUserId { get; set; }
+    public Guid? TargetListingId { get; set; } // Hotfix: Use TargetListingId
+    public Guid? TargetUserId { get; set; } // Hotfix: Use TargetUserId
+    public Guid ReporterId { get; set; } // Hotfix: Use ReporterId
     public string Reason { get; set; } = string.Empty;
 }
 

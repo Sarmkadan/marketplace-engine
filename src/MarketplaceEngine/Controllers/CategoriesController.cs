@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using MarketplaceEngine.Services;
 using MarketplaceEngine.DTOs;
 using MarketplaceEngine.Infrastructure.Caching;
+using MarketplaceEngine.Repositories; // Hotfix: Add missing using directive
 
 namespace MarketplaceEngine.Controllers;
 
@@ -21,15 +22,18 @@ public class CategoriesController : ControllerBase
 {
     private readonly CategoryService _categoryService;
     private readonly CacheService _cacheService;
+    private readonly IListingRepository _listingRepository; // Hotfix: Injected for category listings
     private readonly ILogger<CategoriesController> _logger;
 
     public CategoriesController(
         CategoryService categoryService,
         CacheService cacheService,
+        IListingRepository listingRepository,
         ILogger<CategoriesController> logger)
     {
         _categoryService = categoryService;
         _cacheService = cacheService;
+        _listingRepository = listingRepository;
         _logger = logger;
     }
 
@@ -125,13 +129,22 @@ public class CategoriesController : ControllerBase
             return Ok(cached);
         }
 
-        var listings = await _categoryService.GetCategoryListingsAsync(id, page, pageSize);
+        // Hotfix: CategoryService.GetCategoryListingsAsync does not exist.
+        // Using IListingRepository and manually paginating.
+        var allListings = await _listingRepository.GetByCategoryIdAsync(id);
+        var total = allListings.Count;
+        var paginatedListings = allListings
+            .OrderByDescending(l => l.CreatedAt) // Order by creation date as a default
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToList();
+
         var response = new PaginatedResponse<ListingDto>
         {
-            Items = listings.Select(l => new ListingDto(l)).ToList(),
+            Items = paginatedListings.Select(l => new ListingDto(l)).ToList(),
             Page = page,
             PageSize = pageSize,
-            Total = listings.Count
+            Total = total
         };
 
         // Cache for 10 minutes
@@ -157,7 +170,9 @@ public class CategoriesController : ControllerBase
             return Ok(cached);
         }
 
-        var listings = await _categoryService.GetCategoryListingsAsync(id, 1, int.MaxValue);
+        // Hotfix: CategoryService.GetCategoryListingsAsync does not exist.
+        // Using IListingRepository to get all listings for statistics.
+        var listings = await _listingRepository.GetByCategoryIdAsync(id);
 
         var stats = new CategoryStatisticsDto
         {
