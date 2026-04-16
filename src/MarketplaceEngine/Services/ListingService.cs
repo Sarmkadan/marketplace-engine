@@ -58,9 +58,9 @@ public class ListingService
         return created;
     }
 
-    // Updates an existing listing
-    public async Task<Listing> UpdateListingAsync(Guid listingId, Guid requesterId, string? title = null,
-        string? description = null, Money? price = null)
+    // Updates an existing listing; returns the previous CategoryId so callers can invalidate caches
+    public async Task<(Listing listing, Guid previousCategoryId)> UpdateListingAsync(Guid listingId, Guid requesterId,
+        string? title = null, string? description = null, Money? price = null, Guid? categoryId = null)
     {
         var listing = await _listingRepository.GetByIdAsync(listingId);
         if (listing is null)
@@ -68,6 +68,8 @@ public class ListingService
 
         if (listing.SellerId != requesterId)
             throw new UnauthorizedException(requesterId, "update this listing");
+
+        var previousCategoryId = listing.CategoryId;
 
         if (!string.IsNullOrEmpty(title))
             listing.Title = title;
@@ -78,8 +80,12 @@ public class ListingService
         if (price is not null)
             listing.Price = price;
 
+        if (categoryId.HasValue && categoryId.Value != Guid.Empty)
+            listing.CategoryId = categoryId.Value;
+
         listing.ValidateForPublishing();
-        return await _listingRepository.UpdateAsync(listing);
+        var updated = await _listingRepository.UpdateAsync(listing);
+        return (updated, previousCategoryId);
     }
 
     // Publishes or unpublishes a listing

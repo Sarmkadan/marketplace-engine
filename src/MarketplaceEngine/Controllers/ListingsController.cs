@@ -157,6 +157,40 @@ public class ListingsController : ControllerBase
     }
 
     /// <summary>
+    /// Updates an existing listing. Invalidates all category and search caches so that
+    /// category-filtered searches reflect the change immediately.
+    /// </summary>
+    [HttpPut("{id}")]
+    [ProducesResponseType(typeof(ListingDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> UpdateListing(Guid id, [FromBody] UpdateListingRequest request)
+    {
+        _logger.LogInformation("Updating listing: {ListingId}", id);
+
+        var price = request.Price.HasValue ? new Money(request.Price.Value, "USD") : null;
+
+        var (updated, previousCategoryId) = await _listingService.UpdateListingAsync(
+            id, request.SellerId, request.Title, request.Description, price, request.CategoryId);
+
+        // Invalidate the specific listing cache
+        await _cacheService.RemoveAsync($"listing:{id}");
+
+        // Invalidate category-level listing caches for both old and new categories
+        await _cacheService.RemoveAsync($"category:{previousCategoryId}:listings:*");
+        if (request.CategoryId.HasValue && request.CategoryId.Value != previousCategoryId)
+            await _cacheService.RemoveAsync($"category:{request.CategoryId.Value}:listings:*");
+
+        // Invalidate all search result caches so stale category data is not served
+        await _cacheService.RemoveAsync("search:*");
+        await InvalidateListingsCaches();
+
+        _logger.LogInformation("Listing updated and caches invalidated: {ListingId}", id);
+        return Ok(new ListingDto(updated));
+    }
+
+    /// <summary>
     /// Searches listings with full-text search capability.
     /// Search results are cached separately from listing listings.
     /// </summary>
