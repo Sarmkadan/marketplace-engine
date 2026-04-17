@@ -62,42 +62,31 @@ public class MessagesController : ControllerBase
     }
 
     /// <summary>
-    /// Retrieves messages in a specific conversation with pagination.
-    /// Uses message ID ranges instead of caching individual messages
-    /// to handle real-time message delivery correctly.
+    /// Retrieves messages in a specific conversation with cursor-based pagination.
+    /// Using a cursor (last seen message ID) instead of page offsets prevents duplicate
+    /// messages when new rows are inserted concurrently between requests.
     /// </summary>
     [HttpGet("conversations/{conversationId}/messages")]
-    [ProducesResponseType(typeof(PaginatedResponse<MessageDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(CursorPaginatedResponse<MessageDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetConversationMessages(
-        Guid conversationId, // Assuming this is actually a UserId for simplicity in this hotfix
-        [FromQuery] int page = 1,
+        Guid conversationId,
+        [FromQuery] Guid? after = null,
         [FromQuery] int pageSize = 50)
     {
         _logger.LogInformation("Fetching messages for conversation: {ConversationId}", conversationId);
 
-        if (page < 1 || pageSize < 1 || pageSize > 100)
-            return BadRequest("Invalid pagination parameters");
+        if (pageSize < 1 || pageSize > 100)
+            return BadRequest("Invalid pageSize: must be between 1 and 100");
 
-        // Hotfix: MessagingService.GetConversationMessagesAsync does not exist.
-        // GetConversationAsync takes two user IDs, not a single conversationId.
-        // For compilation, we will assume conversationId is actually a UserId here
-        // and fetch all messages for that user as a workaround.
-        // A proper solution requires a conversation abstraction in MessagingService.
-        var allMessages = await _messagingService.GetReceivedMessagesAsync(conversationId); // Using GetReceivedMessagesAsync as a fallback
+        var (items, nextCursor) = await _messagingService.GetMessagesByCursorAsync(
+            conversationId, after, pageSize);
 
-        var total = allMessages.Count;
-        var paginatedMessages = allMessages
-            .OrderByDescending(m => m.CreatedAt)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
-            .ToList();
-
-        var response = new PaginatedResponse<MessageDto>
+        var response = new CursorPaginatedResponse<MessageDto>
         {
-            Items = paginatedMessages.Select(m => new MessageDto(m)).ToList(),
-            Page = page,
+            Items = items.Select(m => new MessageDto(m)).ToList(),
+            NextCursor = nextCursor,
             PageSize = pageSize,
-            Total = total
+            HasMore = nextCursor.HasValue
         };
 
         return Ok(response);
