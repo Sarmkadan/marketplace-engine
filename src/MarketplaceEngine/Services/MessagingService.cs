@@ -201,6 +201,17 @@ public class MessagingService
         return await _messageRepository.GetPagedAsync(userId, pageNumber, pageSize);
     }
 
+    // Gets paginated messages using cursor-based pagination to avoid duplicates on concurrent writes
+    public async Task<(List<Message> items, Guid? nextCursor)> GetMessagesByCursorAsync(
+        Guid userId, Guid? afterId, int pageSize)
+    {
+        var user = await _userRepository.GetByIdAsync(userId);
+        if (user is null)
+            throw new ResourceNotFoundException("User", userId);
+
+        return await _messageRepository.GetPagedByCursorAsync(userId, afterId, pageSize);
+    }
+
     // Gets conversation count
     public async Task<int> GetConversationCountAsync(Guid userId)
     {

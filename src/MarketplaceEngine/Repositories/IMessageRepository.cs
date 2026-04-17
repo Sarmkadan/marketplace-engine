@@ -40,6 +40,9 @@ public interface IMessageRepository : IRepository<Message>
     // Retrieves paginated messages
     Task<(List<Message> items, int total)> GetPagedAsync(Guid userId, int pageNumber, int pageSize);
 
+    // Retrieves messages using cursor-based pagination to avoid duplicates under concurrent writes
+    Task<(List<Message> items, Guid? nextCursor)> GetPagedByCursorAsync(Guid userId, Guid? afterId, int pageSize);
+
     // Marks messages as read
     Task MarkAsReadAsync(List<Guid> messageIds);
 
