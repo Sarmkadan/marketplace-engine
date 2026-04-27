@@ -177,10 +177,14 @@ public class ListingsController : ControllerBase
         // Invalidate the specific listing cache
         await _cacheService.RemoveAsync($"listing:{id}");
 
-        // Invalidate category-level listing caches for both old and new categories
+        // Invalidate category-level listing and statistics caches for both old and new categories
         await _cacheService.RemoveAsync($"category:{previousCategoryId}:listings:*");
+        await _cacheService.RemoveAsync($"category:{previousCategoryId}:statistics");
         if (request.CategoryId.HasValue && request.CategoryId.Value != previousCategoryId)
+        {
             await _cacheService.RemoveAsync($"category:{request.CategoryId.Value}:listings:*");
+            await _cacheService.RemoveAsync($"category:{request.CategoryId.Value}:statistics");
+        }
 
         // Invalidate all search result caches so stale category data is not served
         await _cacheService.RemoveAsync("search:*");
