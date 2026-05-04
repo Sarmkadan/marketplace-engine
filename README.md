@@ -496,3 +496,30 @@ Console.WriteLine($"Review status: {review.Status}");
 Console.WriteLine($"Seller reply: {review.SellerReply}");
 ```
 
+## ModerationReport
+
+The `ModerationReport` class represents a submission reporting a violation of platform guidelines, such as inappropriate user behavior, harmful content in listings, or message abuse. It tracks the reporter, the target (user, listing, or message), the reason for the report, and the current administrative status for review.
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.Domain.Models;
+using System;
+
+// Create a new moderation report for a user violation
+var moderationReport = new ModerationReport
+{
+    Id = Guid.NewGuid(),
+    ReporterId = Guid.NewGuid(),
+    TargetUserId = Guid.NewGuid(),
+    Reason = "Harassment",
+    Details = "User sent offensive messages.",
+    Status = ModerationStatus.Pending,
+    Priority = 2,
+    CreatedAt = DateTime.UtcNow
+};
+
+Console.WriteLine($"Report ID: {moderationReport.Id}");
+Console.WriteLine($"Report Status: {moderationReport.Status}");
+```
+
