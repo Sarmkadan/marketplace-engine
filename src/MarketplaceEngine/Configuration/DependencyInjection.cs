@@ -6,11 +6,19 @@
 using Microsoft.Extensions.DependencyInjection;
 using MarketplaceEngine.Repositories;
 using MarketplaceEngine.Services;
+using MarketplaceEngine.Infrastructure.Caching;
+using MarketplaceEngine.Infrastructure.Events;
+using MarketplaceEngine.Infrastructure.Background;
+using MarketplaceEngine.Infrastructure.Integration;
+using MarketplaceEngine.Infrastructure.Security;
+using MarketplaceEngine.Infrastructure.Formatters;
+using MarketplaceEngine.Utilities;
 
 namespace MarketplaceEngine.Configuration;
 
 /// <summary>
 /// Configures dependency injection for the marketplace application.
+/// Registers all Phase 1 and Phase 2 services for the marketplace engine.
 /// </summary>
 public static class DependencyInjection
 {
@@ -22,7 +30,7 @@ public static class DependencyInjection
         services.AddSingleton<IUserRepository, UserRepository>();
         services.AddSingleton<IMessageRepository, MessageRepository>();
 
-        // Register services
+        // Register domain services
         services.AddSingleton<ListingService>();
         services.AddSingleton<SearchService>();
         services.AddSingleton<UserService>();
@@ -30,7 +38,61 @@ public static class DependencyInjection
         services.AddSingleton<CategoryService>();
         services.AddSingleton<MessagingService>();
 
+        // Register caching services
+        services.AddSingleton<CacheService>();
+
+        // Register event bus and handlers
+        services.AddSingleton<EventBus>();
+        services.RegisterEventHandlers();
+
+        // Register background job queue
+        services.AddSingleton<BackgroundJobQueue>();
+
+        // Register integration services
+        services.AddHttpClient<HttpClientService>();
+        services.AddSingleton<IListingProvider, DropshipProviderClient>(provider =>
+        {
+            var httpClient = provider.GetRequiredService<IHttpClientFactory>().CreateClient();
+            var logger = provider.GetRequiredService<ILogger<DropshipProviderClient>>();
+            return new DropshipProviderClient(
+                new HttpClientService(httpClient, provider.GetRequiredService<ILogger<HttpClientService>>()),
+                logger,
+                "https://api.example.com", // Configuration
+                "api-key-here"); // Configuration
+        });
+        services.AddSingleton<ExternalListingSyncService>();
+        services.AddSingleton<WebhookService>(provider =>
+        {
+            var logger = provider.GetRequiredService<ILogger<WebhookService>>();
+            return new WebhookService(logger, "webhook-secret-key"); // Configuration
+        });
+
+        // Register security services
+        services.AddSingleton<TokenService>(provider =>
+        {
+            var logger = provider.GetRequiredService<ILogger<TokenService>>();
+            return new TokenService(logger, "token-secret-key"); // Configuration
+        });
+        services.AddSingleton<ApiKeyValidator>();
+        services.AddSingleton<PermissionService>();
+
+        // Register formatters
+        services.AddSingleton<FormatterFactory>();
+
         return services;
+    }
+
+    /// <summary>
+    /// Registers event handlers with the event bus.
+    /// </summary>
+    private static void RegisterEventHandlers(this IServiceCollection services)
+    {
+        services.AddSingleton<IEventHandler<ListingCreatedEvent>, ListingCreatedEventHandler>();
+        services.AddSingleton<IEventHandler<MessageSentEvent>, MessageSentEventHandler>();
+        services.AddSingleton<IEventHandler<ReportCreatedEvent>, ReportCreatedEventHandler>();
+        services.AddSingleton<IEventHandler<UserCreatedEvent>, UserCreatedEventHandler>();
+        services.AddSingleton<IEventHandler<UserEmailVerifiedEvent>, UserEmailVerifiedEventHandler>();
+        services.AddSingleton<IEventHandler<RatingSubmittedEvent>, RatingSubmittedEventHandler>();
     }
 
     // Registers API endpoints
