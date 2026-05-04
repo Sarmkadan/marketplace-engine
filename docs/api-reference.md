@@ -175,40 +175,120 @@ GET /api/v1/listings/{id}
 **Error Responses:**
 - 404 Not Found - Listing doesn't exist
 
-### Search Listings
+### Search Listings (prefix/keyword)
 
 ```http
-GET /api/v1/listings/search?q=iphone&category=Electronics&priceMin=500&priceMax=1500
+GET /api/v1/listings/search?q=iphone&limit=10
 ```
 
 **Query Parameters:**
-- `q` (string, required) - Search query
-- `category` (string, optional) - Filter by category
-- `tags` (string, optional) - Comma-separated tags
-- `priceMin` (decimal, optional) - Minimum price
-- `priceMax` (decimal, optional) - Maximum price
-- `location` (string, optional) - City or country
-- `sortBy` (string, optional) - `relevance`, `price`, `newest`, `rating`
-- `page` (integer, optional) - Page number
-- `pageSize` (integer, optional) - Items per page
+- `q` (string, required, min: 2 chars) - Search query matched against title and description
+- `limit` (integer, optional, default: 10) - Maximum results to return
 
 **Response (200 OK):**
 ```json
 {
-  "success": true,
-  "data": {
-    "items": [
-      {
-        "id": 1,
-        "title": "iPhone 14 Pro - 256GB Space Black",
-        "price": { "amount": 999.99, "currency": "USD" },
-        "rating": 4.8,
-        "location": { "city": "New York" }
-      }
-    ],
-    "totalCount": 45,
-    "relevanceScore": 0.95
-  }
+  "query": "iphone",
+  "results": [
+    {
+      "id": "3fa85f64-...",
+      "title": "iPhone 14 Pro - 256GB Space Black",
+      "price": 999.99,
+      "categoryId": "...",
+      "status": "Active"
+    }
+  ]
+}
+```
+
+---
+
+## Full-Text Search Endpoints
+
+### Full-Text Search with Relevance Scoring
+
+```http
+GET /api/v1/search/full-text?q=vintage+leather+jacket&categoryId=...&minPrice=50&maxPrice=500&page=1&pageSize=20
+```
+
+Full-text search across listing titles, descriptions, and tags with ranked relevance scoring.
+Results are ordered by a TF-inspired relevance score that also boosts featured listings and
+recently published items. The response includes aggregated facets for further filtering.
+
+**Query Parameters:**
+- `q` (string, required) - Free-text query; supports multi-word phrases
+- `categoryId` (UUID, optional) - Restrict results to a specific category
+- `minPrice` (decimal, optional) - Minimum price filter
+- `maxPrice` (decimal, optional) - Maximum price filter
+- `condition` (string, optional) - Filter by condition (e.g. `new`, `used`)
+- `featuredOnly` (boolean, optional) - Restrict to featured listings
+- `page` (integer, optional, default: 1) - Page number
+- `pageSize` (integer, optional, default: 20, max: 100) - Results per page
+
+**Response (200 OK):**
+```json
+{
+  "query": "vintage leather jacket",
+  "totalHits": 42,
+  "page": 1,
+  "pageSize": 20,
+  "totalPages": 3,
+  "hasNextPage": true,
+  "hasPreviousPage": false,
+  "hits": [
+    {
+      "id": "3fa85f64-...",
+      "title": "Vintage Leather Jacket - 1970s Biker Style",
+      "description": "Genuine leather, worn-in patina...",
+      "price": 149.99,
+      "categoryId": "...",
+      "relevanceScore": 0.97,
+      "matchedFields": ["title", "description", "tags"]
+    }
+  ],
+  "facets": [
+    {
+      "name": "Price Range",
+      "field": "price",
+      "values": [
+        { "label": "$100 – $500", "value": "100-500", "count": 28 }
+      ]
+    },
+    {
+      "name": "Condition",
+      "field": "condition",
+      "values": [
+        { "label": "Used", "value": "used", "count": 35 },
+        { "label": "New", "value": "new", "count": 7 }
+      ]
+    }
+  ],
+  "elapsedMilliseconds": 12
+}
+```
+
+### Search Autocomplete Suggestions
+
+```http
+GET /api/v1/search/suggestions?prefix=vint&limit=10
+```
+
+Returns distinct listing titles that begin with the given prefix, ordered by featured status
+and view count for relevance.
+
+**Query Parameters:**
+- `prefix` (string, required, min: 2 chars) - Partial query string to complete
+- `limit` (integer, optional, default: 10, max: 50) - Maximum suggestions
+
+**Response (200 OK):**
+```json
+{
+  "prefix": "vint",
+  "suggestions": [
+    "Vintage Leather Jacket",
+    "Vintage Denim Jacket",
+    "Vintage Camera"
+  ]
 }
 ```
 
