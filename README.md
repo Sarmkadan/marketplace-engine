@@ -50,7 +50,7 @@ Focus on your business logic and user experience. We handle the marketplace infr
 
 ## Features
 
-### 🏪 Listings Management
+### Listings Management
 
 - **Create & Manage Listings** - Full CRUD operations for product/service listings
 - **Rich Content** - Support for images, tags, descriptions, and detailed specifications
@@ -59,7 +59,7 @@ Focus on your business logic and user experience. We handle the marketplace infr
 - **Status Tracking** - Monitor listing lifecycle (Active, Inactive, Under Review, Flagged, Delisted, Archived)
 - **Bulk Operations** - Archive, activate, or deactivate listings in bulk
 
-### 🔍 Search & Discovery
+### Search & Discovery
 
 - **Full-Text Search** - Lightning-fast search across all listings with relevance scoring
 - **Tag-Based Filtering** - Efficient filtering by product tags
@@ -69,7 +69,7 @@ Focus on your business logic and user experience. We handle the marketplace infr
 - **Advanced Filters** - Filter by price range, category, tags, location, and listing status
 - **Pagination** - Efficient cursor-based pagination for large result sets
 
-### 👥 User Management
+### User Management
 
 - **Registration & Verification** - Complete onboarding flow with email verification
 - **Profile Management** - Comprehensive user profiles with location, avatar, and bio
@@ -79,7 +79,7 @@ Focus on your business logic and user experience. We handle the marketplace infr
 - **Activity Tracking** - Monitor user activity and engagement metrics
 - **Seller Analytics** - Sales volume, rating trends, and performance metrics
 
-### 💬 Messaging System
+### Messaging System
 
 - **User-to-User Messaging** - Direct private messages between marketplace participants
 - **Conversation Threading** - Organized message threads with full reply history
@@ -89,7 +89,7 @@ Focus on your business logic and user experience. We handle the marketplace infr
 - **Status Tracking** - Read/unread indicators and message timestamps
 - **Batch Operations** - Archive or delete multiple conversations
 
-### 🛡️ Moderation & Safety
+### Moderation & Safety
 
 - **Content Reporting** - User-submitted reports for inappropriate content
 - **Multi-Priority System** - Low, Medium, High, Critical report priorities
@@ -99,7 +99,7 @@ Focus on your business logic and user experience. We handle the marketplace infr
 - **Report Assignment** - Assign reports to specific moderators
 - **Audit Trail** - Complete history of moderation actions
 
-### 📦 Data Organization
+### Data Organization
 
 - **Hierarchical Categories** - Multi-level category structure with parent-child relationships
 - **Category Analytics** - Listing count, activity metrics per category

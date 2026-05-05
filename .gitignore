@@ -47,3 +47,7 @@ appsettings.local.json
 # ReSharper
 .resharper
 .resharper.user
+*.DotSettings.user
+
+# Packages
+packages/
