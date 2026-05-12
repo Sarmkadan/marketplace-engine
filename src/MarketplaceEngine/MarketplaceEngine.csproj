@@ -6,13 +6,22 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <AssemblyName>MarketplaceEngine</AssemblyName>
     <RootNamespace>MarketplaceEngine</RootNamespace>
+    <PackageId>Zaiets.marketplace.engine</PackageId>
     <Version>1.0.0</Version>
     <Authors>Vladyslav Zaiets</Authors>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <Description>Lightweight marketplace backend engine - listings, search, categories, messaging, moderation</Description>
+    <PackageTags>marketplace engine listings search categories messaging moderation</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/sarmkadan/marketplace-engine</PackageProjectUrl>
     <RepositoryUrl>https://github.com/sarmkadan/marketplace-engine</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="../../README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.0" />
