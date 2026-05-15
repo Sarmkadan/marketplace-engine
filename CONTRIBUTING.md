@@ -1,25 +1,63 @@
 # Contributing to Marketplace Engine
 
-First off, thank you for considering contributing to Marketplace Engine.
+Thank you for your interest in contributing!
 
-## Development Requirements
-- .NET 10.0 SDK
+## Requirements
 
-## How to Contribute
-1. Fork the repository
-2. Clone your fork
-3. Create a feature branch
-4. Make your changes
-5. Run tests
-6. Submit a Pull Request
+- [.NET 10.0 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
+- Docker (optional, for container testing)
+
+## Building Locally
+
+```bash
+# Restore dependencies
+dotnet restore
+
+# Build the solution
+dotnet build --configuration Release
+
+# Or use the Makefile
+make build
+```
+
+## Running Tests
+
+```bash
+# Run all tests
+dotnet test --verbosity normal
+
+# Run with detailed output and TRX report
+dotnet test --verbosity normal --logger "trx;LogFileName=test-results.trx"
+
+# Or via Makefile
+make test
+```
+
+## Pull Request Guidelines
+
+1. Fork the repository and create a feature branch from `main`
+2. Keep changes focused — one feature or fix per PR
+3. Ensure all tests pass before submitting
+4. Add or update tests for any changed behaviour
+5. Update documentation if you change public APIs or configuration
+6. Write a clear PR description explaining what changed and why
 
 ## Code Style
-- Follow existing code conventions.
-- Use XML documentation.
-- Keep all author headers - DO NOT remove them.
+
+- Follow the `.editorconfig` settings already in the repository
+- Use `var` where the type is apparent
+- File-scoped namespaces (`namespace Foo;`)
+- XML documentation on all public types and members
+- Private fields prefixed with `_` in camelCase
+- Keep all existing file headers — do not remove them
 
 ## Reporting Issues
-Please use GitHub Issues to report bugs or request features. When reporting bugs, please include detailed reproduction steps.
+
+Use GitHub Issues to report bugs or request features. For bugs, include:
+- Steps to reproduce
+- Expected vs actual behaviour
+- .NET version and OS
 
 ## License
-By contributing to Marketplace Engine, you agree that your contributions will be licensed under its MIT License.
+
+By contributing you agree that your contributions are licensed under the [MIT License](LICENSE).
