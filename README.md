@@ -112,6 +112,31 @@ Focus on your business logic and user experience. We handle the marketplace infr
 - **Dynamic Management** - Add, update, or archive categories in real-time
 - **Category-Level Moderation** - Apply restrictions at category level
 
+### Payment Integration
+
+- **Payment Lifecycle** - Full flow from initiation → processing → completion with status tracking
+- **Escrow Support** - Hold funds in escrow until buyer confirms delivery before releasing to seller
+- **Automatic Fee Calculation** - Platform fee (5%) and seller payout computed on every transaction
+- **Refund Handling** - Refund completed payments with mandatory reason tracking
+- **Cancellation** - Cancel pending or processing payments with buyer authorization
+- **Per-User History** - Retrieve full payment history for both buyers and sellers
+
+### Seller Dashboard
+
+- **Overview Metrics** - Active listing count, total revenue, pending payout, rating, and unread messages in one call
+- **Revenue Breakdown** - Gross revenue, platform fees, net revenue, and escrow payout with month-by-month chart data
+- **Listing Performance** - Per-listing view counts, interest counts, and a top-10 listing ranking
+- **Real-Time Data** - All metrics are computed from live data with no stale caches
+
+### Review & Rating System
+
+- **Buyer Reviews** - Buyers can rate sellers (1–5 stars) and leave written feedback after a transaction
+- **One-Review Enforcement** - Duplicate review detection per reviewer + seller + listing combination
+- **Seller Replies** - Sellers can publicly respond to reviews (one reply per review)
+- **Aggregate Statistics** - Average score and per-star distribution for any seller
+- **Moderation Actions** - Flag reviews for review or remove them via moderator endpoints
+- **Rating Sync** - Seller's aggregate `Rating` value object is updated automatically after each review submission or removal
+
 ---
 
 ## Architecture
@@ -742,6 +767,115 @@ X-User-Role: Moderator
   "status": "Approved",
   "action": "Remove listing"
 }
+```
+
+### Payments Endpoints
+
+#### Initiate Payment
+```http
+POST /api/v1/payments
+Content-Type: application/json
+
+{
+  "listingId": "listing-uuid",
+  "buyerId": "buyer-uuid",
+  "paymentMethod": "card",
+  "currency": "USD"
+}
+```
+
+#### Complete Payment
+```http
+POST /api/v1/payments/{id}/complete
+Content-Type: application/json
+
+{
+  "externalTransactionId": "txn_abc123"
+}
+```
+
+#### Refund Payment
+```http
+POST /api/v1/payments/{id}/refund
+Content-Type: application/json
+
+{
+  "reason": "Item not as described"
+}
+```
+
+#### Get Buyer Payments
+```http
+GET /api/v1/payments/buyer/{buyerId}
+```
+
+#### Get Seller Payments
+```http
+GET /api/v1/payments/seller/{sellerId}
+```
+
+### Seller Dashboard Endpoints
+
+#### Get Dashboard Overview
+```http
+GET /api/v1/sellers/{sellerId}/dashboard
+```
+
+#### Get Revenue Breakdown
+```http
+GET /api/v1/sellers/{sellerId}/dashboard/revenue
+```
+
+#### Get Listing Performance Stats
+```http
+GET /api/v1/sellers/{sellerId}/dashboard/listings
+```
+
+### Reviews Endpoints
+
+#### Submit a Review
+```http
+POST /api/v1/reviews
+Content-Type: application/json
+
+{
+  "reviewerId": "buyer-uuid",
+  "sellerId": "seller-uuid",
+  "listingId": "listing-uuid",
+  "score": 5,
+  "comment": "Fast shipping and exactly as described."
+}
+```
+
+#### Get Seller Reviews (paginated)
+```http
+GET /api/v1/reviews/seller/{sellerId}?page=1&pageSize=20
+```
+
+#### Get Seller Rating Summary
+```http
+GET /api/v1/reviews/seller/{sellerId}/summary
+```
+
+#### Add Seller Reply
+```http
+POST /api/v1/reviews/{id}/reply
+Content-Type: application/json
+
+{
+  "sellerId": "seller-uuid",
+  "reply": "Thank you for your kind feedback!"
+}
+```
+
+#### Flag Review for Moderation
+```http
+POST /api/v1/reviews/{id}/flag
+```
+
+#### Remove Review (Moderator)
+```http
+DELETE /api/v1/reviews/{id}?moderatorId=moderator-uuid
 ```
 
 ---

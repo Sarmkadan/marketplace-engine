@@ -30,6 +30,8 @@ public static class DependencyInjection
         services.AddSingleton<IListingRepository, ListingRepository>();
         services.AddSingleton<IUserRepository, UserRepository>();
         services.AddSingleton<IMessageRepository, MessageRepository>();
+        services.AddSingleton<IPaymentRepository, PaymentRepository>();
+        services.AddSingleton<IReviewRepository, ReviewRepository>();
 
         // Register domain services
         services.AddSingleton<ListingService>();
@@ -38,6 +40,9 @@ public static class DependencyInjection
         services.AddSingleton<ModerationService>();
         services.AddSingleton<CategoryService>();
         services.AddSingleton<MessagingService>();
+        services.AddSingleton<PaymentService>();
+        services.AddSingleton<ReviewService>();
+        services.AddSingleton<SellerDashboardService>();
 
         // Register caching services
         services.AddSingleton<CacheService>();
