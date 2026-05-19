@@ -21,6 +21,8 @@ public class MarketplaceDbContext
     public List<Listing> Listings { get; set; } = [];
     public List<Message> Messages { get; set; } = [];
     public List<ModerationReport> ModerationReports { get; set; } = [];
+    public List<Payment> Payments { get; set; } = [];
+    public List<Review> Reviews { get; set; } = [];
 
     private MarketplaceDbContext()
     {
@@ -130,6 +132,8 @@ public class MarketplaceDbContext
         Listings.Clear();
         Messages.Clear();
         ModerationReports.Clear();
+        Payments.Clear();
+        Reviews.Clear();
     }
 
     // Resets context to initial state
@@ -142,6 +146,6 @@ public class MarketplaceDbContext
     // Gets total count of all entities
     public int GetTotalEntityCount()
     {
-        return Users.Count + Categories.Count + Listings.Count + Messages.Count + ModerationReports.Count;
+        return Users.Count + Categories.Count + Listings.Count + Messages.Count + ModerationReports.Count + Payments.Count + Reviews.Count;
     }
 }
