@@ -10,30 +10,53 @@ using MarketplaceEngine.Domain.ValueObjects;
 namespace MarketplaceEngine.Domain.Models;
 
 /// <summary>
-/// Represents a marketplace listing for a product or service.
+/// Represents a marketplace listing for a product or service. Contains pricing,
+/// categorization, seller reference, media, and engagement metrics.
+/// Must pass <see cref="ValidateForPublishing"/> before becoming visible.
 /// </summary>
 public class Listing
 {
+    /// <summary>Unique listing identifier.</summary>
     public Guid Id { get; set; }
+    /// <summary>ID of the user who created this listing.</summary>
     public Guid SellerId { get; set; }
+    /// <summary>Navigation property for the seller. Null when not loaded.</summary>
     public User? Seller { get; set; }
+    /// <summary>ID of the category this listing belongs to.</summary>
     public Guid CategoryId { get; set; }
+    /// <summary>Navigation property for the category. Null when not loaded.</summary>
     public Category? Category { get; set; }
+    /// <summary>Listing title (5-100 characters required for publishing).</summary>
     public string Title { get; set; } = string.Empty;
+    /// <summary>Detailed description (20-5000 characters required for publishing).</summary>
     public string Description { get; set; } = string.Empty;
+    /// <summary>Price with currency. Must be greater than zero for publishing.</summary>
     public Money? Price { get; set; }
+    /// <summary>Current lifecycle status (Draft, Active, Sold, Expired, etc.).</summary>
     public ListingStatus Status { get; set; } = ListingStatus.Active;
+    /// <summary>Geographic location of the item, if applicable.</summary>
     public Location? Location { get; set; }
+    /// <summary>URLs of listing images. At least one required for publishing.</summary>
     public List<string> ImageUrls { get; set; } = [];
+    /// <summary>Searchable tags for discovery. Maximum 10 allowed.</summary>
     public List<string> Tags { get; set; } = [];
+    /// <summary>Number of times this listing has been viewed.</summary>
     public int ViewCount { get; set; }
+    /// <summary>Number of users who expressed interest (saved/favorited).</summary>
     public int InterestCount { get; set; }
+    /// <summary>Aggregate rating from buyers, or null if not yet rated.</summary>
     public Rating? Rating { get; set; }
+    /// <summary>Whether this listing is promoted/featured in search results.</summary>
     public bool IsFeatured { get; set; }
+    /// <summary>UTC timestamp when the listing was created.</summary>
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    /// <summary>UTC timestamp of the last modification, or null if never updated.</summary>
     public DateTime? UpdatedAt { get; set; }
+    /// <summary>UTC timestamp when the listing was published, or null if still draft.</summary>
     public DateTime? PublishedAt { get; set; }
+    /// <summary>Expiration date for time-limited listings, or null for no expiry.</summary>
     public DateTime? DueDate { get; set; }
+    /// <summary>Item condition (e.g., "New", "Like New", "Used").</summary>
     public string? Condition { get; set; }
 
     // Validates listing content before publishing
