@@ -72,9 +72,19 @@ public class SearchService
         return await _userRepository.GetTopSellersAsync(limit);
     }
 
-    // Searches listings by category with pagination
+    /// <summary>
+    /// Searches listings by category with pagination support.
+    /// </summary>
+    /// <param name="categoryId">The category to search within.</param>
+    /// <param name="pageNumber">Page number (1-based). Values below 1 are clamped to 1.</param>
+    /// <param name="pageSize">Items per page. Clamped to [1, MaxPageSize].</param>
+    /// <returns>A tuple of the paged listing items and the total count before pagination.</returns>
+    /// <exception cref="ValidationException">Thrown when <paramref name="categoryId"/> is empty.</exception>
     public async Task<(List<Listing> items, int total)> SearchByCategoryAsync(Guid categoryId, int pageNumber, int pageSize)
     {
+        if (categoryId == Guid.Empty)
+            throw new ValidationException("CategoryId", "Category ID cannot be empty");
+
         var listings = await _listingRepository.GetByCategoryIdAsync(categoryId);
 
         if (pageNumber < 1) pageNumber = 1;
