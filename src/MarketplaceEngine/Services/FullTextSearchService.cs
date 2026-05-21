@@ -62,7 +62,7 @@ public class FullTextSearchService
         _logger.LogDebug("Full-text search started. Query={Query} Page={Page} PageSize={PageSize}",
             request.Query, request.Page, request.PageSize);
 
-        var allActive = await _listingRepository.GetActiveListingsAsync();
+        var allActive = await _listingRepository.GetActiveListingsAsync().ConfigureAwait(false);
         cancellationToken.ThrowIfCancellationRequested();
 
         var terms = Tokenize(request.Query);
@@ -123,7 +123,7 @@ public class FullTextSearchService
 
         limit = Math.Clamp(limit, 1, 50);
 
-        var active = await _listingRepository.GetActiveListingsAsync();
+        var active = await _listingRepository.GetActiveListingsAsync().ConfigureAwait(false);
         cancellationToken.ThrowIfCancellationRequested();
 
         return active

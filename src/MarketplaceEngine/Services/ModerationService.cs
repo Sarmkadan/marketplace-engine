@@ -29,9 +29,9 @@ public class ModerationService
     public async Task<ModerationReport> ReportUserAsync(Guid reporterId, Guid targetUserId, string reason,
         string? details = null, int priority = 1)
     {
-        await ValidateReporterAsync(reporterId);
+        await ValidateReporterAsync(reporterId).ConfigureAwait(false);
 
-        var targetUser = await _userRepository.GetByIdAsync(targetUserId);
+        var targetUser = await _userRepository.GetByIdAsync(targetUserId).ConfigureAwait(false);
         if (targetUser is null)
             throw new ResourceNotFoundException("User", targetUserId);
 
@@ -54,9 +54,9 @@ public class ModerationService
     public async Task<ModerationReport> ReportListingAsync(Guid reporterId, Guid listingId, string reason,
         string? details = null, int priority = 1)
     {
-        await ValidateReporterAsync(reporterId);
+        await ValidateReporterAsync(reporterId).ConfigureAwait(false);
 
-        var listing = await _listingRepository.GetByIdAsync(listingId);
+        var listing = await _listingRepository.GetByIdAsync(listingId).ConfigureAwait(false);
         if (listing is null)
             throw new ResourceNotFoundException("Listing", listingId);
 
@@ -78,7 +78,7 @@ public class ModerationService
     // Assigns report to moderator
     public async Task<ModerationReport> AssignReportAsync(ModerationReport report, Guid moderatorId)
     {
-        var moderator = await _userRepository.GetByIdAsync(moderatorId);
+        var moderator = await _userRepository.GetByIdAsync(moderatorId).ConfigureAwait(false);
         if (moderator is null)
             throw new ResourceNotFoundException("User", moderatorId);
 
@@ -114,11 +114,11 @@ public class ModerationService
     {
         if (report.TargetListingId.HasValue && report.TargetListingId != Guid.Empty)
         {
-            var listing = await _listingRepository.GetByIdAsync(report.TargetListingId.Value);
+            var listing = await _listingRepository.GetByIdAsync(report.TargetListingId.Value).ConfigureAwait(false);
             if (listing is not null)
             {
                 listing.Flag();
-                await _listingRepository.UpdateAsync(listing);
+                await _listingRepository.UpdateAsync(listing).ConfigureAwait(false);
             }
         }
 
@@ -131,11 +131,11 @@ public class ModerationService
     {
         if (report.TargetUserId.HasValue && report.TargetUserId != Guid.Empty)
         {
-            var user = await _userRepository.GetByIdAsync(report.TargetUserId.Value);
+            var user = await _userRepository.GetByIdAsync(report.TargetUserId.Value).ConfigureAwait(false);
             if (user is not null)
             {
                 user.Deactivate();
-                await _userRepository.UpdateAsync(user);
+                await _userRepository.UpdateAsync(user).ConfigureAwait(false);
             }
         }
 
@@ -148,13 +148,13 @@ public class ModerationService
     {
         if (report.TargetUserId.HasValue && report.TargetUserId != Guid.Empty)
         {
-            var user = await _userRepository.GetByIdAsync(report.TargetUserId.Value);
+            var user = await _userRepository.GetByIdAsync(report.TargetUserId.Value).ConfigureAwait(false);
             if (user is not null)
             {
                 user.Deactivate();
                 // Mark user as banned by setting special flag
                 user.Role = UserRole.User; // Could add a Ban status in future
-                await _userRepository.UpdateAsync(user);
+                await _userRepository.UpdateAsync(user).ConfigureAwait(false);
             }
         }
 
@@ -172,7 +172,7 @@ public class ModerationService
     // Gets pending reports
     public async Task<List<ModerationReport>> GetPendingReportsAsync(int page, int pageSize)
     {
-        await Task.Delay(5);
+        await Task.Delay(5).ConfigureAwait(false);
         // Hotfix: No actual persistence for ModerationReports, returning empty list
         return new List<ModerationReport>();
     }
@@ -180,7 +180,7 @@ public class ModerationService
     // Hotfix: GetReportAsync for ModerationController to compile
     public async Task<ModerationReport?> GetReportAsync(Guid id)
     {
-        await Task.Delay(5);
+        await Task.Delay(5).ConfigureAwait(false);
         // Hotfix: No actual persistence for ModerationReports, always returning null
         return null;
     }
@@ -188,7 +188,7 @@ public class ModerationService
     // Hotfix: UpdateReportAsync for ModerationController to compile
     public async Task<ModerationReport> UpdateReportAsync(ModerationReport report)
     {
-        await Task.Delay(5);
+        await Task.Delay(5).ConfigureAwait(false);
         // Hotfix: No actual persistence for ModerationReports, returning the input report
         return report;
     }
@@ -196,7 +196,7 @@ public class ModerationService
     // Hotfix: CreateReportAsync for ModerationController to compile
     public async Task<ModerationReport> CreateReportAsync(ModerationReport report)
     {
-        await Task.Delay(5);
+        await Task.Delay(5).ConfigureAwait(false);
         // Hotfix: No actual persistence for ModerationReports, returning the input report
         return report;
     }
@@ -206,31 +206,31 @@ public class ModerationService
     // Gets reports by status
     public async Task<List<ModerationReport>> GetReportsByStatusAsync(ModerationStatus status)
     {
-        await Task.Delay(5);
+        await Task.Delay(5).ConfigureAwait(false);
         return new List<ModerationReport>();
     }
 
     // Gets reports assigned to moderator
     public async Task<List<ModerationReport>> GetModeratorAssignmentsAsync(Guid moderatorId)
     {
-        var moderator = await _userRepository.GetByIdAsync(moderatorId);
+        var moderator = await _userRepository.GetByIdAsync(moderatorId).ConfigureAwait(false);
         if (moderator is null)
             throw new ResourceNotFoundException("User", moderatorId);
 
-        await Task.Delay(5);
+        await Task.Delay(5).ConfigureAwait(false);
         return new List<ModerationReport>();
     }
 
     // Gets report statistics
     public async Task<(int pending, int inReview, int resolved)> GetReportStatsAsync()
     {
-        await Task.Delay(5);
+        await Task.Delay(5).ConfigureAwait(false);
         return (0, 0, 0);
     }
 
     private async Task ValidateReporterAsync(Guid reporterId)
     {
-        var reporter = await _userRepository.GetByIdAsync(reporterId);
+        var reporter = await _userRepository.GetByIdAsync(reporterId).ConfigureAwait(false);
         if (reporter is null)
             throw new ResourceNotFoundException("User", reporterId);
 

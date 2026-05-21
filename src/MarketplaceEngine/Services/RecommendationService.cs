@@ -65,15 +65,15 @@ public class RecommendationService
     {
         count = Math.Clamp(count, 1, 100);
 
-        var user = await _userRepository.GetByIdAsync(userId);
+        var user = await _userRepository.GetByIdAsync(userId).ConfigureAwait(false);
         if (user is null)
             throw new ResourceNotFoundException("User", userId);
 
         _logger.LogInformation(
             "Generating personalised recommendations for user {UserId} (count={Count})", userId, count);
 
-        var scored = await _engine.ComputeForUserAsync(userId, count, cancellationToken);
-        var (items, strategyUsed) = await HydrateAndDiversifyAsync(scored, cancellationToken);
+        var scored = await _engine.ComputeForUserAsync(userId, count, cancellationToken).ConfigureAwait(false);
+        var (items, strategyUsed) = await HydrateAndDiversifyAsync(scored, cancellationToken).ConfigureAwait(false);
 
         var isPersonalised = scored.Count > 0 && scored[0].Reason != RecommendationReason.Trending;
 
@@ -102,15 +102,15 @@ public class RecommendationService
     {
         count = Math.Clamp(count, 1, 100);
 
-        var user = await _userRepository.GetByIdAsync(userId);
+        var user = await _userRepository.GetByIdAsync(userId).ConfigureAwait(false);
         if (user is null)
             throw new ResourceNotFoundException("User", userId);
 
         _logger.LogInformation(
             "Generating category-affinity recommendations for user {UserId} (count={Count})", userId, count);
 
-        var scored = await _engine.ComputeByAffinityAsync(userId, count, cancellationToken);
-        var (items, strategyUsed) = await HydrateAndDiversifyAsync(scored, cancellationToken);
+        var scored = await _engine.ComputeByAffinityAsync(userId, count, cancellationToken).ConfigureAwait(false);
+        var (items, strategyUsed) = await HydrateAndDiversifyAsync(scored, cancellationToken).ConfigureAwait(false);
 
         var isPersonalised = scored.Count > 0 && scored[0].Reason == RecommendationReason.CategoryAffinity;
 
@@ -136,14 +136,14 @@ public class RecommendationService
     {
         count = Math.Clamp(count, 1, 50);
 
-        var listing = await _listingRepository.GetByIdAsync(listingId);
+        var listing = await _listingRepository.GetByIdAsync(listingId).ConfigureAwait(false);
         if (listing is null)
             throw new ResourceNotFoundException("Listing", listingId);
 
         _logger.LogDebug("Computing similar-item panel for listing {ListingId}", listingId);
 
-        var scored = await _engine.ComputeSimilarAsync(listingId, count, cancellationToken);
-        var (items, _) = await HydrateAndDiversifyAsync(scored, cancellationToken);
+        var scored = await _engine.ComputeSimilarAsync(listingId, count, cancellationToken).ConfigureAwait(false);
+        var (items, _) = await HydrateAndDiversifyAsync(scored, cancellationToken).ConfigureAwait(false);
 
         return new RecommendationFeedDto
         {
@@ -166,8 +166,8 @@ public class RecommendationService
     {
         count = Math.Clamp(count, 1, 100);
 
-        var scored = await _engine.ComputeTrendingAsync(count, cancellationToken);
-        var (items, _) = await HydrateAndDiversifyAsync(scored, cancellationToken);
+        var scored = await _engine.ComputeTrendingAsync(count, cancellationToken).ConfigureAwait(false);
+        var (items, _) = await HydrateAndDiversifyAsync(scored, cancellationToken).ConfigureAwait(false);
 
         return new RecommendationFeedDto
         {
@@ -192,7 +192,7 @@ public class RecommendationService
         CancellationToken cancellationToken = default)
     {
         // Resolve the listing's category for category-affinity scoring (best-effort).
-        var listing = await _listingRepository.GetByIdAsync(listingId);
+        var listing = await _listingRepository.GetByIdAsync(listingId).ConfigureAwait(false);
 
         var signal = new UserActivitySignal
         {
@@ -204,7 +204,7 @@ public class RecommendationService
             OccurredAt = DateTime.UtcNow
         };
 
-        await _engine.RecordSignalAsync(signal, cancellationToken);
+        await _engine.RecordSignalAsync(signal, cancellationToken).ConfigureAwait(false);
 
         await _eventBus.PublishAsync(new UserActivityRecordedEvent
         {
@@ -233,7 +233,7 @@ public class RecommendationService
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            var listing = await _listingRepository.GetByIdAsync(score.ListingId);
+            var listing = await _listingRepository.GetByIdAsync(score.ListingId).ConfigureAwait(false);
             if (listing is null) continue;
 
             hydrated.Add(new RecommendationDto(listing, score));

@@ -37,7 +37,7 @@ public class SearchExample
         {
             // Seed some test data
             Console.WriteLine("Setting up test data...");
-            await SeedTestListings(listingService);
+            await SeedTestListings(listingService).ConfigureAwait(false);
             Console.WriteLine("✓ Test data created\n");
 
             // Example 1: Simple search
@@ -131,7 +131,7 @@ public class SearchExample
 
             // Example 6: Get trending listings
             Console.WriteLine("6. Getting trending listings...");
-            var trendingListings = await searchService.GetTrendingListingsAsync(limit: 5);
+            var trendingListings = await searchService.GetTrendingListingsAsync(limit: 5).ConfigureAwait(false);
             Console.WriteLine($"✓ Top trending listings:");
             foreach (var item in trendingListings)
             {
@@ -141,7 +141,7 @@ public class SearchExample
 
             // Example 7: Get featured listings
             Console.WriteLine("7. Getting featured listings...");
-            var featuredListings = await searchService.GetFeaturedListingsAsync(limit: 5);
+            var featuredListings = await searchService.GetFeaturedListingsAsync(limit: 5).ConfigureAwait(false);
             Console.WriteLine($"✓ Featured listings: {featuredListings.Count}");
             foreach (var item in featuredListings)
             {

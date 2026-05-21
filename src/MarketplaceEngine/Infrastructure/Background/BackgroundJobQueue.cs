@@ -104,7 +104,7 @@ public class BackgroundJobQueue
                     {
                         _logger.LogInformation("Processing job: {JobName} (Id: {JobId})", job.JobName, job.JobId);
 
-                        await job.ExecuteAsync();
+                        await job.ExecuteAsync().ConfigureAwait(false);
 
                         _logger.LogInformation("Job completed: {JobName} (Id: {JobId})", job.JobName, job.JobId);
                     }
@@ -119,7 +119,7 @@ public class BackgroundJobQueue
                 else
                 {
                     // No job available, wait a bit before checking again
-                    await Task.Delay(100, cancellationToken);
+                    await Task.Delay(100, cancellationToken).ConfigureAwait(false);
                 }
             }
             catch (OperationCanceledException)
@@ -156,7 +156,7 @@ public class SearchIndexingJob : IBackgroundJob
         // 3. Index in Elasticsearch or similar
         // 4. Handle failures and retries
 
-        await Task.Delay(500); // Simulate indexing work
+        await Task.Delay(500).ConfigureAwait(false); // Simulate indexing work
 
         _logger.LogInformation("Search index rebuild completed");
     }
@@ -187,7 +187,7 @@ public class DataCleanupJob : IBackgroundJob
         // 3. Archive old messages/logs
         // 4. Compact database
 
-        await Task.Delay(300); // Simulate cleanup work
+        await Task.Delay(300).ConfigureAwait(false); // Simulate cleanup work
 
         _logger.LogInformation("Data cleanup completed");
     }
@@ -219,7 +219,7 @@ public class NotificationDispatchJob : IBackgroundJob
         // 4. Track delivery status
         // 5. Retry failed sends
 
-        await Task.Delay(200); // Simulate sending
+        await Task.Delay(200).ConfigureAwait(false); // Simulate sending
 
         _logger.LogInformation("Notification dispatch completed");
     }

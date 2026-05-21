@@ -148,25 +148,25 @@ public static class DependencyInjection
     // Get listings endpoint
     private static async Task<IResult> GetListings(IListingRepository repository, int page = 1, int pageSize = 20)
     {
-        var (items, total) = await repository.GetPagedAsync(page, pageSize);
+        var (items, total) = await repository.GetPagedAsync(page, pageSize).ConfigureAwait(false);
         return Results.Ok(new { items, total, page, pageSize });
     }
 
     // Get listing by ID endpoint
     private static async Task<IResult> GetListing(Guid id, IListingRepository repository)
     {
-        var listing = await repository.GetByIdAsync(id);
+        var listing = await repository.GetByIdAsync(id).ConfigureAwait(false);
         if (listing is null)
             return Results.NotFound();
 
-        await repository.IncrementViewCountAsync(id);
+        await repository.IncrementViewCountAsync(id).ConfigureAwait(false);
         return Results.Ok(listing);
     }
 
     // Search listings endpoint
     private static async Task<IResult> SearchListings(string q, SearchService service)
     {
-        var results = await service.SearchListingsAsync(q);
+        var results = await service.SearchListingsAsync(q).ConfigureAwait(false);
         return Results.Ok(new { query = q, results, count = results.Count });
     }
 
@@ -175,7 +175,7 @@ public static class DependencyInjection
     {
         try
         {
-            var user = await service.GetUserAsync(id);
+            var user = await service.GetUserAsync(id).ConfigureAwait(false);
             return Results.Ok(user);
         }
         catch
@@ -187,14 +187,14 @@ public static class DependencyInjection
     // Get top sellers endpoint
     private static async Task<IResult> GetTopSellers(SearchService service)
     {
-        var sellers = await service.GetTopSellersAsync(10);
+        var sellers = await service.GetTopSellersAsync(10).ConfigureAwait(false);
         return Results.Ok(sellers);
     }
 
     // Get categories endpoint
     private static async Task<IResult> GetCategories(IListingRepository repository)
     {
-        var allListings = await repository.GetAllAsync();
+        var allListings = await repository.GetAllAsync().ConfigureAwait(false);
         var categories = allListings
             .GroupBy(l => l.CategoryId)
             .Select(g => new { categoryId = g.Key, count = g.Count() })
@@ -206,7 +206,7 @@ public static class DependencyInjection
     // Get category listings endpoint
     private static async Task<IResult> GetCategoryListings(Guid id, IListingRepository repository)
     {
-        var listings = await repository.GetByCategoryIdAsync(id);
+        var listings = await repository.GetByCategoryIdAsync(id).ConfigureAwait(false);
         return Results.Ok(new { categoryId = id, listings, count = listings.Count });
     }
 }

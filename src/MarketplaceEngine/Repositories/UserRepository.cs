@@ -25,13 +25,13 @@ public class UserRepository : IUserRepository
 
     public async Task<User?> GetByIdAsync(Guid id)
     {
-        await Task.Delay(5);
+        await Task.Delay(5).ConfigureAwait(false);
         return _context.Users.FirstOrDefault(u => u.Id == id);
     }
 
     public async Task<List<User>> GetAllAsync()
     {
-        await Task.Delay(5);
+        await Task.Delay(5).ConfigureAwait(false);
         return _context.Users.ToList();
     }
 
@@ -47,7 +47,7 @@ public class UserRepository : IUserRepository
         entity.CreatedAt = DateTime.UtcNow;
         _context.Users.Add(entity);
 
-        await Task.Delay(5);
+        await Task.Delay(5).ConfigureAwait(false);
         return entity;
     }
 
@@ -64,29 +64,29 @@ public class UserRepository : IUserRepository
         var index = _context.Users.IndexOf(existing);
         _context.Users[index] = entity;
 
-        await Task.Delay(5);
+        await Task.Delay(5).ConfigureAwait(false);
         return entity;
     }
 
     public async Task DeleteAsync(Guid id)
     {
-        var user = await GetByIdAsync(id);
+        var user = await GetByIdAsync(id).ConfigureAwait(false);
         if (user is null)
             throw new ResourceNotFoundException(ResourceType, id);
 
         _context.Users.Remove(user);
-        await Task.Delay(5);
+        await Task.Delay(5).ConfigureAwait(false);
     }
 
     public async Task<bool> ExistsAsync(Guid id)
     {
-        await Task.Delay(5);
+        await Task.Delay(5).ConfigureAwait(false);
         return _context.Users.Any(u => u.Id == id);
     }
 
     public async Task<int> CountAsync()
     {
-        await Task.Delay(5);
+        await Task.Delay(5).ConfigureAwait(false);
         return _context.Users.Count;
     }
 
@@ -95,25 +95,25 @@ public class UserRepository : IUserRepository
         if (string.IsNullOrWhiteSpace(email))
             return null;
 
-        await Task.Delay(5);
+        await Task.Delay(5).ConfigureAwait(false);
         return _context.Users.FirstOrDefault(u => u.Email.Equals(email, StringComparison.OrdinalIgnoreCase));
     }
 
     public async Task<List<User>> GetActiveUsersAsync()
     {
-        await Task.Delay(5);
+        await Task.Delay(5).ConfigureAwait(false);
         return _context.Users.Where(u => u.IsActive).ToList();
     }
 
     public async Task<List<User>> GetVerifiedUsersAsync()
     {
-        await Task.Delay(5);
+        await Task.Delay(5).ConfigureAwait(false);
         return _context.Users.Where(u => u.IsVerified).ToList();
     }
 
     public async Task<List<User>> GetByRoleAsync(int roleId)
     {
-        await Task.Delay(5);
+        await Task.Delay(5).ConfigureAwait(false);
         return _context.Users.Where(u => (int)u.Role == roleId).ToList();
     }
 
@@ -122,7 +122,7 @@ public class UserRepository : IUserRepository
         if (string.IsNullOrWhiteSpace(query))
             return new List<User>();
 
-        await Task.Delay(5);
+        await Task.Delay(5).ConfigureAwait(false);
         var searchTerm = query.ToLowerInvariant();
         return _context.Users
             .Where(u => u.FullName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
@@ -132,7 +132,7 @@ public class UserRepository : IUserRepository
 
     public async Task<List<User>> GetTopSellersAsync(int limit = 10)
     {
-        await Task.Delay(5);
+        await Task.Delay(5).ConfigureAwait(false);
         return _context.Users
             .Where(u => u.IsActive && u.IsVerified && u.TotalSales > 0)
             .OrderByDescending(u => u.Rating is not null ? u.Rating.AverageRating : 0)
@@ -143,7 +143,7 @@ public class UserRepository : IUserRepository
 
     public async Task<List<User>> GetByLocationAsync(string city, string countryCode)
     {
-        await Task.Delay(5);
+        await Task.Delay(5).ConfigureAwait(false);
         return _context.Users
             .Where(u => u.Location is not null &&
                        u.Location.City.Equals(city, StringComparison.OrdinalIgnoreCase) &&
@@ -156,7 +156,7 @@ public class UserRepository : IUserRepository
         if (string.IsNullOrWhiteSpace(email))
             return false;
 
-        await Task.Delay(5);
+        await Task.Delay(5).ConfigureAwait(false);
         return _context.Users.Any(u => u.Email.Equals(email, StringComparison.OrdinalIgnoreCase));
     }
 
@@ -165,7 +165,7 @@ public class UserRepository : IUserRepository
         if (string.IsNullOrWhiteSpace(token))
             return null;
 
-        await Task.Delay(5);
+        await Task.Delay(5).ConfigureAwait(false);
         return _context.Users.FirstOrDefault(u => u.VerificationToken == token &&
                                                    u.VerificationExpiry > DateTime.UtcNow);
     }
@@ -176,7 +176,7 @@ public class UserRepository : IUserRepository
         if (pageSize < 1) pageSize = 20;
         if (pageSize > 100) pageSize = 100;
 
-        await Task.Delay(5);
+        await Task.Delay(5).ConfigureAwait(false);
         var allUsers = _context.Users.OrderByDescending(u => u.CreatedAt).ToList();
         var total = allUsers.Count;
         var items = allUsers.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToList();
@@ -186,11 +186,11 @@ public class UserRepository : IUserRepository
 
     public async Task UpdateLastActivityAsync(Guid userId)
     {
-        var user = await GetByIdAsync(userId);
+        var user = await GetByIdAsync(userId).ConfigureAwait(false);
         if (user is not null)
         {
             user.UpdateLastActivity();
-            await UpdateAsync(user);
+            await UpdateAsync(user).ConfigureAwait(false);
         }
     }
 }

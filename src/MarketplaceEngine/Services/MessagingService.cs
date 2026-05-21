@@ -28,11 +28,11 @@ public class MessagingService
     public async Task<Message> SendMessageAsync(Guid senderId, Guid recipientId, string subject, string body,
         Guid? listingId = null, List<string>? attachments = null)
     {
-        var sender = await _userRepository.GetByIdAsync(senderId);
+        var sender = await _userRepository.GetByIdAsync(senderId).ConfigureAwait(false);
         if (sender is null)
             throw new ResourceNotFoundException("User", senderId);
 
-        var recipient = await _userRepository.GetByIdAsync(recipientId);
+        var recipient = await _userRepository.GetByIdAsync(recipientId).ConfigureAwait(false);
         if (recipient is null)
             throw new ResourceNotFoundException("User", recipientId);
 
@@ -47,116 +47,116 @@ public class MessagingService
         };
 
         message.ValidateBeforeSending();
-        return await _messageRepository.AddAsync(message);
+        return await _messageRepository.AddAsync(message).ConfigureAwait(false);
     }
 
     // Retrieves received messages
     public async Task<List<Message>> GetReceivedMessagesAsync(Guid userId)
     {
-        var user = await _userRepository.GetByIdAsync(userId);
+        var user = await _userRepository.GetByIdAsync(userId).ConfigureAwait(false);
         if (user is null)
             throw new ResourceNotFoundException("User", userId);
 
-        return await _messageRepository.GetReceivedMessagesAsync(userId);
+        return await _messageRepository.GetReceivedMessagesAsync(userId).ConfigureAwait(false);
     }
 
     // Retrieves sent messages
     public async Task<List<Message>> GetSentMessagesAsync(Guid userId)
     {
-        var user = await _userRepository.GetByIdAsync(userId);
+        var user = await _userRepository.GetByIdAsync(userId).ConfigureAwait(false);
         if (user is null)
             throw new ResourceNotFoundException("User", userId);
 
-        return await _messageRepository.GetSentMessagesAsync(userId);
+        return await _messageRepository.GetSentMessagesAsync(userId).ConfigureAwait(false);
     }
 
     // Retrieves unread messages
     public async Task<List<Message>> GetUnreadMessagesAsync(Guid userId)
     {
-        var user = await _userRepository.GetByIdAsync(userId);
+        var user = await _userRepository.GetByIdAsync(userId).ConfigureAwait(false);
         if (user is null)
             throw new ResourceNotFoundException("User", userId);
 
-        return await _messageRepository.GetUnreadMessagesAsync(userId);
+        return await _messageRepository.GetUnreadMessagesAsync(userId).ConfigureAwait(false);
     }
 
     // Gets conversation between two users
     public async Task<List<Message>> GetConversationAsync(Guid userId1, Guid userId2)
     {
-        var user1 = await _userRepository.GetByIdAsync(userId1);
+        var user1 = await _userRepository.GetByIdAsync(userId1).ConfigureAwait(false);
         if (user1 is null)
             throw new ResourceNotFoundException("User", userId1);
 
-        var user2 = await _userRepository.GetByIdAsync(userId2);
+        var user2 = await _userRepository.GetByIdAsync(userId2).ConfigureAwait(false);
         if (user2 is null)
             throw new ResourceNotFoundException("User", userId2);
 
-        return await _messageRepository.GetConversationAsync(userId1, userId2);
+        return await _messageRepository.GetConversationAsync(userId1, userId2).ConfigureAwait(false);
     }
 
     // Marks message as read
     public async Task<Message> MarkAsReadAsync(Guid messageId)
     {
-        var message = await _messageRepository.GetByIdAsync(messageId);
+        var message = await _messageRepository.GetByIdAsync(messageId).ConfigureAwait(false);
         if (message is null)
             throw new ResourceNotFoundException("Message", messageId);
 
         message.MarkAsRead();
-        return await _messageRepository.UpdateAsync(message);
+        return await _messageRepository.UpdateAsync(message).ConfigureAwait(false);
     }
 
     // Marks multiple messages as read
     public async Task MarkMultipleAsReadAsync(List<Guid> messageIds)
     {
-        await _messageRepository.MarkAsReadAsync(messageIds);
+        await _messageRepository.MarkAsReadAsync(messageIds).ConfigureAwait(false);
     }
 
     // Marks message as unread
     public async Task<Message> MarkAsUnreadAsync(Guid messageId)
     {
-        var message = await _messageRepository.GetByIdAsync(messageId);
+        var message = await _messageRepository.GetByIdAsync(messageId).ConfigureAwait(false);
         if (message is null)
             throw new ResourceNotFoundException("Message", messageId);
 
         message.MarkAsUnread();
-        return await _messageRepository.UpdateAsync(message);
+        return await _messageRepository.UpdateAsync(message).ConfigureAwait(false);
     }
 
     // Flags a message
     public async Task<Message> FlagMessageAsync(Guid messageId, Guid flaggerId)
     {
-        var message = await _messageRepository.GetByIdAsync(messageId);
+        var message = await _messageRepository.GetByIdAsync(messageId).ConfigureAwait(false);
         if (message is null)
             throw new ResourceNotFoundException("Message", messageId);
 
-        var flagger = await _userRepository.GetByIdAsync(flaggerId);
+        var flagger = await _userRepository.GetByIdAsync(flaggerId).ConfigureAwait(false);
         if (flagger is null)
             throw new ResourceNotFoundException("User", flaggerId);
 
         message.Flag();
-        return await _messageRepository.UpdateAsync(message);
+        return await _messageRepository.UpdateAsync(message).ConfigureAwait(false);
     }
 
     // Removes flag from message
     public async Task<Message> RemoveFlagAsync(Guid messageId)
     {
-        var message = await _messageRepository.GetByIdAsync(messageId);
+        var message = await _messageRepository.GetByIdAsync(messageId).ConfigureAwait(false);
         if (message is null)
             throw new ResourceNotFoundException("Message", messageId);
 
         message.RemoveFlag();
-        return await _messageRepository.UpdateAsync(message);
+        return await _messageRepository.UpdateAsync(message).ConfigureAwait(false);
     }
 
     // Adds reply to message
     public async Task<Message> AddReplyAsync(Guid parentMessageId, Guid senderId, string body,
         List<string>? attachments = null)
     {
-        var parentMessage = await _messageRepository.GetByIdAsync(parentMessageId);
+        var parentMessage = await _messageRepository.GetByIdAsync(parentMessageId).ConfigureAwait(false);
         if (parentMessage is null)
             throw new ResourceNotFoundException("Message", parentMessageId);
 
-        var sender = await _userRepository.GetByIdAsync(senderId);
+        var sender = await _userRepository.GetByIdAsync(senderId).ConfigureAwait(false);
         if (sender is null)
             throw new ResourceNotFoundException("User", senderId);
 
@@ -172,9 +172,9 @@ public class MessagingService
         };
 
         reply.ValidateBeforeSending();
-        var created = await _messageRepository.AddAsync(reply);
+        var created = await _messageRepository.AddAsync(reply).ConfigureAwait(false);
         parentMessage.AddReply(created);
-        await _messageRepository.UpdateAsync(parentMessage);
+        await _messageRepository.UpdateAsync(parentMessage).ConfigureAwait(false);
 
         return created;
     }
@@ -182,61 +182,61 @@ public class MessagingService
     // Gets messages about a specific listing
     public async Task<List<Message>> GetListingMessagesAsync(Guid listingId)
     {
-        return await _messageRepository.GetByListingIdAsync(listingId);
+        return await _messageRepository.GetByListingIdAsync(listingId).ConfigureAwait(false);
     }
 
     // Gets conversation about a listing
     public async Task<List<Message>> GetListingConversationAsync(Guid userId1, Guid userId2, Guid listingId)
     {
-        return await _messageRepository.GetConversationAboutListingAsync(userId1, userId2, listingId);
+        return await _messageRepository.GetConversationAboutListingAsync(userId1, userId2, listingId).ConfigureAwait(false);
     }
 
     // Gets paginated messages
     public async Task<(List<Message> items, int total)> GetPaginatedMessagesAsync(Guid userId, int pageNumber, int pageSize)
     {
-        var user = await _userRepository.GetByIdAsync(userId);
+        var user = await _userRepository.GetByIdAsync(userId).ConfigureAwait(false);
         if (user is null)
             throw new ResourceNotFoundException("User", userId);
 
-        return await _messageRepository.GetPagedAsync(userId, pageNumber, pageSize);
+        return await _messageRepository.GetPagedAsync(userId, pageNumber, pageSize).ConfigureAwait(false);
     }
 
     // Gets conversation count
     public async Task<int> GetConversationCountAsync(Guid userId)
     {
-        var user = await _userRepository.GetByIdAsync(userId);
+        var user = await _userRepository.GetByIdAsync(userId).ConfigureAwait(false);
         if (user is null)
             throw new ResourceNotFoundException("User", userId);
 
-        return await _messageRepository.GetConversationCountAsync(userId);
+        return await _messageRepository.GetConversationCountAsync(userId).ConfigureAwait(false);
     }
 
     // Deletes a message
     public async Task DeleteMessageAsync(Guid messageId, Guid requesterId)
     {
-        var message = await _messageRepository.GetByIdAsync(messageId);
+        var message = await _messageRepository.GetByIdAsync(messageId).ConfigureAwait(false);
         if (message is null)
             throw new ResourceNotFoundException("Message", messageId);
 
         if (message.SenderId != requesterId && message.RecipientId != requesterId)
             throw new UnauthorizedException(requesterId, "delete this message");
 
-        await _messageRepository.DeleteAsync(messageId);
+        await _messageRepository.DeleteAsync(messageId).ConfigureAwait(false);
     }
 
     // Gets flagged messages (admin only)
     public async Task<List<Message>> GetFlaggedMessagesAsync()
     {
-        return await _messageRepository.GetFlaggedMessagesAsync();
+        return await _messageRepository.GetFlaggedMessagesAsync().ConfigureAwait(false);
     }
 
     // Cleans up old messages (admin only)
     public async Task CleanupOldMessagesAsync(int retentionDays)
     {
-        var oldMessages = await _messageRepository.GetOldMessagesAsync(retentionDays);
+        var oldMessages = await _messageRepository.GetOldMessagesAsync(retentionDays).ConfigureAwait(false);
         foreach (var msg in oldMessages)
         {
-            await _messageRepository.DeleteAsync(msg.Id);
+            await _messageRepository.DeleteAsync(msg.Id).ConfigureAwait(false);
         }
     }
 }

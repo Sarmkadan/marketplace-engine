@@ -66,7 +66,7 @@ public class UserManagementExample
 
             // Example 2: Get user details
             Console.WriteLine("2. Retrieving user details...");
-            var userDetails = await userService.GetUserAsync(seller.Id);
+            var userDetails = await userService.GetUserAsync(seller.Id).ConfigureAwait(false);
             if (userDetails is not null)
             {
                 Console.WriteLine($"✓ User Details:");
@@ -81,14 +81,14 @@ public class UserManagementExample
 
             // Example 3: Update user role
             Console.WriteLine("3. Promoting user to Premium Seller...");
-            await userService.UpdateUserRoleAsync(seller.Id, UserRole.PremiumSeller);
-            var updatedUser = await userService.GetUserAsync(seller.Id);
+            await userService.UpdateUserRoleAsync(seller.Id, UserRole.PremiumSeller).ConfigureAwait(false);
+            var updatedUser = await userService.GetUserAsync(seller.Id).ConfigureAwait(false);
             Console.WriteLine($"✓ New role: {updatedUser?.Role}\n");
 
             // Example 4: Set moderator role
             Console.WriteLine("4. Setting moderator role...");
-            await userService.UpdateUserRoleAsync(moderator.Id, UserRole.Moderator);
-            var moderatorUser = await userService.GetUserAsync(moderator.Id);
+            await userService.UpdateUserRoleAsync(moderator.Id, UserRole.Moderator).ConfigureAwait(false);
+            var moderatorUser = await userService.GetUserAsync(moderator.Id).ConfigureAwait(false);
             Console.WriteLine($"✓ Moderator role set: {moderatorUser?.Role}\n");
 
             // Example 5: Create listings to build seller rating
@@ -109,7 +109,7 @@ public class UserManagementExample
 
             // Example 6: Simulate user ratings
             Console.WriteLine("6. Adding ratings to user...");
-            var sellerWithRatings = await userService.GetUserAsync(seller.Id);
+            var sellerWithRatings = await userService.GetUserAsync(seller.Id).ConfigureAwait(false);
             if (sellerWithRatings is not null)
             {
                 Console.WriteLine($"✓ Seller Ratings:");
@@ -121,7 +121,7 @@ public class UserManagementExample
 
             // Example 7: Get user listings
             Console.WriteLine("7. Getting seller's listings...");
-            var userListings = await listingService.GetUserListingsAsync(seller.Id);
+            var userListings = await listingService.GetUserListingsAsync(seller.Id).ConfigureAwait(false);
             Console.WriteLine($"✓ Seller has {userListings.Count} listings:");
             foreach (var listing in userListings)
             {
@@ -131,7 +131,7 @@ public class UserManagementExample
 
             // Example 8: Get top sellers
             Console.WriteLine("8. Getting top sellers...");
-            var topSellers = await userService.GetTopSellersAsync(limit: 5);
+            var topSellers = await userService.GetTopSellersAsync(limit: 5).ConfigureAwait(false);
             Console.WriteLine($"✓ Top {topSellers.Count} sellers:");
             foreach (var topSeller in topSellers)
             {
@@ -141,13 +141,13 @@ public class UserManagementExample
 
             // Example 9: Verify user email
             Console.WriteLine("9. Verifying user email...");
-            await userService.VerifyUserEmailAsync(seller.Id);
-            var verifiedUser = await userService.GetUserAsync(seller.Id);
+            await userService.VerifyUserEmailAsync(seller.Id).ConfigureAwait(false);
+            var verifiedUser = await userService.GetUserAsync(seller.Id).ConfigureAwait(false);
             Console.WriteLine($"✓ Email verified: {verifiedUser?.IsVerified}\n");
 
             // Example 10: Get user by username
             Console.WriteLine("10. Finding user by username...");
-            var foundUser = await userService.GetUserByUsernameAsync("john_seller");
+            var foundUser = await userService.GetUserByUsernameAsync("john_seller").ConfigureAwait(false);
             if (foundUser is not null)
             {
                 Console.WriteLine($"✓ Found: {foundUser.FullName} ({foundUser.Email})\n");
@@ -155,7 +155,7 @@ public class UserManagementExample
 
             // Example 11: Get user by email
             Console.WriteLine("11. Finding user by email...");
-            var emailUser = await userService.GetUserByEmailAsync("seller@example.com");
+            var emailUser = await userService.GetUserByEmailAsync("seller@example.com").ConfigureAwait(false);
             if (emailUser is not null)
             {
                 Console.WriteLine($"✓ Found: {emailUser.FullName} (ID: {emailUser.Id})\n");
@@ -170,7 +170,7 @@ public class UserManagementExample
                     fullName: "John Smith Jr.",
                     location: new Location { City = "Los Angeles", State = "CA", Country = "USA" }
                 );
-                var updatedProfile = await userService.GetUserAsync(seller.Id);
+                var updatedProfile = await userService.GetUserAsync(seller.Id).ConfigureAwait(false);
                 Console.WriteLine($"✓ Profile updated:");
                 Console.WriteLine($"  Name: {updatedProfile?.FullName}");
                 Console.WriteLine($"  Location: {updatedProfile?.Location?.City}, {updatedProfile?.Location?.State}\n");
@@ -178,19 +178,19 @@ public class UserManagementExample
 
             // Example 13: Deactivate user account
             Console.WriteLine("13. Deactivating user account...");
-            await userService.DeactivateUserAsync(buyer.Id);
-            var deactivatedUser = await userService.GetUserAsync(buyer.Id);
+            await userService.DeactivateUserAsync(buyer.Id).ConfigureAwait(false);
+            var deactivatedUser = await userService.GetUserAsync(buyer.Id).ConfigureAwait(false);
             Console.WriteLine($"✓ Account active: {deactivatedUser?.IsActive}\n");
 
             // Example 14: Reactivate user account
             Console.WriteLine("14. Reactivating user account...");
-            await userService.ActivateUserAsync(buyer.Id);
-            var reactivatedUser = await userService.GetUserAsync(buyer.Id);
+            await userService.ActivateUserAsync(buyer.Id).ConfigureAwait(false);
+            var reactivatedUser = await userService.GetUserAsync(buyer.Id).ConfigureAwait(false);
             Console.WriteLine($"✓ Account active: {reactivatedUser?.IsActive}\n");
 
             // Example 15: User statistics
             Console.WriteLine("15. User statistics...");
-            var allUsers = await userService.GetAllUsersAsync();
+            var allUsers = await userService.GetAllUsersAsync().ConfigureAwait(false);
             var sellerCount = allUsers.Count(u => u.Role == UserRole.PremiumSeller || u.Role == UserRole.User);
             var moderatorCount = allUsers.Count(u => u.Role == UserRole.Moderator);
             var activeCount = allUsers.Count(u => u.IsActive);

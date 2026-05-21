@@ -84,7 +84,7 @@ public class WebhookService
             // Find and invoke handler for this event type
             if (_handlers.TryGetValue(webhookEvent.EventType, out var handler))
             {
-                await handler.HandleAsync(webhookEvent);
+                await handler.HandleAsync(webhookEvent).ConfigureAwait(false);
                 _logger.LogInformation("Webhook processed successfully: {EventType}", webhookEvent.EventType);
             }
             else
@@ -187,7 +187,7 @@ public class PaymentWebhookHandler : IWebhookEventHandler
             // 4. Update seller's balance
             // 5. Trigger fulfillment workflow
 
-            await Task.Delay(100); // Simulate processing
+            await Task.Delay(100).ConfigureAwait(false); // Simulate processing
         }
     }
 }
@@ -221,7 +221,7 @@ public class ShippingWebhookHandler : IWebhookEventHandler
             // 3. Trigger delivery confirmation workflow
             // 4. Update reputation scores when delivered
 
-            await Task.Delay(50); // Simulate processing
+            await Task.Delay(50).ConfigureAwait(false); // Simulate processing
         }
     }
 }

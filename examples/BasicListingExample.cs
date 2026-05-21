@@ -56,7 +56,7 @@ public class BasicListingExample
 
             // Example 2: Retrieve listing details
             Console.WriteLine("2. Retrieving listing details...");
-            var listing = await listingService.GetListingAsync(newListing.Id);
+            var listing = await listingService.GetListingAsync(newListing.Id).ConfigureAwait(false);
             if (listing is not null)
             {
                 Console.WriteLine($"✓ Retrieved listing:");
@@ -88,7 +88,7 @@ public class BasicListingExample
 
             // Example 4: List all listings
             Console.WriteLine("4. Listing all available listings...");
-            var allListings = await listingService.GetAllListingsAsync();
+            var allListings = await listingService.GetAllListingsAsync().ConfigureAwait(false);
             Console.WriteLine($"✓ Total listings: {allListings.Count}");
             foreach (var item in allListings)
             {
@@ -98,7 +98,7 @@ public class BasicListingExample
 
             // Example 5: Get listings by seller
             Console.WriteLine("5. Getting listings by seller ID 1...");
-            var sellerListings = await listingService.GetUserListingsAsync(sellerId: 1);
+            var sellerListings = await listingService.GetUserListingsAsync(sellerId: 1).ConfigureAwait(false);
             Console.WriteLine($"✓ Seller has {sellerListings.Count} listings:");
             foreach (var item in sellerListings)
             {
@@ -108,31 +108,31 @@ public class BasicListingExample
 
             // Example 6: Update listing price
             Console.WriteLine("6. Updating listing price...");
-            var listingToUpdate = await listingService.GetListingAsync(newListing.Id);
+            var listingToUpdate = await listingService.GetListingAsync(newListing.Id).ConfigureAwait(false);
             if (listingToUpdate is not null)
             {
                 listingToUpdate.UpdatePrice(new Money(949.99m, "USD"));
-                await listingService.UpdateListingAsync(listingToUpdate);
+                await listingService.UpdateListingAsync(listingToUpdate).ConfigureAwait(false);
                 Console.WriteLine($"✓ Price updated to: ${listingToUpdate.Price.Amount}\n");
             }
 
             // Example 7: Mark listing as inactive
             Console.WriteLine("7. Marking listing as inactive...");
-            var listingToDeactivate = await listingService.GetListingAsync(secondListing.Id);
+            var listingToDeactivate = await listingService.GetListingAsync(secondListing.Id).ConfigureAwait(false);
             if (listingToDeactivate is not null)
             {
                 listingToDeactivate.Deactivate();
-                await listingService.UpdateListingAsync(listingToDeactivate);
+                await listingService.UpdateListingAsync(listingToDeactivate).ConfigureAwait(false);
                 Console.WriteLine($"✓ Listing status: {listingToDeactivate.Status}\n");
             }
 
             // Example 8: Feature a listing
             Console.WriteLine("8. Featuring a listing...");
-            var listingToFeature = await listingService.GetListingAsync(newListing.Id);
+            var listingToFeature = await listingService.GetListingAsync(newListing.Id).ConfigureAwait(false);
             if (listingToFeature is not null)
             {
                 listingToFeature.SetFeatured(true);
-                await listingService.UpdateListingAsync(listingToFeature);
+                await listingService.UpdateListingAsync(listingToFeature).ConfigureAwait(false);
                 Console.WriteLine($"✓ Listing is now featured: {listingToFeature.IsFeatured}\n");
             }
 

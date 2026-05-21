@@ -76,7 +76,7 @@ public static class FullTextSearchExtensions
                 PageSize = pageSize
             };
 
-            var result = await service.SearchAsync(request, cancellationToken);
+            var result = await service.SearchAsync(request, cancellationToken).ConfigureAwait(false);
             return Results.Ok(result);
         }
         catch (ValidationException ex)
@@ -92,7 +92,7 @@ public static class FullTextSearchExtensions
         int limit = 10,
         CancellationToken cancellationToken = default)
     {
-        var suggestions = await service.GetSuggestionsAsync(prefix, limit, cancellationToken);
+        var suggestions = await service.GetSuggestionsAsync(prefix, limit, cancellationToken).ConfigureAwait(false);
         return Results.Ok(new { prefix, suggestions });
     }
 }
