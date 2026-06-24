@@ -26,7 +26,19 @@ public class ListingService
         _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
     }
 
-    // Creates and publishes a new listing
+    /// <summary>
+    /// Creates and publishes a new listing.
+    /// </summary>
+    /// <param name="sellerId">The ID of the user creating the listing.</param>
+    /// <param name="title">Listing title.</param>
+    /// <param name="description">Listing description.</param>
+    /// <param name="price">Listing price.</param>
+    /// <param name="currency">Listing currency code.</param>
+    /// <param name="categoryId">The category ID for the listing.</param>
+    /// <param name="imageUrls">List of image URLs.</param>
+    /// <returns>The newly created listing.</returns>
+    /// <exception cref="ResourceNotFoundException">Thrown if seller does not exist.</exception>
+    /// <exception cref="UnauthorizedException">Thrown if seller is not active.</exception>
     public async Task<Listing> CreateListingAsync(Guid sellerId, string title, string description,
         decimal price, string currency, Guid categoryId, List<string> imageUrls)
     {
@@ -58,7 +70,18 @@ public class ListingService
         return created;
     }
 
-    // Updates an existing listing; returns the previous CategoryId so callers can invalidate caches
+    /// <summary>
+    /// Updates an existing listing.
+    /// </summary>
+    /// <param name="listingId">The unique identifier of the listing.</param>
+    /// <param name="requesterId">The ID of the user requesting the update.</param>
+    /// <param name="title">Optional new title.</param>
+    /// <param name="description">Optional new description.</param>
+    /// <param name="price">Optional new price.</param>
+    /// <param name="categoryId">Optional new category ID.</param>
+    /// <returns>A tuple containing the updated listing and the previous category ID.</returns>
+    /// <exception cref="ResourceNotFoundException">Thrown if listing does not exist.</exception>
+    /// <exception cref="UnauthorizedException">Thrown if user is not the owner.</exception>
     public async Task<(Listing listing, Guid previousCategoryId)> UpdateListingAsync(Guid listingId, Guid requesterId,
         string? title = null, string? description = null, Money? price = null, Guid? categoryId = null)
     {
@@ -88,7 +111,15 @@ public class ListingService
         return (updated, previousCategoryId);
     }
 
-    // Publishes or unpublishes a listing
+    /// <summary>
+    /// Sets the visibility (published status) of a listing.
+    /// </summary>
+    /// <param name="listingId">The unique identifier of the listing.</param>
+    /// <param name="requesterId">The ID of the user requesting the change.</param>
+    /// <param name="isVisible">Whether the listing should be visible (published).</param>
+    /// <returns>The updated listing.</returns>
+    /// <exception cref="ResourceNotFoundException">Thrown if listing does not exist.</exception>
+    /// <exception cref="UnauthorizedException">Thrown if user is not the owner.</exception>
     public async Task<Listing> SetListingVisibilityAsync(Guid listingId, Guid requesterId, bool isVisible)
     {
         var listing = await _listingRepository.GetByIdAsync(listingId);
@@ -106,7 +137,12 @@ public class ListingService
         return await _listingRepository.UpdateAsync(listing);
     }
 
-    // Retrieves a listing and records the view
+    /// <summary>
+    /// Retrieves a listing and records the view.
+    /// </summary>
+    /// <param name="listingId">The unique identifier of the listing.</param>
+    /// <returns>The retrieved listing.</returns>
+    /// <exception cref="ResourceNotFoundException">Thrown if listing does not exist.</exception>
     public async Task<Listing> GetListingWithViewAsync(Guid listingId)
     {
         var listing = await _listingRepository.GetByIdAsync(listingId);
@@ -117,7 +153,12 @@ public class ListingService
         return listing;
     }
 
-    // Records user interest in a listing
+    /// <summary>
+    /// Records user interest in a listing.
+    /// </summary>
+    /// <param name="listingId">The unique identifier of the listing.</param>
+    /// <returns>The updated listing.</returns>
+    /// <exception cref="ResourceNotFoundException">Thrown if listing does not exist.</exception>
     public async Task<Listing> RecordInterestAsync(Guid listingId)
     {
         var listing = await _listingRepository.GetByIdAsync(listingId);
@@ -128,7 +169,14 @@ public class ListingService
         return listing;
     }
 
-    // Marks listing as sold/delisted
+    /// <summary>
+    /// Marks a listing as sold or delisted.
+    /// </summary>
+    /// <param name="listingId">The unique identifier of the listing.</param>
+    /// <param name="requesterId">The ID of the user requesting the delist.</param>
+    /// <returns>The updated listing.</returns>
+    /// <exception cref="ResourceNotFoundException">Thrown if listing does not exist.</exception>
+    /// <exception cref="UnauthorizedException">Thrown if user is not the owner.</exception>
     public async Task<Listing> DelistListingAsync(Guid listingId, Guid requesterId)
     {
         var listing = await _listingRepository.GetByIdAsync(listingId);
@@ -142,7 +190,12 @@ public class ListingService
         return await _listingRepository.UpdateAsync(listing);
     }
 
-    // Retrieves listings by seller
+    /// <summary>
+    /// Retrieves all listings belonging to a specific seller.
+    /// </summary>
+    /// <param name="sellerId">The unique identifier of the seller.</param>
+    /// <returns>A list of the seller's listings.</returns>
+    /// <exception cref="ResourceNotFoundException">Thrown if seller does not exist.</exception>
     public async Task<List<Listing>> GetSellerListingsAsync(Guid sellerId)
     {
         var seller = await _userRepository.GetByIdAsync(sellerId);
@@ -152,7 +205,11 @@ public class ListingService
         return await _listingRepository.GetBySellerIdAsync(sellerId);
     }
 
-    // Retrieves featured listings
+    /// <summary>
+    /// Retrieves featured listings.
+    /// </summary>
+    /// <param name="limit">The maximum number of featured listings to return.</param>
+    /// <returns>A list of featured listings.</returns>
     public async Task<List<Listing>> GetFeaturedListingsAsync(int limit = 10)
     {
         if (limit < 1 || limit > 100)
@@ -161,7 +218,11 @@ public class ListingService
         return await _listingRepository.GetFeaturedListingsAsync(limit);
     }
 
-    // Retrieves recent listings
+    /// <summary>
+    /// Retrieves recent listings.
+    /// </summary>
+    /// <param name="days">The number of days to look back for recent listings.</param>
+    /// <returns>A list of recent listings.</returns>
     public async Task<List<Listing>> GetRecentListingsAsync(int days = 7)
     {
         if (days < 1 || days > 365)
@@ -170,13 +231,25 @@ public class ListingService
         return await _listingRepository.GetRecentListingsAsync(days);
     }
 
-    // Gets paginated listings
+    /// <summary>
+    /// Gets a paginated list of listings.
+    /// </summary>
+    /// <param name="pageNumber">The page number to retrieve.</param>
+    /// <param name="pageSize">The number of listings per page.</param>
+    /// <returns>A tuple containing the list of listings and the total count.</returns>
     public async Task<(List<Listing> items, int total)> GetPaginatedListingsAsync(int pageNumber, int pageSize)
     {
         return await _listingRepository.GetPagedAsync(pageNumber, pageSize);
     }
 
-    // Marks listing as featured (admin only)
+    /// <summary>
+    /// Marks a listing as featured (Administrator only).
+    /// </summary>
+    /// <param name="listingId">The unique identifier of the listing.</param>
+    /// <param name="adminId">The ID of the administrator.</param>
+    /// <returns>The updated listing.</returns>
+    /// <exception cref="UnauthorizedException">Thrown if requester is not an administrator.</exception>
+    /// <exception cref="ResourceNotFoundException">Thrown if listing does not exist.</exception>
     public async Task<Listing> MarkAsFeaturedAsync(Guid listingId, Guid adminId)
     {
         var admin = await _userRepository.GetByIdAsync(adminId);
@@ -191,7 +264,10 @@ public class ListingService
         return await _listingRepository.UpdateAsync(listing);
     }
 
-    // Gets total listing count
+    /// <summary>
+    /// Gets the total count of all listings.
+    /// </summary>
+    /// <returns>The total number of listings.</returns>
     public async Task<int> GetTotalListingCountAsync()
     {
         return await _listingRepository.CountAsync();
