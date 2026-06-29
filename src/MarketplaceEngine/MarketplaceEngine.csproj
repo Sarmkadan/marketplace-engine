@@ -6,10 +6,10 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <AssemblyName>MarketplaceEngine</AssemblyName>
     <RootNamespace>MarketplaceEngine</RootNamespace>
-    <PackageId>Zaiets.marketplace.engine</PackageId>
-    <Version>2.0.2</Version>
+    <PackageId>sarmkadan.marketplace.engine</PackageId>
+    <Version>1.0.0</Version>
     <Authors>Vladyslav Zaiets</Authors>
-    <Description>Lightweight marketplace backend engine - listings, search, categories, messaging, moderation</Description>
+    <Description>A lightweight marketplace backend engine providing functionality for listings, search, categories, messaging, and moderation.</Description>
     <PackageTags>marketplace engine listings search categories messaging moderation</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/sarmkadan/marketplace-engine</PackageProjectUrl>
