@@ -280,7 +280,7 @@ cd marketplace-engine
 docker build -t marketplace-engine:latest .
 
 # Run container
-docker run -p 5000:5000 -p 5001:5001 marketplace-engine:latest
+docker run -p 8080:8080 marketplace-engine:latest
 
 # Or use docker-compose
 docker-compose -f docker-compose.yml up -d
@@ -1022,14 +1022,14 @@ For Docker deployments, use environment file `docker.env`:
 
 ```bash
 ASPNETCORE_ENVIRONMENT=Production
-ASPNETCORE_URLS=http://0.0.0.0:5000
+ASPNETCORE_URLS=http://0.0.0.0:8080
 MARKETPLACE_RATE_LIMIT=120
 MARKETPLACE_ENABLE_MODERATION=true
 ```
 
 Then run:
 ```bash
-docker run --env-file docker.env -p 5000:5000 marketplace-engine:latest
+docker run --env-file docker.env -p 8080:8080 marketplace-engine:latest
 ```
 
 ---

@@ -65,17 +65,17 @@ RUN chown -R appuser:appuser /app && \
     chmod -R 755 /app
 
 # Expose ports
-EXPOSE 5000 5001
+EXPOSE 8080
 
 # Set environment
 ENV ASPNETCORE_ENVIRONMENT=Production
-ENV ASPNETCORE_URLS=http://+:5000
+ENV ASPNETCORE_URLS=http://+:8080
 ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false
 ENV TZ=UTC
 
 # Health check with proper endpoint
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:5000/api/v1/health || exit 1
+    CMD curl -f http://localhost:8080/api/v1/health || exit 1
 
 # Switch to non-root user
 USER appuser
