@@ -13,14 +13,21 @@ using MarketplaceEngine.Services;
 using Moq;
 using Xunit;
 
-namespace MarketplaceEngine.Tests;
-
+/// <summary>
+/// Tests for the ListingService class.
+/// </summary>
 public class ListingServiceTests
 {
+    /// <summary>
+    /// Mock objects for the ListingRepository and UserRepository.
+    /// </summary>
     private readonly Mock<IListingRepository> _listingRepoMock;
     private readonly Mock<IUserRepository> _userRepoMock;
     private readonly ListingService _sut;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ListingServiceTests"/> class.
+    /// </summary>
     public ListingServiceTests()
     {
         _listingRepoMock = new Mock<IListingRepository>();
@@ -28,6 +35,9 @@ public class ListingServiceTests
         _sut = new ListingService(_listingRepoMock.Object, _userRepoMock.Object);
     }
 
+    /// <summary>
+    /// Tests that CreateListingAsync throws a ResourceNotFoundException when the seller is not found.
+    /// </summary>
     [Fact]
     public async Task CreateListingAsync_WhenSellerNotFound_ThrowsResourceNotFoundException()
     {
@@ -49,6 +59,9 @@ public class ListingServiceTests
             .WithMessage("*User*not found*");
     }
 
+    /// <summary>
+    /// Tests that CreateListingAsync throws an UnauthorizedException when the seller is inactive.
+    /// </summary>
     [Fact]
     public async Task CreateListingAsync_WhenSellerIsInactive_ThrowsUnauthorizedException()
     {
@@ -70,6 +83,9 @@ public class ListingServiceTests
         await act.Should().ThrowAsync<UnauthorizedException>();
     }
 
+    /// <summary>
+    /// Tests that DelistListingAsync throws an UnauthorizedException when the caller is not the seller.
+    /// </summary>
     [Fact]
     public async Task DelistListingAsync_WhenCallerIsNotSeller_ThrowsUnauthorizedException()
     {
@@ -89,6 +105,9 @@ public class ListingServiceTests
         await act.Should().ThrowAsync<UnauthorizedException>();
     }
 
+    /// <summary>
+    /// Tests that MarkAsFeaturedAsync throws an UnauthorizedException when the caller is not an admin.
+    /// </summary>
     [Fact]
     public async Task MarkAsFeaturedAsync_WhenCallerIsNotAdmin_ThrowsUnauthorizedException()
     {
