@@ -8,7 +8,6 @@ using System.Collections.Concurrent;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 
 namespace MarketplaceEngine.Middleware;
 
@@ -23,12 +22,10 @@ public static class RateLimitingMiddlewareExtensions
     /// </summary>
     /// <param name="app">The IApplicationBuilder instance</param>
     /// <returns>The IApplicationBuilder instance for method chaining</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="app"/> is null.</exception>
     public static IApplicationBuilder UseRateLimiting(this IApplicationBuilder app)
     {
-        if (app == null)
-        {
-            throw new ArgumentNullException(nameof(app));
-        }
+        ArgumentNullException.ThrowIfNull(app);
 
         return app.UseMiddleware<RateLimitingMiddleware>();
     }
@@ -39,17 +36,11 @@ public static class RateLimitingMiddlewareExtensions
     /// <param name="middleware">The RateLimitingMiddleware instance</param>
     /// <param name="context">The HttpContext containing the client IP</param>
     /// <returns>The current request count, or 0 if not tracked</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="middleware"/> or <paramref name="context"/> is null.</exception>
     public static int GetCurrentRequestCount(this RateLimitingMiddleware middleware, HttpContext context)
     {
-        if (middleware == null)
-        {
-            throw new ArgumentNullException(nameof(middleware));
-        }
-
-        if (context == null)
-        {
-            throw new ArgumentNullException(nameof(context));
-        }
+        ArgumentNullException.ThrowIfNull(middleware);
+        ArgumentNullException.ThrowIfNull(context);
 
         var clientIp = context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
         return middleware.GetRequestCount(clientIp);
@@ -61,31 +52,15 @@ public static class RateLimitingMiddlewareExtensions
     /// <param name="middleware">The RateLimitingMiddleware instance</param>
     /// <param name="clientIp">The client IP address to check</param>
     /// <returns>The current request count, or 0 if not tracked</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="middleware"/> is null.</exception>
+    /// <exception cref="ArgumentException"><paramref name="clientIp"/> is null or whitespace.</exception>
     public static int GetRequestCount(this RateLimitingMiddleware middleware, string clientIp)
     {
-        if (middleware == null)
-        {
-            throw new ArgumentNullException(nameof(middleware));
-        }
+        ArgumentNullException.ThrowIfNull(middleware);
+        ArgumentException.ThrowIfNullOrWhiteSpace(clientIp, nameof(clientIp));
 
-        if (string.IsNullOrWhiteSpace(clientIp))
-        {
-            throw new ArgumentException("Client IP cannot be null or empty", nameof(clientIp));
-        }
-
-        // Use reflection to access the private RateLimitBuckets dictionary
-        var bucketsField = typeof(RateLimitingMiddleware).GetField("_requestCount",
-            System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
-
-        if (bucketsField?.GetValue(null) is ConcurrentDictionary<string, int> requestCounts)
-        {
-            if (requestCounts.TryGetValue(clientIp, out var count))
-            {
-                return count;
-            }
-        }
-
-        return 0;
+        var bucket = RateLimitingMiddleware.RateLimitBuckets.GetValueOrDefault(clientIp);
+        return bucket?.RequestCount ?? 0;
     }
 
     /// <summary>
@@ -94,17 +69,11 @@ public static class RateLimitingMiddlewareExtensions
     /// <param name="middleware">The RateLimitingMiddleware instance</param>
     /// <param name="context">The HttpContext containing the client IP</param>
     /// <returns>True if rate limit is exceeded, false otherwise</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="middleware"/> or <paramref name="context"/> is null.</exception>
     public static bool IsCurrentRateLimitExceeded(this RateLimitingMiddleware middleware, HttpContext context)
     {
-        if (middleware == null)
-        {
-            throw new ArgumentNullException(nameof(middleware));
-        }
-
-        if (context == null)
-        {
-            throw new ArgumentNullException(nameof(context));
-        }
+        ArgumentNullException.ThrowIfNull(middleware);
+        ArgumentNullException.ThrowIfNull(context);
 
         var clientIp = context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
         return middleware.IsRateLimitExceeded(clientIp);
@@ -116,16 +85,14 @@ public static class RateLimitingMiddlewareExtensions
     /// <param name="middleware">The RateLimitingMiddleware instance</param>
     /// <param name="clientIp">The client IP address to check</param>
     /// <returns>True if rate limit is exceeded, false otherwise</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="middleware"/> is null.</exception>
+    /// <exception cref="ArgumentException"><paramref name="clientIp"/> is null or whitespace.</exception>
     public static bool IsRateLimitExceeded(this RateLimitingMiddleware middleware, string clientIp)
     {
-        if (middleware == null)
-        {
-            throw new ArgumentNullException(nameof(middleware));
-        }
+        ArgumentNullException.ThrowIfNull(middleware);
+        ArgumentException.ThrowIfNullOrWhiteSpace(clientIp, nameof(clientIp));
 
-        // Default max requests per minute from the middleware
-        const int maxRequestsPerMinute = 100;
-        return middleware.GetRequestCount(clientIp) > maxRequestsPerMinute;
+        return middleware.GetRequestCount(clientIp) > RateLimitingMiddleware.MaxRequestsPerMinute;
     }
 
     /// <summary>
@@ -134,17 +101,11 @@ public static class RateLimitingMiddlewareExtensions
     /// <param name="middleware">The RateLimitingMiddleware instance</param>
     /// <param name="context">The HttpContext containing the client IP</param>
     /// <returns>A tuple containing WindowStart and RequestCount, or default values if not tracked</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="middleware"/> or <paramref name="context"/> is null.</exception>
     public static (DateTime WindowStart, int RequestCount) GetCurrentRateLimitWindow(this RateLimitingMiddleware middleware, HttpContext context)
     {
-        if (middleware == null)
-        {
-            throw new ArgumentNullException(nameof(middleware));
-        }
-
-        if (context == null)
-        {
-            throw new ArgumentNullException(nameof(context));
-        }
+        ArgumentNullException.ThrowIfNull(middleware);
+        ArgumentNullException.ThrowIfNull(context);
 
         var clientIp = context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
         return middleware.GetRateLimitWindow(clientIp);
@@ -156,33 +117,17 @@ public static class RateLimitingMiddlewareExtensions
     /// <param name="middleware">The RateLimitingMiddleware instance</param>
     /// <param name="clientIp">The client IP address to check</param>
     /// <returns>A tuple containing WindowStart and RequestCount, or default values if not tracked</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="middleware"/> is null.</exception>
+    /// <exception cref="ArgumentException"><paramref name="clientIp"/> is null or whitespace.</exception>
     public static (DateTime WindowStart, int RequestCount) GetRateLimitWindow(this RateLimitingMiddleware middleware, string clientIp)
     {
-        if (middleware == null)
-        {
-            throw new ArgumentNullException(nameof(middleware));
-        }
+        ArgumentNullException.ThrowIfNull(middleware);
+        ArgumentException.ThrowIfNullOrWhiteSpace(clientIp, nameof(clientIp));
 
-        if (string.IsNullOrWhiteSpace(clientIp))
-        {
-            throw new ArgumentException("Client IP cannot be null or empty", nameof(clientIp));
-        }
-
-        // Use reflection to access the private rate limit tracking
-        var bucketsField = typeof(RateLimitingMiddleware).GetField("_requestCount",
-            System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
-
-        if (bucketsField?.GetValue(null) is ConcurrentDictionary<string, int> requestCounts)
-        {
-            if (requestCounts.TryGetValue(clientIp, out var count))
-            {
-                // Window start is approximately now minus 1 minute based on the middleware logic
-                var windowStart = DateTime.UtcNow.AddMinutes(-1);
-                return (windowStart, count);
-            }
-        }
-
-        return (DateTime.MinValue, 0);
+        var bucket = RateLimitingMiddleware.RateLimitBuckets.GetValueOrDefault(clientIp);
+        return bucket is null
+            ? (DateTime.MinValue, 0)
+            : (bucket.WindowStart, bucket.RequestCount);
     }
 
     /// <summary>
@@ -192,17 +137,11 @@ public static class RateLimitingMiddlewareExtensions
     /// <param name="middleware">The RateLimitingMiddleware instance</param>
     /// <param name="context">The HttpContext containing the client IP</param>
     /// <returns>True if the bucket was found and removed, false otherwise</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="middleware"/> or <paramref name="context"/> is null.</exception>
     public static bool ResetCurrentRateLimit(this RateLimitingMiddleware middleware, HttpContext context)
     {
-        if (middleware == null)
-        {
-            throw new ArgumentNullException(nameof(middleware));
-        }
-
-        if (context == null)
-        {
-            throw new ArgumentNullException(nameof(context));
-        }
+        ArgumentNullException.ThrowIfNull(middleware);
+        ArgumentNullException.ThrowIfNull(context);
 
         var clientIp = context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
         return middleware.ResetRateLimit(clientIp);
@@ -215,27 +154,13 @@ public static class RateLimitingMiddlewareExtensions
     /// <param name="middleware">The RateLimitingMiddleware instance</param>
     /// <param name="clientIp">The client IP address to reset</param>
     /// <returns>True if the bucket was found and removed, false otherwise</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="middleware"/> is null.</exception>
+    /// <exception cref="ArgumentException"><paramref name="clientIp"/> is null or whitespace.</exception>
     public static bool ResetRateLimit(this RateLimitingMiddleware middleware, string clientIp)
     {
-        if (middleware == null)
-        {
-            throw new ArgumentNullException(nameof(middleware));
-        }
+        ArgumentNullException.ThrowIfNull(middleware);
+        ArgumentException.ThrowIfNullOrWhiteSpace(clientIp, nameof(clientIp));
 
-        if (string.IsNullOrWhiteSpace(clientIp))
-        {
-            throw new ArgumentException("Client IP cannot be null or empty", nameof(clientIp));
-        }
-
-        // Use reflection to access and modify the private dictionary
-        var bucketsField = typeof(RateLimitingMiddleware).GetField("_requestCount",
-            System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
-
-        if (bucketsField?.GetValue(null) is ConcurrentDictionary<string, int> requestCounts)
-        {
-            return requestCounts.TryRemove(clientIp, out _);
-        }
-
-        return false;
+        return RateLimitingMiddleware.RateLimitBuckets.TryRemove(clientIp, out _);
     }
 }
