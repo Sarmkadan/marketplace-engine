@@ -17,9 +17,10 @@ namespace MarketplaceEngine.Services
         /// </summary>
         /// <param name="service">The <see cref="CategoryService"/> instance.</param>
         /// <returns>A dictionary where the key is the category Id and the value is the <see cref="Category"/>.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="service"/> is <see langword="null"/></exception>
         public static async Task<Dictionary<Guid, Category>> ToDictionaryAsync(this CategoryService service)
         {
-            if (service == null) throw new ArgumentNullException(nameof(service));
+            ArgumentNullException.ThrowIfNull(service);
 
             var categories = await service.GetAllCategoriesAsync().ConfigureAwait(false);
             return categories.ToDictionary(c => c.Id);
@@ -31,9 +32,10 @@ namespace MarketplaceEngine.Services
         /// <param name="service">The <see cref="CategoryService"/> instance.</param>
         /// <param name="parentId">The identifier of the parent category.</param>
         /// <returns>A list of sub‑category names.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="service"/> is <see langword="null"/></exception>
         public static async Task<List<string>> GetSubCategoryNamesAsync(this CategoryService service, Guid parentId)
         {
-            if (service == null) throw new ArgumentNullException(nameof(service));
+            ArgumentNullException.ThrowIfNull(service);
 
             var subCategories = await service.GetSubCategoriesAsync(parentId).ConfigureAwait(false);
             return subCategories.Select(c => c.Name).ToList();
@@ -42,11 +44,12 @@ namespace MarketplaceEngine.Services
         /// <summary>
         /// Retrieves the slugs of the currently “hot” categories.
         /// </summary>
-        /// <param name="service">The <see cref="CategoryService"/> instance.</param>
+        /// <param name=”service”>The <see cref=”CategoryService”/> instance.</param>
         /// <returns>A list of slug strings for hot categories.</returns>
+        /// <exception cref=”ArgumentNullException”><paramref name=”service”/> is <see langword=”null”/></exception>
         public static async Task<List<string>> GetHotCategorySlugsAsync(this CategoryService service)
         {
-            if (service == null) throw new ArgumentNullException(nameof(service));
+            ArgumentNullException.ThrowIfNull(service);
 
             var hotCategories = await service.GetHotCategoriesAsync().ConfigureAwait(false);
             return hotCategories
@@ -63,10 +66,13 @@ namespace MarketplaceEngine.Services
         /// <param name="service">The <see cref="CategoryService"/> instance.</param>
         /// <param name="nameFragment">Part of the category name to search for.</param>
         /// <returns>A list of categories whose names contain the fragment.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="service"/> is <see langword="null"/></exception>
         public static async Task<List<Category>> SearchByNameAsync(this CategoryService service, string nameFragment)
         {
-            if (service == null) throw new ArgumentNullException(nameof(service));
-            if (string.IsNullOrWhiteSpace(nameFragment)) return new List<Category>();
+            ArgumentNullException.ThrowIfNull(service);
+
+            if (string.IsNullOrWhiteSpace(nameFragment))
+                return new List<Category>();
 
             // The underlying service expects a search term; we trim and keep the original casing
             // because the service itself may handle case‑insensitivity internally.
