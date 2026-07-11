@@ -15,7 +15,10 @@ namespace MarketplaceEngine.Services;
 /// </summary>
 public enum ModerationTargetType
 {
+    /// <summary>User target type</summary>
     User,
+
+    /// <summary>Listing target type</summary>
     Listing
 }
 
@@ -30,10 +33,10 @@ public static class ModerationServiceExtensions
     /// </summary>
     /// <param name="service">The moderation service instance</param>
     /// <param name="reporterId">The ID of the user filing the reports</param>
-    /// <param name="listingIds">Collection of listing IDs to report</param>
-    /// <param name="reason">Reason for reporting</param>
-    /// <param name="details">Optional details about the reports</param>
-    /// <param name="priority">Priority level (1-5)</param>
+    /// <exception cref="ArgumentNullException"><paramref name="service"/> is <see langword="null"/></exception>
+    /// <exception cref="ArgumentNullException"><paramref name="listingIds"/> is <see langword="null"/></exception>
+    /// <exception cref="ArgumentException"><paramref name="reason"/> is <see langword="null"/> or whitespace</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="priority"/> is less than 1 or greater than 5</exception>
     /// <returns>List of created moderation reports</returns>
     public static async Task<List<ModerationReport>> ReportListingsBatchAsync(
         this ModerationService service,
@@ -43,6 +46,15 @@ public static class ModerationServiceExtensions
         string? details = null,
         int priority = 1)
     {
+        ArgumentNullException.ThrowIfNull(service);
+        ArgumentNullException.ThrowIfNull(listingIds);
+        ArgumentException.ThrowIfNullOrWhiteSpace(reason);
+
+        if (priority < 1 || priority > 5)
+        {
+            throw new ArgumentOutOfRangeException(nameof(priority), priority, "Priority must be between 1 and 5");
+        }
+
         var reports = new List<ModerationReport>();
 
         foreach (var listingId in listingIds)
@@ -59,10 +71,10 @@ public static class ModerationServiceExtensions
     /// </summary>
     /// <param name="service">The moderation service instance</param>
     /// <param name="reporterId">The ID of the user filing the reports</param>
-    /// <param name="userIds">Collection of user IDs to report</param>
-    /// <param name="reason">Reason for reporting</param>
-    /// <param name="details">Optional details about the reports</param>
-    /// <param name="priority">Priority level (1-5)</param>
+    /// <exception cref="ArgumentNullException"><paramref name="service"/> is <see langword="null"/></exception>
+    /// <exception cref="ArgumentNullException"><paramref name="userIds"/> is <see langword="null"/></exception>
+    /// <exception cref="ArgumentException"><paramref name="reason"/> is <see langword="null"/> or whitespace</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="priority"/> is less than 1 or greater than 5</exception>
     /// <returns>List of created moderation reports</returns>
     public static async Task<List<ModerationReport>> ReportUsersBatchAsync(
         this ModerationService service,
@@ -72,6 +84,15 @@ public static class ModerationServiceExtensions
         string? details = null,
         int priority = 1)
     {
+        ArgumentNullException.ThrowIfNull(service);
+        ArgumentNullException.ThrowIfNull(userIds);
+        ArgumentException.ThrowIfNullOrWhiteSpace(reason);
+
+        if (priority < 1 || priority > 5)
+        {
+            throw new ArgumentOutOfRangeException(nameof(priority), priority, "Priority must be between 1 and 5");
+        }
+
         var reports = new List<ModerationReport>();
 
         foreach (var userId in userIds)
@@ -89,12 +110,22 @@ public static class ModerationServiceExtensions
     /// <param name="service">The moderation service instance</param>
     /// <param name="reports">Collection of reports to assign</param>
     /// <param name="moderatorId">ID of the moderator to assign to</param>
+    /// <exception cref="ArgumentNullException"><paramref name="service"/> is <see langword="null"/></exception>
+    /// <exception cref="ArgumentNullException"><paramref name="reports"/> is <see langword="null"/></exception>
+    /// <exception cref="ArgumentException"><paramref name="moderatorId"/> is <see cref="Guid"/>.Empty</exception>
     /// <returns>List of assigned moderation reports</returns>
     public static async Task<List<ModerationReport>> AssignReportsToModeratorAsync(
         this ModerationService service,
         IEnumerable<ModerationReport> reports,
         Guid moderatorId)
     {
+        ArgumentNullException.ThrowIfNull(service);
+        ArgumentNullException.ThrowIfNull(reports);
+        if (moderatorId == Guid.Empty)
+        {
+            throw new ArgumentException("Moderator ID cannot be empty", nameof(moderatorId));
+        }
+
         var assignedReports = new List<ModerationReport>();
 
         foreach (var report in reports)
@@ -113,6 +144,9 @@ public static class ModerationServiceExtensions
     /// <param name="reports">Collection of reports to process</param>
     /// <param name="action">Action to apply: 'approve', 'reject', 'remove', 'suspend', or 'ban'</param>
     /// <param name="reviewNotes">Optional review notes to add to each report</param>
+    /// <exception cref="ArgumentNullException"><paramref name="service"/> is <see langword="null"/></exception>
+    /// <exception cref="ArgumentNullException"><paramref name="reports"/> is <see langword="null"/></exception>
+    /// <exception cref="ArgumentException"><paramref name="action"/> is <see langword="null"/>, whitespace, or invalid</exception>
     /// <returns>List of processed moderation reports</returns>
     public static async Task<List<ModerationReport>> ProcessReportsBatchAsync(
         this ModerationService service,
@@ -120,6 +154,10 @@ public static class ModerationServiceExtensions
         string action,
         string? reviewNotes = null)
     {
+        ArgumentNullException.ThrowIfNull(service);
+        ArgumentNullException.ThrowIfNull(reports);
+        ArgumentException.ThrowIfNullOrWhiteSpace(action);
+
         var processedReports = new List<ModerationReport>();
 
         foreach (var report in reports)
@@ -147,7 +185,7 @@ public static class ModerationServiceExtensions
                     break;
 
                 case "ban":
-                    var bannedReport = await service.BanUserAsync(report, reviewNotes ?? "");
+                    var bannedReport = await service.BanUserAsync(report, reviewNotes ?? string.Empty);
                     processedReports.Add(bannedReport);
                     break;
 
@@ -166,11 +204,16 @@ public static class ModerationServiceExtensions
     /// </summary>
     /// <param name="service">The moderation service instance</param>
     /// <param name="reports">Collection of reports to escalate</param>
+    /// <exception cref="ArgumentNullException"><paramref name="service"/> is <see langword="null"/></exception>
+    /// <exception cref="ArgumentNullException"><paramref name="reports"/> is <see langword="null"/></exception>
     /// <returns>List of escalated moderation reports</returns>
     public static async Task<List<ModerationReport>> EscalateReportsPriorityAsync(
         this ModerationService service,
         IEnumerable<ModerationReport> reports)
     {
+        ArgumentNullException.ThrowIfNull(service);
+        ArgumentNullException.ThrowIfNull(reports);
+
         var escalatedReports = new List<ModerationReport>();
 
         foreach (var report in reports)
@@ -188,12 +231,17 @@ public static class ModerationServiceExtensions
     /// <param name="service">The moderation service instance</param>
     /// <param name="reports">Collection of reports to filter</param>
     /// <param name="targetType">Type of target to filter by</param>
+    /// <exception cref="ArgumentNullException"><paramref name="service"/> is <see langword="null"/></exception>
+    /// <exception cref="ArgumentNullException"><paramref name="reports"/> is <see langword="null"/></exception>
     /// <returns>Filtered list of moderation reports</returns>
     public static async Task<List<ModerationReport>> FilterByTargetTypeAsync(
         this ModerationService service,
         IEnumerable<ModerationReport> reports,
         ModerationTargetType targetType)
     {
+        ArgumentNullException.ThrowIfNull(service);
+        ArgumentNullException.ThrowIfNull(reports);
+
         return targetType switch
         {
             ModerationTargetType.User => reports
@@ -213,6 +261,8 @@ public static class ModerationServiceExtensions
     /// <param name="page">Page number for pagination</param>
     /// <param name="pageSize">Number of items per page</param>
     /// <param name="minPriority">Minimum priority level to include (null for all)</param>
+    /// <exception cref="ArgumentNullException"><paramref name="service"/> is <see langword="null"/></exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="page"/> is less than 0 or <paramref name="pageSize"/> is less than 1</exception>
     /// <returns>Filtered list of pending moderation reports</returns>
     public static async Task<List<ModerationReport>> GetPendingReportsByPriorityAsync(
         this ModerationService service,
@@ -220,6 +270,16 @@ public static class ModerationServiceExtensions
         int pageSize,
         int? minPriority = null)
     {
+        ArgumentNullException.ThrowIfNull(service);
+        if (page < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(page), page, "Page must be non-negative");
+        }
+        if (pageSize < 1)
+        {
+            throw new ArgumentOutOfRangeException(nameof(pageSize), pageSize, "Page size must be at least 1");
+        }
+
         var allReports = await service.GetPendingReportsAsync(page, pageSize);
 
         if (minPriority.HasValue)
@@ -238,12 +298,15 @@ public static class ModerationServiceExtensions
     /// <param name="service">The moderation service instance</param>
     /// <param name="status">Moderation status to filter by</param>
     /// <param name="minPriority">Minimum priority level to include (null for all)</param>
+    /// <exception cref="ArgumentNullException"><paramref name="service"/> is <see langword="null"/></exception>
     /// <returns>Filtered list of moderation reports by status</returns>
     public static async Task<List<ModerationReport>> GetReportsByStatusWithPriorityAsync(
         this ModerationService service,
         ModerationStatus status,
         int? minPriority = null)
     {
+        ArgumentNullException.ThrowIfNull(service);
+
         var reports = await service.GetReportsByStatusAsync(status);
 
         if (minPriority.HasValue)
@@ -262,12 +325,20 @@ public static class ModerationServiceExtensions
     /// <param name="service">The moderation service instance</param>
     /// <param name="moderatorId">ID of the moderator to get assignments for</param>
     /// <param name="minPriority">Minimum priority level to include (null for all)</param>
+    /// <exception cref="ArgumentNullException"><paramref name="service"/> is <see langword="null"/></exception>
+    /// <exception cref="ArgumentException"><paramref name="moderatorId"/> is <see cref="Guid"/>.Empty</exception>
     /// <returns>Filtered list of moderator assignments</returns>
     public static async Task<List<ModerationReport>> GetModeratorAssignmentsByPriorityAsync(
         this ModerationService service,
         Guid moderatorId,
         int? minPriority = null)
     {
+        ArgumentNullException.ThrowIfNull(service);
+        if (moderatorId == Guid.Empty)
+        {
+            throw new ArgumentException("Moderator ID cannot be empty", nameof(moderatorId));
+        }
+
         var assignments = await service.GetModeratorAssignmentsAsync(moderatorId);
 
         if (minPriority.HasValue)
