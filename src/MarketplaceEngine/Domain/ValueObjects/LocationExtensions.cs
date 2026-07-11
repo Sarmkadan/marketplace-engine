@@ -8,19 +8,19 @@
 namespace MarketplaceEngine.Domain.ValueObjects;
 
 /// <summary>
-/// Extension methods for the Location value object providing additional functionality.
+/// Extension methods for the <see cref="Location"/> value object providing additional functionality.
 /// </summary>
 public static class LocationExtensions
 {
     /// <summary>
     /// Formats the location as a full address string including postal code and country.
     /// </summary>
-    /// <param name="location">The location to format</param>
-    /// <returns>Formatted address string</returns>
+    /// <param name="location">The location to format. Cannot be null.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="location"/> is null.</exception>
+    /// <returns>Formatted address string with city, state, optional postal code, and country code.</returns>
     public static string ToFullAddressString(this Location location)
     {
-        if (location == null)
-            throw new ArgumentNullException(nameof(location));
+        ArgumentNullException.ThrowIfNull(location);
 
         var parts = new List<string>();
         parts.Add(location.City);
@@ -37,16 +37,15 @@ public static class LocationExtensions
     /// <summary>
     /// Determines if the location is within a specified country.
     /// </summary>
-    /// <param name="location">The location to check</param>
-    /// <param name="countryCode">The 2-letter country code to compare against</param>
-    /// <returns>True if the location is in the specified country</returns>
+    /// <param name="location">The location to check. Cannot be null.</param>
+    /// <param name="countryCode">The 2-letter country code to compare against. Cannot be null or empty.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="location"/> or <paramref name="countryCode"/> is null.</exception>
+    /// <exception cref="ArgumentException"><paramref name="countryCode"/> is empty or whitespace.</exception>
+    /// <returns>True if the location is in the specified country.</returns>
     public static bool IsInCountry(this Location location, string countryCode)
     {
-        if (location == null)
-            throw new ArgumentNullException(nameof(location));
-
-        if (string.IsNullOrWhiteSpace(countryCode))
-            throw new ArgumentException("Country code cannot be null or empty", nameof(countryCode));
+        ArgumentNullException.ThrowIfNull(location);
+        ArgumentException.ThrowIfNullOrEmpty(countryCode, nameof(countryCode));
 
         return location.CountryCode.Equals(countryCode, StringComparison.OrdinalIgnoreCase);
     }
@@ -54,12 +53,12 @@ public static class LocationExtensions
     /// <summary>
     /// Gets a simplified display name for the location (City, State).
     /// </summary>
-    /// <param name="location">The location to format</param>
-    /// <returns>Simplified location name</returns>
+    /// <param name="location">The location to format. Cannot be null.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="location"/> is null.</exception>
+    /// <returns>Simplified location name in format "City, State".</returns>
     public static string ToSimpleName(this Location location)
     {
-        if (location == null)
-            throw new ArgumentNullException(nameof(location));
+        ArgumentNullException.ThrowIfNull(location);
 
         return $"{location.City}, {location.State}";
     }
@@ -67,12 +66,12 @@ public static class LocationExtensions
     /// <summary>
     /// Determines if the location has valid geographic coordinates.
     /// </summary>
-    /// <param name="location">The location to check</param>
-    /// <returns>True if the location has valid latitude and longitude</returns>
+    /// <param name="location">The location to check. Cannot be null.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="location"/> is null.</exception>
+    /// <returns>True if the location has valid latitude and longitude.</returns>
     public static bool HasCoordinates(this Location location)
     {
-        if (location == null)
-            throw new ArgumentNullException(nameof(location));
+        ArgumentNullException.ThrowIfNull(location);
 
         return location.Latitude.HasValue && location.Longitude.HasValue;
     }
