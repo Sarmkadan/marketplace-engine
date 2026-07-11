@@ -5,6 +5,7 @@
 // CTO & Software Architect
 // =====================================================================
 
+using ArgumentException = System.ArgumentException;
 using Microsoft.AspNetCore.Mvc;
 using MarketplaceEngine.DTOs;
 using System.Linq;
@@ -15,22 +16,24 @@ namespace MarketplaceEngine.Controllers;
 /// Extension methods for <see cref="MessagesController"/> that provide additional functionality
 /// for message management, batch operations, and conversation utilities.
 /// </summary>
+/// <remarks>
+/// All extension methods validate inputs and throw appropriate exceptions for invalid arguments.
+/// </remarks>
 public static class MessagesControllerExtensions
 {
     /// <summary>
     /// Retrieves unread message counts for a user across all conversations.
     /// </summary>
-    /// <param name="controller">The messages controller instance</param>
-    /// <param name="userId">The user ID to check unread messages for</param>
-    /// <returns>Count of unread messages and a list of conversation IDs with unread messages</returns>
+    /// <param name="controller">The messages controller instance.</param>
+    /// <param name="userId">The user ID to check unread messages for.</param>
+    /// <returns>Count of unread messages and a list of conversation IDs with unread messages.</returns>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="userId"/> is <see cref="Guid.Empty"/>.</exception>
     public static async Task<IActionResult> GetUnreadMessageCounts(
         this MessagesController controller,
         Guid userId)
     {
-        if (userId == Guid.Empty)
-        {
-            return new BadRequestObjectResult("User ID is required");
-        }
+        ArgumentException.ThrowIfNullOrEmpty(userId.ToString(), nameof(userId));
+        ArgumentNullException.ThrowIfNull(controller, nameof(controller));
 
         // Get conversations for the user
         var conversationsResult = await controller.GetConversations(userId);
@@ -77,17 +80,16 @@ public static class MessagesControllerExtensions
     /// <summary>
     /// Marks all messages in a conversation as read for the current user.
     /// </summary>
-    /// <param name="controller">The messages controller instance</param>
-    /// <param name="conversationId">The conversation ID to mark all messages as read</param>
-    /// <returns>Result indicating success or failure</returns>
+    /// <param name="controller">The messages controller instance.</param>
+    /// <param name="conversationId">The conversation ID to mark all messages as read.</param>
+    /// <returns>Result indicating success or failure.</returns>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="conversationId"/> is <see cref="Guid.Empty"/>.</exception>
     public static async Task<IActionResult> MarkConversationAsRead(
         this MessagesController controller,
         Guid conversationId)
     {
-        if (conversationId == Guid.Empty)
-        {
-            return new BadRequestObjectResult("Conversation ID is required");
-        }
+        ArgumentException.ThrowIfNullOrEmpty(conversationId.ToString(), nameof(conversationId));
+        ArgumentNullException.ThrowIfNull(controller, nameof(controller));
 
         // Get all messages in the conversation
         var messagesResult = await controller.GetConversationMessages(conversationId, null, 1000);
@@ -128,14 +130,18 @@ public static class MessagesControllerExtensions
     /// Sends a batch of messages in a single operation.
     /// Useful for bulk notifications or system messages.
     /// </summary>
-    /// <param name="controller">The messages controller instance</param>
-    /// <param name="requests">Collection of messages to send</param>
-    /// <returns>Collection of created messages</returns>
+    /// <param name="controller">The messages controller instance.</param>
+    /// <param name="requests">Collection of messages to send.</param>
+    /// <returns>Collection of created messages.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="requests"/> is <see langword="null"/>.</exception>
     public static async Task<IActionResult> SendMessageBatch(
         this MessagesController controller,
         IEnumerable<SendMessageRequest> requests)
     {
-        if (requests == null || !requests.Any())
+        ArgumentNullException.ThrowIfNull(requests, nameof(requests));
+        ArgumentNullException.ThrowIfNull(controller, nameof(controller));
+
+        if (!requests.Any())
         {
             return new BadRequestObjectResult("At least one message request is required");
         }
@@ -179,14 +185,16 @@ public static class MessagesControllerExtensions
     /// <summary>
     /// Searches messages across all conversations with optional filters.
     /// </summary>
-    /// <param name="controller">The messages controller instance</param>
-    /// <param name="userId">The user ID to search messages for</param>
-    /// <param name="searchTerm">Optional search term to filter messages</param>
-    /// <param name="isRead">Optional filter for read/unread status</param>
-    /// <param name="startDate">Optional start date filter</param>
-    /// <param name="endDate">Optional end date filter</param>
-    /// <param name="pageSize">Number of results to return (default: 50)</param>
-    /// <returns>Paginated list of matching messages</returns>
+    /// <param name="controller">The messages controller instance.</param>
+    /// <param name="userId">The user ID to search messages for.</param>
+    /// <param name="searchTerm">Optional search term to filter messages.</param>
+    /// <param name="isRead">Optional filter for read/unread status.</param>
+    /// <param name="startDate">Optional start date filter.</param>
+    /// <param name="endDate">Optional end date filter.</param>
+    /// <param name="pageSize">Number of results to return (default: 50).</param>
+    /// <returns>Paginated list of matching messages.</returns>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="userId"/> is <see cref="Guid.Empty"/>.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="pageSize"/> is outside valid range.</exception>
     public static async Task<IActionResult> SearchMessages(
         this MessagesController controller,
         Guid userId,
@@ -196,12 +204,10 @@ public static class MessagesControllerExtensions
         DateTime? endDate = null,
         int pageSize = 50)
     {
-        if (userId == Guid.Empty)
-        {
-            return new BadRequestObjectResult("User ID is required");
-        }
+        ArgumentException.ThrowIfNullOrEmpty(userId.ToString(), nameof(userId));
+        ArgumentNullException.ThrowIfNull(controller, nameof(controller));
 
-        if (pageSize < 1 || pageSize > 200)
+        if (pageSize is < 1 or > 200)
         {
             return new BadRequestObjectResult("Invalid pageSize: must be between 1 and 200");
         }
@@ -234,10 +240,11 @@ public static class MessagesControllerExtensions
         // Apply filters
         var filteredMessages = allMessages.AsEnumerable();
 
-        if (searchTerm != null)
+        if (searchTerm is not null)
         {
             filteredMessages = filteredMessages.Where(m =>
-                m.Content != null && m.Content.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
+                m.Content is not null &&
+                m.Content.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
         }
 
         if (isRead.HasValue)
