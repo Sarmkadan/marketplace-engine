@@ -2,7 +2,7 @@
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
-// =============================================================================
+// =====================================================================
 
 using FluentAssertions;
 using MarketplaceEngine.Domain.Enums;
@@ -16,13 +16,36 @@ using Xunit;
 
 namespace MarketplaceEngine.Tests;
 
+/// <summary>
+/// Contains unit tests for the <see cref="PaymentService"/> class.
+/// Tests various payment operations including initiation, cancellation, refund, and completion.
+/// </summary>
 public class PaymentServiceTests
 {
+    /// <summary>
+    /// Mock repository for payment operations.
+    /// </summary>
     private readonly Mock<IPaymentRepository> _paymentRepoMock;
+
+    /// <summary>
+    /// Mock repository for listing operations.
+    /// </summary>
     private readonly Mock<IListingRepository> _listingRepoMock;
+
+    /// <summary>
+    /// Mock repository for user operations.
+    /// </summary>
     private readonly Mock<IUserRepository> _userRepoMock;
+
+    /// <summary>
+    /// System under test - the PaymentService instance being tested.
+    /// </summary>
     private readonly PaymentService _sut;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="PaymentServiceTests"/> class.
+    /// Sets up mock repositories and creates the PaymentService instance for testing.
+    /// </summary>
     public PaymentServiceTests()
     {
         _paymentRepoMock = new Mock<IPaymentRepository>();
@@ -31,6 +54,9 @@ public class PaymentServiceTests
         _sut = new PaymentService(_paymentRepoMock.Object, _listingRepoMock.Object, _userRepoMock.Object);
     }
 
+    /// <summary>
+    /// Tests that initiating payment with a non-existent listing throws ResourceNotFoundException.
+    /// </summary>
     [Fact]
     public async Task InitiatePaymentAsync_WhenListingNotFound_ThrowsResourceNotFoundException()
     {
@@ -45,6 +71,9 @@ public class PaymentServiceTests
         await act.Should().ThrowAsync<ResourceNotFoundException>().WithMessage("*Listing*not found*");
     }
 
+    /// <summary>
+    /// Tests that initiating payment with an inactive listing throws MarketplaceException.
+    /// </summary>
     [Fact]
     public async Task InitiatePaymentAsync_WhenListingIsNotActive_ThrowsMarketplaceException()
     {
@@ -60,6 +89,9 @@ public class PaymentServiceTests
         await act.Should().ThrowAsync<MarketplaceException>();
     }
 
+    /// <summary>
+    /// Tests that a buyer cannot purchase their own listing and throws MarketplaceException.
+    /// </summary>
     [Fact]
     public async Task InitiatePaymentAsync_WhenBuyerIsSeller_ThrowsMarketplaceException()
     {
@@ -79,6 +111,9 @@ public class PaymentServiceTests
         await act.Should().ThrowAsync<MarketplaceException>().WithMessage("*cannot purchase their own listing*");
     }
 
+    /// <summary>
+    /// Tests that valid payment initiation creates a payment record with Pending status.
+    /// </summary>
     [Fact]
     public async Task InitiatePaymentAsync_WithValidData_CreatesPayment()
     {
@@ -104,6 +139,9 @@ public class PaymentServiceTests
         payment.Status.Should().Be(PaymentStatus.Pending);
     }
 
+    /// <summary>
+    /// Tests that canceling a payment by a non-buyer throws UnauthorizedException.
+    /// </summary>
     [Fact]
     public async Task CancelPaymentAsync_WhenCallerIsNotBuyer_ThrowsUnauthorizedException()
     {
@@ -122,6 +160,9 @@ public class PaymentServiceTests
         await act.Should().ThrowAsync<UnauthorizedException>();
     }
 
+    /// <summary>
+    /// Tests that refunding a pending payment throws InvalidOperationException.
+    /// </summary>
     [Fact]
     public async Task RefundPaymentAsync_WhenPaymentIsPending_ThrowsInvalidOperationException()
     {
@@ -138,6 +179,9 @@ public class PaymentServiceTests
         await act.Should().ThrowAsync<InvalidOperationException>();
     }
 
+    /// <summary>
+    /// Tests that completing a payment with a valid transaction ID marks the listing as delisted.
+    /// </summary>
     [Fact]
     public async Task CompletePaymentAsync_WithValidTransactionId_MarksListingAsDelisted()
     {
