@@ -8,10 +8,14 @@ using FluentAssertions;
 using MarketplaceEngine.Domain.ValueObjects;
 using Xunit;
 
-namespace MarketplaceEngine.Tests;
-
+/// <summary>
+/// Tests for value objects in the MarketplaceEngine domain.
+/// </summary>
 public class ValueObjectTests
 {
+    /// <summary>
+    /// Verifies that the Money constructor throws an ArgumentException when given a negative amount.
+    /// </summary>
     [Fact]
     public void Money_Constructor_WithNegativeAmount_ThrowsArgumentException()
     {
@@ -23,6 +27,9 @@ public class ValueObjectTests
            .WithMessage("*negative*");
     }
 
+    /// <summary>
+    /// Verifies that the Add method of the Money class returns the correct sum when adding two Money objects with the same currency.
+    /// </summary>
     [Fact]
     public void Money_Add_WithSameCurrency_ReturnsCorrectSum()
     {
@@ -38,6 +45,9 @@ public class ValueObjectTests
         result.CurrencyCode.Should().Be("USD");
     }
 
+    /// <summary>
+    /// Verifies that the Add method of the Money class throws an InvalidOperationException when adding two Money objects with different currencies.
+    /// </summary>
     [Fact]
     public void Money_Add_WithDifferentCurrencies_ThrowsInvalidOperationException()
     {
@@ -53,6 +63,9 @@ public class ValueObjectTests
            .WithMessage("*different currencies*");
     }
 
+    /// <summary>
+    /// Verifies that the Multiply method of the Money class returns a Money object with an amount of zero when multiplied by zero.
+    /// </summary>
     [Fact]
     public void Money_Multiply_ByZero_ReturnsZeroAmount()
     {
@@ -67,6 +80,9 @@ public class ValueObjectTests
         result.CurrencyCode.Should().Be("USD");
     }
 
+    /// <summary>
+    /// Verifies that the Rating constructor throws an ArgumentException when given a score above 5.
+    /// </summary>
     [Fact]
     public void Rating_Constructor_WithScoreAboveFive_ThrowsArgumentException()
     {
@@ -78,6 +94,9 @@ public class ValueObjectTests
            .WithMessage("*between 1 and 5*");
     }
 
+    /// <summary>
+    /// Verifies that the AddReview method of the Rating class increments the total number of reviews.
+    /// </summary>
     [Fact]
     public void Rating_AddReview_IncrementsTotalReviews()
     {
@@ -91,6 +110,9 @@ public class ValueObjectTests
         updated.TotalReviews.Should().Be(6);
     }
 
+    /// <summary>
+    /// Verifies that the Location constructor throws an ArgumentException when given a three-letter country code.
+    /// </summary>
     [Fact]
     public void Location_Constructor_WithThreeLetterCountryCode_ThrowsArgumentException()
     {
@@ -102,6 +124,9 @@ public class ValueObjectTests
            .WithMessage("*2-letter ISO*");
     }
 
+    /// <summary>
+    /// Verifies that the DistanceTo method of the Location class returns null when the coordinates are not available.
+    /// </summary>
     [Fact]
     public void Location_DistanceTo_WithoutCoordinates_ReturnsNull()
     {
