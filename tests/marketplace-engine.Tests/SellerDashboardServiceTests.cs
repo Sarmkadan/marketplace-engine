@@ -15,6 +15,9 @@ using MarketplaceEngine.Services;
 using Moq;
 using Xunit;
 
+/// <summary>
+/// Tests for the SellerDashboardService class.
+/// </summary>
 namespace MarketplaceEngine.Tests;
 
 public class SellerDashboardServiceTests
@@ -26,6 +29,9 @@ public class SellerDashboardServiceTests
     private readonly Mock<IMessageRepository> _messageRepoMock;
     private readonly SellerDashboardService _sut;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SellerDashboardServiceTests"/> class.
+    /// </summary>
     public SellerDashboardServiceTests()
     {
         _userRepoMock = new Mock<IUserRepository>();
@@ -42,6 +48,9 @@ public class SellerDashboardServiceTests
             _messageRepoMock.Object);
     }
 
+    /// <summary>
+    /// Tests that GetDashboardAsync throws a ResourceNotFoundException when the seller is not found.
+    /// </summary>
     [Fact]
     public async Task GetDashboardAsync_WhenSellerNotFound_ThrowsResourceNotFoundException()
     {
@@ -56,6 +65,10 @@ public class SellerDashboardServiceTests
         await act.Should().ThrowAsync<ResourceNotFoundException>().WithMessage("*User*not found*");
     }
 
+    /// <summary>
+    /// Tests that GetDashboardAsync returns the correct metrics for a valid seller.
+    /// </summary>
+    /// <param name="sellerId">The ID of the seller.</param>
     [Fact]
     public async Task GetDashboardAsync_WithValidSeller_ReturnsCorrectMetrics()
     {
@@ -96,6 +109,10 @@ public class SellerDashboardServiceTests
         dashboard.TotalSales.Should().Be(3);
     }
 
+    /// <summary>
+    /// Tests that GetRevenueAsync returns the monthly breakdown for a seller with completed payments.
+    /// </summary>
+    /// <param name="sellerId">The ID of the seller.</param>
     [Fact]
     public async Task GetRevenueAsync_WithCompletedPayments_ReturnsMonthlyBreakdown()
     {
@@ -141,6 +158,10 @@ public class SellerDashboardServiceTests
         revenue.MonthlyBreakdown[0].SalesCount.Should().Be(2);
     }
 
+    /// <summary>
+    /// Tests that GetListingStatsAsync returns the top listings by view count for a seller.
+    /// </summary>
+    /// <param name="sellerId">The ID of the seller.</param>
     [Fact]
     public async Task GetListingStatsAsync_ReturnsTopListingsByViewCount()
     {
