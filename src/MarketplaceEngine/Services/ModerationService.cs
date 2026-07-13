@@ -4,6 +4,7 @@
 // CTO & Software Architect
 // =============================================================================
 
+using MarketplaceEngine.Data;
 using MarketplaceEngine.Domain.Enums;
 using MarketplaceEngine.Domain.Models;
 using MarketplaceEngine.Exceptions;
@@ -18,11 +19,14 @@ public class ModerationService
 {
     private readonly IUserRepository _userRepository;
     private readonly IListingRepository _listingRepository;
+    private readonly MarketplaceDbContext _context;
+    private readonly object _reportsLock = new();
 
     public ModerationService(IUserRepository userRepository, IListingRepository listingRepository)
     {
         _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
         _listingRepository = listingRepository ?? throw new ArgumentNullException(nameof(listingRepository));
+        _context = MarketplaceDbContext.GetInstance();
     }
 
     // Creates a moderation report for a user
@@ -46,6 +50,11 @@ public class ModerationService
 
         report.ValidateReport();
         report.Submit();
+
+        lock (_reportsLock)
+        {
+            _context.ModerationReports.Add(report);
+        }
 
         return report;
     }
@@ -71,6 +80,11 @@ public class ModerationService
 
         report.ValidateReport();
         report.Submit();
+
+        lock (_reportsLock)
+        {
+            _context.ModerationReports.Add(report);
+        }
 
         return report;
     }
@@ -197,45 +211,83 @@ public class ModerationService
         }
     }
 
-    // Gets pending reports
+    // Gets pending reports, most recently created first
     public async Task<List<ModerationReport>> GetPendingReportsAsync(int page, int pageSize)
     {
+        if (page < 1)
+            throw new ArgumentOutOfRangeException(nameof(page), "Page must be greater than or equal to 1.");
+        if (pageSize < 1)
+            throw new ArgumentOutOfRangeException(nameof(pageSize), "Page size must be greater than or equal to 1.");
+
         await Task.Delay(5);
-        // Hotfix: No actual persistence for ModerationReports, returning empty list
-        return new List<ModerationReport>();
+        lock (_reportsLock)
+        {
+            return _context.ModerationReports
+                .Where(r => r.Status == ModerationStatus.Pending)
+                .OrderByDescending(r => r.CreatedAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+        }
     }
 
-    // Hotfix: GetReportAsync for ModerationController to compile
+    // Gets a moderation report by id
     public async Task<ModerationReport?> GetReportAsync(Guid id)
     {
         await Task.Delay(5);
-        // Hotfix: No actual persistence for ModerationReports, always returning null
-        return null;
+        lock (_reportsLock)
+        {
+            return _context.ModerationReports.FirstOrDefault(r => r.Id == id);
+        }
     }
 
-    // Hotfix: UpdateReportAsync for ModerationController to compile
+    // Updates an existing moderation report's state
     public async Task<ModerationReport> UpdateReportAsync(ModerationReport report)
     {
+        ArgumentNullException.ThrowIfNull(report);
+
         await Task.Delay(5);
-        // Hotfix: No actual persistence for ModerationReports, returning the input report
+        lock (_reportsLock)
+        {
+            var index = _context.ModerationReports.FindIndex(r => r.Id == report.Id);
+            if (index < 0)
+                throw new ResourceNotFoundException("ModerationReport", report.Id);
+
+            report.UpdatedAt = DateTime.UtcNow;
+            _context.ModerationReports[index] = report;
+        }
+
         return report;
     }
 
-    // Hotfix: CreateReportAsync for ModerationController to compile
+    // Persists a newly created moderation report
     public async Task<ModerationReport> CreateReportAsync(ModerationReport report)
     {
+        ArgumentNullException.ThrowIfNull(report);
+
         await Task.Delay(5);
-        // Hotfix: No actual persistence for ModerationReports, returning the input report
+        lock (_reportsLock)
+        {
+            if (report.Id == Guid.Empty)
+                report.Id = Guid.NewGuid();
+
+            _context.ModerationReports.Add(report);
+        }
+
         return report;
     }
-
-    // Gets reports by status
 
     // Gets reports by status
     public async Task<List<ModerationReport>> GetReportsByStatusAsync(ModerationStatus status)
     {
         await Task.Delay(5);
-        return new List<ModerationReport>();
+        lock (_reportsLock)
+        {
+            return _context.ModerationReports
+                .Where(r => r.Status == status)
+                .OrderByDescending(r => r.CreatedAt)
+                .ToList();
+        }
     }
 
     // Gets reports assigned to moderator
@@ -246,14 +298,28 @@ public class ModerationService
             throw new ResourceNotFoundException("User", moderatorId);
 
         await Task.Delay(5);
-        return new List<ModerationReport>();
+        lock (_reportsLock)
+        {
+            return _context.ModerationReports
+                .Where(r => r.ReviewedBy == moderatorId)
+                .OrderByDescending(r => r.CreatedAt)
+                .ToList();
+        }
     }
 
-    // Gets report statistics
+    // Gets report statistics: counts of pending, in-review, and resolved reports
     public async Task<(int pending, int inReview, int resolved)> GetReportStatsAsync()
     {
         await Task.Delay(5);
-        return (0, 0, 0);
+        lock (_reportsLock)
+        {
+            var pending = _context.ModerationReports.Count(r => r.Status == ModerationStatus.Pending);
+            var inReview = _context.ModerationReports.Count(r => r.Status == ModerationStatus.InReview);
+            var resolved = _context.ModerationReports.Count(r =>
+                r.Status is ModerationStatus.Approved or ModerationStatus.Rejected or ModerationStatus.ContentRemoved);
+
+            return (pending, inReview, resolved);
+        }
     }
 
     private async Task ValidateReporterAsync(Guid reporterId)
