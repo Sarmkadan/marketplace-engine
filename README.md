@@ -662,6 +662,61 @@ Console.WriteLine($"Amount: {payment.Amount.Value} {payment.Amount.Currency}");
 Console.WriteLine($"Status: {payment.Status}");
 ```
 
+## User
+
+The `User` class represents a marketplace user who can act as both a buyer and seller. It encapsulates user profile information, authentication state, activity tracking, and seller statistics. The class provides methods for email verification, profile validation, account management, and activity tracking.
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.Domain.Models;
+using MarketplaceEngine.Domain.ValueObjects;
+using System;
+
+// Create a new user
+var user = new User
+{
+    Id = Guid.NewGuid(),
+    Email = "john.doe@example.com",
+    FullName = "John Doe",
+    Phone = "+1-555-123-4567",
+    ProfileImageUrl = "/avatars/john-doe.jpg",
+    Bio = "Experienced software developer and tech enthusiast",
+    Role = UserRole.Seller,
+    Location = new Location("San Francisco", "CA", "94105", "Downtown", "123 Market St"),
+    IsVerified = true,
+    IsActive = true,
+    TotalListings = 25,
+    TotalSales = 42,
+    CreatedAt = DateTime.UtcNow.AddDays(-30)
+};
+
+// Validate user profile and email
+user.ValidateProfile();
+user.ValidateEmail();
+
+// Record user activity
+user.UpdateLastActivity();
+
+// Promote to premium seller if eligible
+if (user.TotalSales >= 10)
+{
+    user.PromoteToPremiumSeller();
+}
+
+// Record a successful sale
+user.RecordSale();
+
+// Generate verification token for email confirmation
+user.GenerateVerificationToken();
+
+Console.WriteLine($"User: {user.FullName} ({user.Email})");
+Console.WriteLine($"Role: {user.Role}");
+Console.WriteLine($"Total listings: {user.TotalListings}");
+Console.WriteLine($"Total sales: {user.TotalSales}");
+Console.WriteLine($"Is verified: {user.IsVerified}");
+```
+
 ## ModerationReport
 
 The `ModerationReport` class represents a submission reporting a violation of platform guidelines, such as inappropriate user behavior, harmful content in listings, or message abuse. It tracks the reporter, the target (user, listing, or message), the reason for the report, and the current administrative status for review.
