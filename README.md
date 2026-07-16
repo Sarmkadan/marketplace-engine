@@ -528,6 +528,68 @@ var removed = category.RemoveSubCategory(smartphones.Id);
 Console.WriteLine($"Subcategory removed: {removed}");
 ```
 
+## Listing
+
+The `Listing` class represents a product or service listing in the marketplace. It encapsulates all essential information about a marketplace item including seller details, pricing, location, media, tags, engagement metrics, and status tracking. Listings are the core entity for buying and selling activities in the marketplace.
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.Domain.Models;
+using MarketplaceEngine.Domain.ValueObjects;
+using System;
+
+// Create a new listing
+var listing = new Listing
+{
+    Id = Guid.NewGuid(),
+    SellerId = Guid.NewGuid(),
+    Title = "Premium Mountain Bike",
+    Description = "Hardtail mountain bike with 29-inch wheels, hydraulic disc brakes, and 12-speed drivetrain. Excellent condition, barely used.",
+    Price = new Money(799.99m, "USD"),
+    CategoryId = Guid.NewGuid(),
+    Status = ListingStatus.Active,
+    Location = new Location("New York", "NY", "10001", "Manhattan", "123 Main St"),
+    ImageUrls = new List<string>
+    {
+        "https://example.com/images/bike-1.jpg",
+        "https://example.com/images/bike-2.jpg"
+    },
+    Tags = new List<string> { "bike", "mountain", "outdoor", "sports" },
+    IsFeatured = true,
+    DueDate = DateTime.UtcNow.AddDays(30),
+    Condition = "Like New"
+};
+
+// Publish the listing
+listing.Publish();
+
+Console.WriteLine($"Listing published: {listing.PublishedAt}");
+Console.WriteLine($"Status: {listing.Status}");
+
+// Record user engagement
+listing.RecordView();
+listing.RecordInterest();
+
+// Add additional tags
+listing.AddTag("cycling");
+listing.AddTag("recreational");
+
+// Add more images
+listing.AddImage("https://example.com/images/bike-3.jpg");
+
+// Mark as featured
+listing.MarkAsFeatured();
+
+Console.WriteLine($"View count: {listing.ViewCount}");
+Console.WriteLine($"Interest count: {listing.InterestCount}");
+Console.WriteLine($"Tags: {string.Join(", ", listing.Tags)}");
+Console.WriteLine($"Is featured: {listing.IsFeatured}");
+
+// Archive when sold
+listing.Delist();
+```
+
 ## Review
 
 The `Review` class represents a customer's feedback on a listing, allowing reviewers to rate their experience, provide comments, and flag content for moderation. It manages the review lifecycle including seller replies, status tracking, and validation logic to ensure high-quality, authentic feedback within the marketplace.
