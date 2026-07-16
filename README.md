@@ -662,6 +662,51 @@ Console.WriteLine($"Amount: {payment.Amount.Value} {payment.Amount.Currency}");
 Console.WriteLine($"Status: {payment.Status}");
 ```
 
+## Money
+
+The `Money` value object represents immutable monetary amounts with associated currency codes. It provides type-safe currency handling for financial calculations, ensuring that operations like addition, subtraction, and multiplication maintain currency consistency and prevent mixing of different currencies. The class implements value-based equality and provides standard overrides for proper comparison and hashing.
+
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.Domain.ValueObjects;
+using System;
+
+// Create money instances with different amounts and currencies
+var productPrice = new Money(799.99m, "USD");
+var taxAmount = new Money(63.99m, "USD");
+var shippingCost = new Money(15.50m, "EUR");
+
+Console.WriteLine($"Product price: {productPrice}");
+Console.WriteLine($"Tax amount: {taxAmount}");
+Console.WriteLine($"Shipping cost: {shippingCost}");
+
+// Perform arithmetic operations (same currency only)
+var totalPrice = productPrice.Add(taxAmount);
+Console.WriteLine($"Total price: {totalPrice}");
+
+var discount = new Money(50.00m, "USD");
+var discountedPrice = totalPrice.Subtract(discount);
+Console.WriteLine($"Discounted price: {discountedPrice}");
+
+// Multiply by a scalar value
+var bulkPrice = productPrice.Multiply(5);
+Console.WriteLine($"Bulk price (5 units): {bulkPrice}");
+
+// Compare money values
+var price1 = new Money(100.00m, "USD");
+var price2 = new Money(100.00m, "USD");
+var price3 = new Money(99.99m, "USD");
+
+Console.WriteLine($"Price1 equals Price2: {price1.Equals(price2)}"); // True
+Console.WriteLine($"Price1 equals Price3: {price1.Equals(price3)}"); // False
+
+// Check hash codes
+Console.WriteLine($"Price1 hash code: {price1.GetHashCode()}");
+Console.WriteLine($"Price2 hash code: {price2.GetHashCode()}"); // Same as Price1
+```
+
 ## User
 
 The `User` class represents a marketplace user who can act as both a buyer and seller. It encapsulates user profile information, authentication state, activity tracking, and seller statistics. The class provides methods for email verification, profile validation, account management, and activity tracking.
