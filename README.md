@@ -744,3 +744,74 @@ Console.WriteLine($"Report ID: {moderationReport.Id}");
 Console.WriteLine($"Report Status: {moderationReport.Status}");
 ```
 
+## Message
+
+The `Message` class represents a private message exchanged between marketplace users. It supports one-to-one messaging, conversation threading through parent-child relationships, attachment management, read status tracking, and flagging for moderation. Messages can be associated with specific listings for context during transactions.
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.Domain.Models;
+using System;
+using System.Collections.Generic;
+
+// Create a new message between buyer and seller
+var message = new Message
+{
+    Id = Guid.NewGuid(),
+    SenderId = Guid.Parse("11111111-1111-1111-1111-111111111111"),
+    Sender = new User
+    {
+        Id = Guid.Parse("11111111-1111-1111-1111-111111111111"),
+        FullName = "John Doe",
+        Email = "john@example.com"
+    },
+    RecipientId = Guid.Parse("22222222-2222-2222-2222-222222222222"),
+    Recipient = new User
+    {
+        Id = Guid.Parse("22222222-2222-2222-2222-222222222222"),
+        FullName = "Jane Smith",
+        Email = "jane@example.com"
+    },
+    ListingId = Guid.Parse("33333333-3333-3333-3333-333333333333"),
+    Listing = new Listing
+    {
+        Id = Guid.Parse("33333333-3333-3333-3333-333333333333"),
+        Title = "Premium Mountain Bike",
+        Price = 799.99m
+    },
+    Subject = "Question about your bike listing",
+    Body = "Hi Jane, I'm interested in your mountain bike. Is it still available? Could you provide more details about its condition?",
+    AttachmentUrls = new List<string> { "https://example.com/images/bike-photo.jpg" },
+    CreatedAt = DateTime.UtcNow
+};
+
+// Validate message before sending
+message.ValidateBeforeSending();
+
+// Mark message as read when recipient views it
+message.MarkAsRead();
+
+// Add a reply to the conversation
+var reply = new Message
+{
+    Id = Guid.NewGuid(),
+    SenderId = Guid.Parse("22222222-2222-2222-2222-222222222222"),
+    Sender = message.Recipient,
+    RecipientId = Guid.Parse("11111111-1111-1111-1111-111111111111"),
+    Recipient = message.Sender,
+    Subject = "Re: Question about your bike listing",
+    Body = "Hi John, yes the bike is still available. It's in excellent condition with minimal wear and tear.",
+    CreatedAt = DateTime.UtcNow.AddMinutes(5)
+};
+
+message.AddReply(reply);
+
+// Check message status
+Console.WriteLine($"Message ID: {message.Id}");
+Console.WriteLine($"Subject: {message.Subject}");
+Console.WriteLine($"Status: {message.GetReadStatus()}");
+Console.WriteLine($"Has {message.Replies.Count} replies");
+Console.WriteLine($"Attachments: {message.AttachmentUrls.Count}");
+```
+
