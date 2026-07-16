@@ -789,6 +789,31 @@ Console.WriteLine($"Report ID: {moderationReport.Id}");
 Console.WriteLine($"Report Status: {moderationReport.Status}");
 ```
 
+## Location
+
+The `Location` type represents a geographic point with city, state, country, and optional postal code information. It also includes latitude and longitude coordinates for mapping and distance calculations. The type provides methods for equality comparison, hashing, and string representation.
+
+Example usage:
+
+```csharp
+using MarketplaceEngine.Domain.ValueObjects;
+
+public Location location = new Location
+{
+    City = "New York",
+    State = "NY",
+    CountryCode = "US",
+    PostalCode = "10001",
+    Latitude = 40.7128,
+    Longitude = -74.0060
+};
+
+// Calculate distance to another location
+var otherLocation = new Location("Boston", "MA", "US", "02108", 42.3601, -71.0589);
+var distance = location.DistanceTo(otherLocation);
+Console.WriteLine($"Distance: {distance} miles");
+```
+
 ## Message
 
 The `Message` class represents a private message exchanged between marketplace users. It supports one-to-one messaging, conversation threading through parent-child relationships, attachment management, read status tracking, and flagging for moderation. Messages can be associated with specific listings for context during transactions.
