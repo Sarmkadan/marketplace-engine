@@ -457,6 +457,77 @@ await engine.RecordSignalAsync(new UserActivitySignal
 });
 ```
 
+## Category
+
+The `Category` class represents a marketplace category for organizing listings hierarchically. It supports parent-child relationships, maintains listing counts, and provides methods for managing subcategories and validating category data. Categories are essential for navigation, search filtering, and recommendation engines.
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.Domain.Models;
+using System;
+
+// Create a parent category
+var electronics = new Category
+{
+    Id = Guid.NewGuid(),
+    Name = "Electronics",
+    Description = "Electronic devices and components",
+    IconUrl = "/icons/electronics.png",
+    DisplayOrder = 1,
+    IsActive = true,
+    CreatedAt = DateTime.UtcNow
+};
+
+// Validate and initialize the category
+electronics.ValidateAndInitialize();
+
+// Create a subcategory
+var smartphones = new Category
+{
+    Id = Guid.NewGuid(),
+    Name = "Smartphones",
+    Description = "Mobile phones and accessories",
+    IconUrl = "/icons/smartphones.png",
+    DisplayOrder = 1,
+    IsActive = true,
+    CreatedAt = DateTime.UtcNow
+};
+
+smartphones.ValidateAndInitialize();
+
+// Add subcategory to parent
+electronics.AddSubCategory(smartphones);
+
+// Create a listing and add it to the category
+var phoneListing = new Listing
+{
+    Id = Guid.NewGuid(),
+    Title = "iPhone 15 Pro",
+    Description = "Latest smartphone with advanced features",
+    Price = 999.99m,
+    SellerId = Guid.NewGuid(),
+    Status = ListingStatus.Active,
+    CreatedAt = DateTime.UtcNow
+};
+
+// Add listing to category
+category.Listings.Add(phoneListing);
+category.IncrementListingCount();
+
+// Check if category has active listings
+var hasActive = category.HasActiveListings();
+Console.WriteLine($"Category has active listings: {hasActive}");
+
+// Get full category path
+var fullPath = category.GetFullPath();
+Console.WriteLine($"Category path: {fullPath}");
+
+// Remove a subcategory
+var removed = category.RemoveSubCategory(smartphones.Id);
+Console.WriteLine($"Subcategory removed: {removed}");
+```
+
 ## Review
 
 The `Review` class represents a customer's feedback on a listing, allowing reviewers to rate their experience, provide comments, and flag content for moderation. It manages the review lifecycle including seller replies, status tracking, and validation logic to ensure high-quality, authentic feedback within the marketplace.
