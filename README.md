@@ -629,6 +629,39 @@ Console.WriteLine($"Review status: {review.Status}");
 Console.WriteLine($"Seller reply: {review.SellerReply}");
 ```
 
+## Payment
+
+The `Payment` class represents a financial transaction within the marketplace, capturing essential details such as the parties involved, the amount, and the transaction's lifecycle status. It tracks the payment from creation through to completion, refund, or failure, ensuring auditability and traceability using metadata and external transaction identifiers.
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.Domain.Models;
+using System;
+using System.Collections.Generic;
+
+// Create a new payment instance
+var payment = new Payment
+{
+    Id = Guid.NewGuid(),
+    ListingId = Guid.NewGuid(),
+    BuyerId = Guid.NewGuid(),
+    SellerId = Guid.NewGuid(),
+    Amount = new Money(100.00m, "USD"),
+    Status = PaymentStatus.Pending,
+    CreatedAt = DateTime.UtcNow,
+    Metadata = new Dictionary<string, string>
+    {
+        { "Reference", "INV-1001" },
+        { "Channel", "Web" }
+    }
+};
+
+Console.WriteLine($"Payment created: {payment.Id}");
+Console.WriteLine($"Amount: {payment.Amount.Value} {payment.Amount.Currency}");
+Console.WriteLine($"Status: {payment.Status}");
+```
+
 ## ModerationReport
 
 The `ModerationReport` class represents a submission reporting a violation of platform guidelines, such as inappropriate user behavior, harmful content in listings, or message abuse. It tracks the reporter, the target (user, listing, or message), the reason for the report, and the current administrative status for review.
