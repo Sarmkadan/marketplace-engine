@@ -42,7 +42,9 @@ public static class CategoryExtensions
         {
             yield return sub;
             foreach (var descendant in sub.GetAllDescendants())
+            {
                 yield return descendant;
+            }
         }
     }
 
@@ -50,17 +52,19 @@ public static class CategoryExtensions
     /// Returns a human‑readable string that combines the category name with its full hierarchical path.
     /// </summary>
     /// <param name="category">The category to format.</param>
-    /// <returns>A string in the form <c>"{Name} ({FullPath})"</c>.</returns>
+    /// <returns>A string in the form <c>"{Name} ({FullPath})</c>.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="category"/> is <c>null</c>.</exception>
-    public static string ToDisplayString(this Category category) =>
-        $"{category.Name} ({category.GetFullPath()})";
+    public static string ToDisplayString(this Category category)
+    {
+        ArgumentNullException.ThrowIfNull(category);
+        return $"{category.Name} ({category.GetFullPath()})";
+    }
 
     /// <summary>
     /// Determines whether the category is a leaf node (i.e., it has no sub‑categories).
     /// </summary>
     /// <param name="category">The category to evaluate.</param>
-    /// <returns><c>true</c> if <see cref="Category.SubCategories"/> is empty; otherwise, <c>false</c>.</returns>
+    /// <returns><c>true</c> if <see cref="Category.SubCategories"/> is empty or null; otherwise, <c>false</c>.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="category"/> is <c>null</c>.</exception>
-    public static bool IsLeaf(this Category category) =>
-        (category.SubCategories?.Count ?? 0) == 0;
+    public static bool IsLeaf(this Category category) => category.SubCategories is null or { Count: 0 };
 }
