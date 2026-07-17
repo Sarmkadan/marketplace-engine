@@ -2274,6 +2274,73 @@ var reportDto = MappingUtility.ToDto(report);
 ```
 ```
 
+## DateTimeUtility
+
+The `DateTimeUtility` class provides a comprehensive set of static methods for working with dates and times throughout the Marketplace Engine. It includes utilities for getting current UTC time, converting between time zones, calculating elapsed time, checking if dates fall within specific time windows, and determining day/week/month boundaries. These utilities help maintain consistent date/time handling across the application.
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.Utilities;
+using System;
+
+// Get current UTC time
+var currentUtcTime = DateTimeUtility.GetCurrentUtcTime();
+Console.WriteLine($"Current UTC time: {currentUtcTime:yyyy-MM-dd HH:mm:ss}");
+
+// Convert local time to UTC
+var localTime = DateTime.Now;
+var utcTime = DateTimeUtility.ToUtc(localTime);
+Console.WriteLine($"Local time {localTime} converted to UTC: {utcTime}");
+
+// Get elapsed time since a specific date
+var pastDate = DateTime.UtcNow.AddDays(-7);
+var elapsedTime = DateTimeUtility.GetElapsedTime(pastDate);
+Console.WriteLine($"Elapsed time: {elapsedTime.TotalDays:F1} days");
+
+// Get elapsed time as formatted string
+var elapsedString = DateTimeUtility.GetElapsedTimeString(pastDate);
+Console.WriteLine($"Elapsed time string: {elapsedString}");
+
+// Check if a date is within the last 30 days
+var recentDate = DateTime.UtcNow.AddDays(-15);
+var isWithin30Days = DateTimeUtility.IsWithinDays(recentDate, 30);
+Console.WriteLine($"Is within 30 days: {isWithin30Days}");
+
+// Check if a date is within the last 2 hours
+var recentHour = DateTime.UtcNow.AddMinutes(-90);
+var isWithin2Hours = DateTimeUtility.IsWithinHours(recentHour, 2);
+Console.WriteLine($"Is within 2 hours: {isWithin2Hours}");
+
+// Get start and end of current day
+var dayStart = DateTimeUtility.GetDayStart();
+var dayEnd = DateTimeUtility.GetDayEnd();
+Console.WriteLine($"Day starts at: {dayStart:yyyy-MM-dd HH:mm:ss}");
+Console.WriteLine($"Day ends at: {dayEnd:yyyy-MM-dd HH:mm:ss}");
+
+// Get start of current week (Monday)
+var weekStart = DateTimeUtility.GetWeekStart();
+Console.WriteLine($"Week starts on: {weekStart:yyyy-MM-dd} (Monday)");
+
+// Get start of current month
+var monthStart = DateTimeUtility.GetMonthStart();
+Console.WriteLine($"Month starts on: {monthStart:yyyy-MM-dd}");
+
+// Check if two dates are on the same day
+var date1 = DateTime.UtcNow;
+var date2 = DateTime.UtcNow.AddHours(2);
+var isSameDay = DateTimeUtility.IsSameDay(date1, date2);
+Console.WriteLine($"Same day: {isSameDay}");
+
+// Convert DateTime to ISO 8601 string
+var isoString = DateTimeUtility.ToIso8601String(DateTime.UtcNow);
+Console.WriteLine($"ISO 8601 string: {isoString}");
+
+// Get future time (30 minutes from now)
+var futureTime = DateTimeUtility.GetFutureTime(TimeSpan.FromMinutes(30));
+Console.WriteLine($"Future time: {futureTime:yyyy-MM-dd HH:mm:ss}");
+```
+
 ## PaginationUtility
 
 The `PaginationUtility` class provides standardized pagination calculation utilities used throughout the Marketplace Engine. It handles offset calculation, page parameter validation, total page calculation, and navigation between pages. This utility ensures consistent pagination behavior across all API endpoints and repository methods.
