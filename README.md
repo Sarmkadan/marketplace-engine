@@ -1079,6 +1079,92 @@ var publicProfile = await userService.GetPublicProfileAsync(newUser.Id);
 Console.WriteLine($"Public profile: {publicProfile.DisplayName} - {publicProfile.Bio}");
 ```
 
+## CategoryService
+
+The `CategoryService` class provides comprehensive category management functionality for the Marketplace Engine. It handles category hierarchy operations, including creating, updating, and organizing categories into parent-child relationships. The service supports retrieving categories by ID, searching categories, managing category trees for navigation, and retrieving popular categories based on listing activity.
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.Services;
+using MarketplaceEngine.Domain.Models;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
+
+// Initialize category service
+var categoryService = new CategoryService();
+
+// Get all active categories
+var allCategories = await categoryService.GetAllCategoriesAsync();
+Console.WriteLine($"Found {allCategories.Count} active categories");
+
+// Get category by ID
+var category = await categoryService.GetCategoryAsync(Guid.Parse("3fa85f64-5717-4562-b3fc-2c963f66afa6"));
+Console.WriteLine($"Retrieved category: {category.Name}");
+
+// Get root categories (categories without parent)
+var rootCategories = await categoryService.GetRootCategoriesAsync();
+Console.WriteLine($"Found {rootCategories.Count} root categories");
+
+// Get subcategories for a parent category
+var electronicsCategoryId = rootCategories.First().Id;
+var subCategories = await categoryService.GetSubCategoriesAsync(electronicsCategoryId);
+Console.WriteLine($"Found {subCategories.Count} subcategories under {rootCategories.First().Name}");
+
+// Get category with full hierarchy (parent + children)
+var categoryWithHierarchy = await categoryService.GetCategoryHierarchyAsync(electronicsCategoryId);
+Console.WriteLine($"Category hierarchy retrieved: {categoryWithHierarchy.Name} with {categoryWithHierarchy.SubCategories.Count} subcategories");
+
+// Create a new category
+var newCategory = await categoryService.CreateCategoryAsync(
+    name: "Smart Home Devices",
+    description: "Smart home automation devices and accessories",
+    parentCategoryId: electronicsCategoryId
+);
+Console.WriteLine($"Created new category: {newCategory.Name}");
+
+// Update category information
+var updatedCategory = await categoryService.UpdateCategoryAsync(
+    categoryId: newCategory.Id,
+    name: "Smart Home & IoT Devices",
+    description: "Smart home devices, IoT gadgets, and home automation equipment"
+);
+Console.WriteLine($"Updated category: {updatedCategory.Name}");
+
+// Deactivate a category (soft delete)
+var deactivatedCategory = await categoryService.DeactivateCategoryAsync(newCategory.Id);
+Console.WriteLine($"Category deactivated: {deactivatedCategory.IsActive}");
+
+// Get category tree structure (root categories with nested subcategories)
+var categoryTree = await categoryService.GetCategoryTreeAsync();
+Console.WriteLine($"Category tree contains {categoryTree.Count} root categories");
+foreach (var root in categoryTree)
+{
+    Console.WriteLine($"- {root.Name} ({root.SubCategories.Count} subcategories, {root.ListingCount} listings)");
+}
+
+// Get category tree with specific depth
+var deepCategoryTree = await categoryService.GetCategoryTreeAsync(depth: 3);
+Console.WriteLine($"Deep category tree retrieved with depth 3");
+
+// Search categories by name
+var searchResults = await categoryService.SearchCategoriesAsync("electronics");
+Console.WriteLine($"Search for 'electronics' found {searchResults.Count} categories");
+
+// Get category by slug
+var categoryBySlug = await categoryService.GetBySlugAsync("electronics");
+Console.WriteLine($"Retrieved category by slug 'electronics': {categoryBySlug.Name}");
+
+// Get top hot categories by listing count
+var hotCategories = await categoryService.GetHotCategoriesAsync(limit: 5);
+Console.WriteLine($"Top {hotCategories.Count} hot categories:");
+foreach (var hotCat in hotCategories)
+{
+    Console.WriteLine($"- {hotCat.Name}: {hotCat.ListingCount} listings");
+}
+```
+
 ## WatchlistService
 
 The `WatchlistService` class provides in-memory per-user watchlist functionality for tracking user interest in specific listings. It maintains watchlists that integrate with the recommendation system by recording Save signals when listings are added to watchlists, enabling personalized recommendations based on user preferences. The service supports adding/removing listings from watchlists, checking if a user is watching a listing, retrieving watched listings, and getting watcher counts for notifications.
