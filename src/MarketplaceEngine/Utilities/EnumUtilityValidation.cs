@@ -18,15 +18,19 @@ public static class EnumUtilityValidation
     /// <summary>
     /// Validates the EnumUtility class and its methods for common issues.
     /// </summary>
+    /// <param name="enumType">The type to validate (should be EnumUtility class).</param>
     /// <returns>An enumerable of validation problems; empty if valid.</returns>
-    public static IReadOnlyList<string> Validate()
+    /// <exception cref="ArgumentNullException"><paramref name="enumType"/> is <see langword="null"/></exception>
+    public static IReadOnlyList<string> Validate(Type enumType)
     {
+        ArgumentNullException.ThrowIfNull(enumType);
+
         var problems = new List<string>();
 
         // Validate that all expected methods exist with correct signatures
 
         // Validate GetDescription method
-        var getDescriptionMethod = typeof(EnumUtility).GetMethod("GetDescription", BindingFlags.Public | BindingFlags.Static);
+        var getDescriptionMethod = enumType.GetMethod("GetDescription", BindingFlags.Public | BindingFlags.Static);
         if (getDescriptionMethod == null)
         {
             problems.Add("Missing GetDescription method");
@@ -41,7 +45,7 @@ public static class EnumUtilityValidation
         }
 
         // Validate TryParseEnum method
-        var tryParseEnumMethod = typeof(EnumUtility).GetMethod("TryParseEnum", BindingFlags.Public | BindingFlags.Static);
+        var tryParseEnumMethod = enumType.GetMethod("TryParseEnum", BindingFlags.Public | BindingFlags.Static);
         if (tryParseEnumMethod == null)
         {
             problems.Add("Missing TryParseEnum method");
@@ -50,13 +54,13 @@ public static class EnumUtilityValidation
         {
             problems.Add("TryParseEnum method has incorrect parameter count");
         }
-        else if (tryParseEnumMethod.ReturnType != typeof(void).MakeByRefType())
+        else if (tryParseEnumMethod.ReturnType != typeof(bool))
         {
             problems.Add("TryParseEnum method has incorrect return type");
         }
 
         // Validate GetEnumValues method
-        var getEnumValuesMethod = typeof(EnumUtility).GetMethod("GetEnumValues", BindingFlags.Public | BindingFlags.Static);
+        var getEnumValuesMethod = enumType.GetMethod("GetEnumValues", BindingFlags.Public | BindingFlags.Static);
         if (getEnumValuesMethod == null)
         {
             problems.Add("Missing GetEnumValues method");
@@ -65,13 +69,13 @@ public static class EnumUtilityValidation
         {
             problems.Add("GetEnumValues method has incorrect parameter count");
         }
-        else if (!getEnumValuesMethod.ReturnType.IsGenericType || getEnumValuesMethod.ReturnType.GetGenericTypeDefinition() != typeof(List<>))
+        else if (getEnumValuesMethod.ReturnType.GetGenericTypeDefinition() != typeof(List<>))
         {
             problems.Add("GetEnumValues method has incorrect return type");
         }
 
         // Validate GetEnumNames method
-        var getEnumNamesMethod = typeof(EnumUtility).GetMethod("GetEnumNames", BindingFlags.Public | BindingFlags.Static);
+        var getEnumNamesMethod = enumType.GetMethod("GetEnumNames", BindingFlags.Public | BindingFlags.Static);
         if (getEnumNamesMethod == null)
         {
             problems.Add("Missing GetEnumNames method");
@@ -80,13 +84,13 @@ public static class EnumUtilityValidation
         {
             problems.Add("GetEnumNames method has incorrect parameter count");
         }
-        else if (!getEnumNamesMethod.ReturnType.IsGenericType || getEnumNamesMethod.ReturnType.GetGenericTypeDefinition() != typeof(List<>))
+        else if (getEnumNamesMethod.ReturnType.GetGenericTypeDefinition() != typeof(List<>))
         {
             problems.Add("GetEnumNames method has incorrect return type");
         }
 
         // Validate GetEnumDictionary method
-        var getEnumDictionaryMethod = typeof(EnumUtility).GetMethod("GetEnumDictionary", BindingFlags.Public | BindingFlags.Static);
+        var getEnumDictionaryMethod = enumType.GetMethod("GetEnumDictionary", BindingFlags.Public | BindingFlags.Static);
         if (getEnumDictionaryMethod == null)
         {
             problems.Add("Missing GetEnumDictionary method");
@@ -95,13 +99,13 @@ public static class EnumUtilityValidation
         {
             problems.Add("GetEnumDictionary method has incorrect parameter count");
         }
-        else if (!getEnumDictionaryMethod.ReturnType.IsGenericType || getEnumDictionaryMethod.ReturnType.GetGenericTypeDefinition() != typeof(Dictionary<,>))
+        else if (getEnumDictionaryMethod.ReturnType.GetGenericTypeDefinition() != typeof(Dictionary<,>))
         {
             problems.Add("GetEnumDictionary method has incorrect return type");
         }
 
         // Validate HasFlag method
-        var hasFlagMethod = typeof(EnumUtility).GetMethod("HasFlag", BindingFlags.Public | BindingFlags.Static);
+        var hasFlagMethod = enumType.GetMethod("HasFlag", BindingFlags.Public | BindingFlags.Static);
         if (hasFlagMethod == null)
         {
             problems.Add("Missing HasFlag method");
@@ -121,16 +125,22 @@ public static class EnumUtilityValidation
     /// <summary>
     /// Checks if the EnumUtility class is valid (has no validation problems).
     /// </summary>
+    /// <param name="enumType">The type to validate (should be EnumUtility class).</param>
     /// <returns>True if valid; false if any validation problems exist.</returns>
-    public static bool IsValid() => Validate().Count == 0;
+    /// <exception cref="ArgumentNullException"><paramref name="enumType"/> is <see langword="null"/></exception>
+    public static bool IsValid(Type enumType) => Validate(enumType).Count == 0;
 
     /// <summary>
     /// Ensures that the EnumUtility class is valid, throwing an exception if not.
     /// </summary>
+    /// <param name="enumType">The type to validate (should be EnumUtility class).</param>
+    /// <exception cref="ArgumentNullException"><paramref name="enumType"/> is <see langword="null"/></exception>
     /// <exception cref="ArgumentException">Thrown if validation fails, containing the list of problems.</exception>
-    public static void EnsureValid()
+    public static void EnsureValid(Type enumType)
     {
-        var problems = Validate();
+        ArgumentNullException.ThrowIfNull(enumType);
+
+        var problems = Validate(enumType);
         if (problems.Count == 0)
             return;
 
