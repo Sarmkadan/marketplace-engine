@@ -853,6 +853,64 @@ Console.WriteLine($"Error Code: {errorResponse.ErrorCode}");
 Console.WriteLine($"Message: {errorResponse.Message}");
 ```
 
+## PaymentDto
+
+The `PaymentDto` class is a data transfer object that represents a payment transaction in the marketplace. It encapsulates all essential payment details including the transaction parties, amounts, fees, status, and timestamps, providing a clean interface for payment processing and display.
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.DTOs;
+using System;
+
+// Create a new payment DTO for a completed transaction
+var paymentDto = new PaymentDto
+{
+    Id = Guid.NewGuid(),
+    ListingId = Guid.NewGuid(),
+    BuyerId = Guid.NewGuid(),
+    SellerId = Guid.NewGuid(),
+    Amount = 99.99m,
+    Currency = "USD",
+    PlatformFee = 4.99m,
+    SellerPayout = 95.00m,
+    Status = "Completed",
+    PaymentMethod = "Credit Card",
+    ExternalTransactionId = "ch_1234567890",
+    CreatedAt = DateTime.UtcNow,
+    CompletedAt = DateTime.UtcNow.AddSeconds(30)
+};
+
+Console.WriteLine($"Payment ID: {paymentDto.Id}");
+Console.WriteLine($"Amount: {paymentDto.Amount} {paymentDto.Currency}");
+Console.WriteLine($"Platform Fee: {paymentDto.PlatformFee} {paymentDto.Currency}");
+Console.WriteLine($"Seller Payout: {paymentDto.SellerPayout} {paymentDto.Currency}");
+Console.WriteLine($"Status: {paymentDto.Status}");
+Console.WriteLine($"Payment Method: {paymentDto.PaymentMethod}");
+Console.WriteLine($"Completed At: {paymentDto.CompletedAt}");
+
+// Create a payment DTO from a domain Payment entity
+var payment = new Payment
+{
+    Id = Guid.NewGuid(),
+    ListingId = Guid.NewGuid(),
+    BuyerId = Guid.NewGuid(),
+    SellerId = Guid.NewGuid(),
+    Amount = new Money(99.99m, "USD"),
+    PlatformFee = new Money(4.99m, "USD"),
+    SellerPayout = new Money(95.00m, "USD"),
+    Status = PaymentStatus.Completed,
+    PaymentMethod = "PayPal",
+    ExternalTransactionId = "paypal_12345",
+    CreatedAt = DateTime.UtcNow,
+    CompletedAt = DateTime.UtcNow.AddMinutes(2)
+};
+
+var paymentFromEntity = new PaymentDto(payment);
+Console.WriteLine($"Payment from entity - Status: {paymentFromEntity.Status}");
+Console.WriteLine($"Amount: {paymentFromEntity.Amount} {paymentFromEntity.Currency}");
+```
+
 ## Message
 
 The `Message` class represents a private message exchanged between marketplace users. It supports one-to-one messaging, conversation threading through parent-child relationships, attachment management, read status tracking, and flagging for moderation. Messages can be associated with specific listings for context during transactions.
