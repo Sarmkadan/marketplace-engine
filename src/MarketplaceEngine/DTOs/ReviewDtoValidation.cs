@@ -6,12 +6,12 @@
 
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 
 namespace MarketplaceEngine.DTOs;
 
 /// <summary>
 /// Provides validation helpers for <see cref="ReviewDto"/> instances.
+/// Validates business rules and constraints for review data transfer objects.
 /// </summary>
 public static class ReviewDtoValidation
 {
@@ -30,29 +30,35 @@ public static class ReviewDtoValidation
         // Validate Id
         if (value.Id == Guid.Empty)
         {
-            errors.Add("Review Id cannot be empty.");
+            errors.Add("Id must be a valid GUID.");
         }
 
         // Validate ReviewerId
         if (value.ReviewerId == Guid.Empty)
         {
-            errors.Add("Reviewer Id cannot be empty.");
+            errors.Add("ReviewerId must be a valid GUID.");
         }
 
         // Validate ReviewerName
         if (string.IsNullOrWhiteSpace(value.ReviewerName))
         {
-            errors.Add("Reviewer name cannot be null or whitespace.");
+            errors.Add("ReviewerName must not be null or whitespace.");
         }
         else if (value.ReviewerName.Length > 200)
         {
-            errors.Add("Reviewer name cannot exceed 200 characters.");
+            errors.Add("ReviewerName must not exceed 200 characters.");
         }
 
         // Validate SellerId
         if (value.SellerId == Guid.Empty)
         {
-            errors.Add("Seller Id cannot be empty.");
+            errors.Add("SellerId must be a valid GUID.");
+        }
+
+        // Validate ReviewerId and SellerId are different (business rule)
+        if (value.ReviewerId != Guid.Empty && value.SellerId != Guid.Empty && value.ReviewerId == value.SellerId)
+        {
+            errors.Add("ReviewerId and SellerId must be different (a seller cannot review themselves).");
         }
 
         // Validate Score (assuming 1-5 scale)
@@ -64,31 +70,44 @@ public static class ReviewDtoValidation
         // Validate Comment
         if (string.IsNullOrWhiteSpace(value.Comment))
         {
-            errors.Add("Comment cannot be null or whitespace.");
+            errors.Add("Comment must not be null or whitespace.");
         }
-        else if (value.Comment.Length > 2000)
+        else
         {
-            errors.Add("Comment cannot exceed 2000 characters.");
+            if (value.Comment.Length < 10)
+            {
+                errors.Add("Comment must be at least 10 characters long.");
+            }
+
+            if (value.Comment.Length > 2000)
+            {
+                errors.Add("Comment must not exceed 2000 characters.");
+            }
+
+            if (value.Comment.Trim().Length == 0)
+            {
+                errors.Add("Comment must not consist entirely of whitespace.");
+            }
         }
 
         // Validate Status
         if (string.IsNullOrWhiteSpace(value.Status))
         {
-            errors.Add("Status cannot be null or whitespace.");
+            errors.Add("Status must not be null or whitespace.");
         }
         else if (value.Status.Length > 50)
         {
-            errors.Add("Status cannot exceed 50 characters.");
+            errors.Add("Status must not exceed 50 characters.");
         }
 
         // Validate CreatedAt
         if (value.CreatedAt == default)
         {
-            errors.Add("CreatedAt cannot be the default DateTime value.");
+            errors.Add("CreatedAt must be set to a valid DateTime.");
         }
         else if (value.CreatedAt > DateTime.UtcNow.AddMinutes(5))
         {
-            errors.Add("CreatedAt cannot be in the future.");
+            errors.Add("CreatedAt must not be in the future.");
         }
 
         // Validate UpdatedAt (if set)
@@ -96,16 +115,22 @@ public static class ReviewDtoValidation
         {
             if (value.UpdatedAt.Value == default)
             {
-                errors.Add("UpdatedAt cannot be the default DateTime value.");
+                errors.Add("UpdatedAt must be a valid DateTime when set.");
             }
             else if (value.UpdatedAt.Value > DateTime.UtcNow.AddMinutes(5))
             {
-                errors.Add("UpdatedAt cannot be in the future.");
+                errors.Add("UpdatedAt must not be in the future.");
             }
             else if (value.UpdatedAt.Value < value.CreatedAt)
             {
-                errors.Add("UpdatedAt cannot be earlier than CreatedAt.");
+                errors.Add("UpdatedAt must not be earlier than CreatedAt.");
             }
+        }
+
+        // Validate SellerReply consistency with UpdatedAt
+        if (value.SellerReply is not null && value.UpdatedAt is null)
+        {
+            errors.Add("UpdatedAt must be set when SellerReply is populated.");
         }
 
         return errors.AsReadOnly();
@@ -119,6 +144,7 @@ public static class ReviewDtoValidation
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
     public static bool IsValid(this ReviewDto? value)
     {
+        ArgumentNullException.ThrowIfNull(value);
         return Validate(value).Count == 0;
     }
 
@@ -136,7 +162,7 @@ public static class ReviewDtoValidation
         if (errors.Count > 0)
         {
             throw new ArgumentException(
-                $"ReviewDto is invalid. Validation errors: {string.Join(", ", errors)}");
+                $"ReviewDto validation failed:{Environment.NewLine}- {string.Join($"{Environment.NewLine}- ", errors)}");
         }
     }
 }
