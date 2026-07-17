@@ -480,6 +480,49 @@ Console.WriteLine($"\nAverage rating: {averageScore:F1}/5 stars");
 Console.WriteLine($"Total reviews: {sellerReviews.Count}");
 ```
 
+## FullTextSearchRequest
+
+The `FullTextSearchRequest` class represents a full-text search request with optional filters and pagination. It supports searching listings by query text, category, price range, tags, condition, and featured status, with configurable pagination for efficient result browsing.
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.DTOs;
+using System;
+using System.Collections.Generic;
+
+// Create a full-text search request for electronics under $500
+var searchRequest = new FullTextSearchRequest
+{
+    Query = "wireless headphones",
+    CategoryId = Guid.Parse("3fa85f64-5717-4562-b3fc-2c963f66afa6"),
+    MaxPrice = 500,
+    Tags = new List<string> { "electronics", "audio" },
+    Condition = "new",
+    FeaturedOnly = false,
+    Page = 1,
+    PageSize = 25
+};
+
+Console.WriteLine($"Searching for: {searchRequest.Query}");
+Console.WriteLine($"Category: {searchRequest.CategoryId}");
+Console.WriteLine($"Price range: ${searchRequest.MinPrice ?? 0} - ${searchRequest.MaxPrice ?? 0}");
+Console.WriteLine($"Tags: {string.Join(", ", searchRequest.Tags ?? new List<string>())}");
+Console.WriteLine($"Condition: {searchRequest.Condition ?? "any"}");
+Console.WriteLine($"Featured only: {searchRequest.FeaturedOnly}");
+Console.WriteLine($"Pagination: Page {searchRequest.Page}, {searchRequest.PageSize} per page");
+
+// Create a search request with price range only
+var budgetSearch = new FullTextSearchRequest
+{
+    Query = "laptop",
+    MinPrice = 300,
+    MaxPrice = 800,
+    Page = 2,
+    PageSize = 10
+};
+```
+
 ## ModerationReportDto
 
 The `ModerationReportDto` class is a basic data transfer object that represents a moderation report submitted by users to flag inappropriate content or user behavior. It contains essential information about the report including identifiers for the reported content/user, the reporter, the reason for reporting, and creation timestamp. This DTO is used in API responses to display moderation reports in lists and dashboards.
