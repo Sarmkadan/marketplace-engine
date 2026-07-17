@@ -662,6 +662,42 @@ Console.WriteLine($"\nAverage rating: {averageScore:F1}/5 stars");
 Console.WriteLine($"Total reviews: {sellerReviews.Count}");
 ```
 
+## ReviewService
+
+The `ReviewService` class provides essential functionality for managing user and listing reviews within the marketplace. It enables users to submit, retrieve, flag, and remove reviews, while also offering analytical insights like average scores and review distribution for sellers. This service acts as the central hub for all review-related operations in the application layer.
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.Services;
+using MarketplaceEngine.Domain.Entities;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+
+// Initialize review service (typically via dependency injection)
+// var reviewService = new ReviewService(reviewRepository, ...);
+
+// Submit a new review
+var review = await reviewService.SubmitReviewAsync(
+    reviewerId: Guid.Parse("11111111-1111-1111-1111-111111111111"),
+    sellerId: Guid.Parse("22222222-2222-2222-2222-222222222222"),
+    listingId: Guid.Parse("33333333-3333-3333-3333-333333333333"),
+    score: 5,
+    comment: "Great experience!"
+);
+
+// Add a seller reply
+await reviewService.AddSellerReplyAsync(review.Id, "Thank you!");
+
+// Get seller reviews
+var (reviews, total) = await reviewService.GetSellerReviewsAsync(Guid.Parse("22222222-2222-2222-2222-222222222222"));
+
+// Get seller stats
+var (averageScore, totalReviews, distribution) = await reviewService.GetSellerStatsAsync(Guid.Parse("22222222-2222-2222-2222-222222222222"));
+Console.WriteLine($"Average Score: {averageScore:F1}, Total Reviews: {totalReviews}");
+```
+
 ## FullTextSearchRequest
 
 The `FullTextSearchRequest` class represents a full-text search request with optional filters and pagination. It supports searching listings by query text, category, price range, tags, condition, and featured status, with configurable pagination for efficient result browsing.
