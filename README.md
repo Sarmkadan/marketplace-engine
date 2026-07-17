@@ -1,3 +1,99 @@
+## ModerationControllerValidation
+
+The `ModerationControllerValidation` class provides validation methods for moderation-related data, including report IDs, pagination parameters, action notes, rejection reasons, and bulk moderation operations. It ensures that moderation data meets expected formats and constraints before processing.
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.Controllers;
+using Microsoft.AspNetCore.Mvc;
+using System;
+using System.Collections.Generic;
+
+// Example 1: Validate a single report ID
+var reportId = "rep_1234567890";
+var isValidReportId = ModerationControllerValidation.IsValidReportId(reportId);
+if (isValidReportId)
+{
+    Console.WriteLine("Report ID is valid");
+}
+else
+{
+    Console.WriteLine("Report ID is invalid");
+}
+
+// Example 2: Validate pagination parameters
+var pageNumber = 1;
+var pageSize = 25;
+var paginationErrors = ModerationControllerValidation.ValidatePagination(pageNumber, pageSize);
+if (paginationErrors.Count == 0)
+{
+    Console.WriteLine("Pagination parameters are valid");
+}
+else
+{
+    Console.WriteLine("Pagination errors:");
+    foreach (var error in paginationErrors)
+    {
+        Console.WriteLine($"- {error}");
+    }
+}
+
+// Example 3: Validate action notes
+var actionNotes = "This content violates our community guidelines by containing inappropriate language.";
+var notesErrors = ModerationControllerValidation.ValidateActionNotes(actionNotes);
+if (notesErrors.Count == 0)
+{
+    Console.WriteLine("Action notes are valid");
+}
+else
+{
+    Console.WriteLine("Action notes validation failed:");
+    foreach (var error in notesErrors)
+    {
+        Console.WriteLine($"- {error}");
+    }
+}
+
+// Example 4: Validate rejection reason
+var rejectionReason = "Violation of content policy section 3.2";
+var rejectionErrors = ModerationControllerValidation.ValidateRejectionReason(rejectionReason);
+if (rejectionErrors.Count == 0)
+{
+    Console.WriteLine("Rejection reason is valid");
+}
+else
+{
+    Console.WriteLine("Rejection reason validation failed:");
+    foreach (var error in rejectionErrors)
+    {
+        Console.WriteLine($"- {error}");
+    }
+}
+
+// Example 5: Validate bulk moderation operation
+var bulkOperation = new Dictionary<string, object>
+{
+    { "reportId", "rep_1234567890" },
+    { "action", "Reject" },
+    { "reason", "Violation of content policy" }
+};
+
+var bulkErrors = ModerationControllerValidation.ValidateBulkModeration(bulkOperation);
+if (bulkErrors.Count == 0)
+{
+    Console.WriteLine("Bulk moderation operation is valid");
+}
+else
+{
+    Console.WriteLine("Bulk moderation validation failed:");
+    foreach (var error in bulkErrors)
+    {
+        Console.WriteLine($"- {error}");
+    }
+}
+```
+
 ## PaymentsControllerExtensions
 
 The `PaymentsControllerExtensions` class provides extension methods for the `PaymentsController` that simplify payment operations including batch processing, status queries, and bulk operations. It enhances the controller with convenience methods for handling multiple payments simultaneously, filtering payments by status and date range, and managing payment cancellations in bulk.
