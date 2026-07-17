@@ -10,8 +10,14 @@ using Xunit;
 
 namespace MarketplaceEngine.Tests;
 
+/// <summary>
+/// Contains unit tests for the <see cref="Message"/> class validation logic.
+/// </summary>
 public class MessageTests
 {
+    /// <summary>
+    /// Tests that <see cref="Message.ValidateBeforeSending"/> throws an <see cref="ArgumentException"/> when sender and recipient are the same.
+    /// </summary>
     [Fact]
     public void ValidateBeforeSending_WhenSenderAndRecipientAreTheSame_ThrowsArgumentException()
     {
@@ -36,6 +42,9 @@ public class MessageTests
         act.Should().Throw<ArgumentException>().WithMessage("*to yourself*");
     }
 
+    /// <summary>
+    /// Tests that <see cref="Message.ValidateBeforeSending"/> throws an <see cref="ArgumentException"/> when subject is too short.
+    /// </summary>
     [Fact]
     public void ValidateBeforeSending_WhenSubjectIsTooShort_ThrowsArgumentException()
     {
@@ -53,6 +62,9 @@ public class MessageTests
         act.Should().Throw<ArgumentException>().WithMessage("*at least 3 characters*");
     }
 
+    /// <summary>
+    /// Tests that <see cref="Message.ValidateBeforeSending"/> throws an <see cref="ArgumentException"/> when subject exceeds maximum length.
+    /// </summary>
     [Fact]
     public void ValidateBeforeSending_WhenSubjectIsTooLong_ThrowsArgumentException()
     {
@@ -70,6 +82,9 @@ public class MessageTests
         act.Should().Throw<ArgumentException>().WithMessage("*cannot exceed 100 characters*");
     }
 
+    /// <summary>
+    /// Tests that <see cref="Message.ValidateBeforeSending"/> throws an <see cref="ArgumentException"/> when body is too short.
+    /// </summary>
     [Fact]
     public void ValidateBeforeSending_WhenBodyIsTooShort_ThrowsArgumentException()
     {
@@ -87,6 +102,9 @@ public class MessageTests
         act.Should().Throw<ArgumentException>().WithMessage("*at least 5 characters*");
     }
 
+    /// <summary>
+    /// Tests that <see cref="Message.ValidateBeforeSending"/> throws an <see cref="ArgumentException"/> when body exceeds maximum length.
+    /// </summary>
     [Fact]
     public void ValidateBeforeSending_WhenBodyIsTooLong_ThrowsArgumentException()
     {
@@ -104,6 +122,9 @@ public class MessageTests
         act.Should().Throw<ArgumentException>().WithMessage("*cannot exceed 5000 characters*");
     }
 
+    /// <summary>
+    /// Tests that <see cref="Message.ValidateBeforeSending"/> throws an <see cref="ArgumentException"/> when message has too many attachments.
+    /// </summary>
     [Fact]
     public void ValidateBeforeSending_WhenTooManyAttachments_ThrowsArgumentException()
     {
