@@ -1061,6 +1061,89 @@ var act8 = async () => await reviewService.RemoveReviewAsync(
 await Assert.ThrowsAsync<UnauthorizedException>(act8);
 ```
 
+## ValueObjectTests
+
+The `ValueObjectTests` class provides unit tests for the Marketplace Engine's value objects, ensuring they maintain business invariants and handle edge cases correctly. It tests the `Money`, `Rating`, and `Location` value objects with validation for negative amounts, currency mismatches, score ranges, and coordinate-based distance calculations.
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.Domain.ValueObjects;
+using System;
+
+// Test Money value object behavior
+var price1 = new Money(50m, "USD");
+var price2 = new Money(30m, "USD");
+
+// Add two Money objects with same currency
+var sum = price1.Add(price2);
+Console.WriteLine($"Sum: {sum.Amount} {sum.CurrencyCode}"); // Sum: 80 USD
+
+// Test Money validation - negative amount throws
+try
+{
+    var invalidPrice = new Money(-10m, "USD");
+}
+catch (ArgumentException ex)
+{
+    Console.WriteLine($"Caught expected exception: {ex.Message}");
+}
+
+// Test Money with different currencies
+var usd = new Money(100m, "USD");
+var eur = new Money(100m, "EUR");
+
+try
+{
+    var mixed = usd.Add(eur);
+}
+catch (InvalidOperationException ex)
+{
+    Console.WriteLine($"Caught expected exception: {ex.Message}");
+}
+
+// Test Money multiplication
+var price = new Money(99.99m, "USD");
+var zeroPrice = price.Multiply(0m);
+Console.WriteLine($"Zero multiplication result: {zeroPrice.Amount} {zeroPrice.CurrencyCode}"); // Zero multiplication result: 0 USD
+
+// Test Rating value object
+var rating = new Rating(4, totalReviews: 5);
+Console.WriteLine($"Initial rating: Score={rating.Score}, TotalReviews={rating.TotalReviews}"); // Score=4, TotalReviews=5
+
+// Add a review to increment total reviews
+var updatedRating = rating.AddReview(5);
+Console.WriteLine($"Updated rating: Score={updatedRating.Score}, TotalReviews={updatedRating.TotalReviews}"); // Score=4, TotalReviews=6
+
+// Test Rating validation - score above 5 throws
+try
+{
+    var invalidRating = new Rating(6);
+}
+catch (ArgumentException ex)
+{
+    Console.WriteLine($"Caught expected exception: {ex.Message}");
+}
+
+// Test Location value object
+var london = new Location("London", "England", "GB");
+var paris = new Location("Paris", "Ile-de-France", "FR");
+
+// Distance calculation returns null when coordinates are not available
+var distance = london.DistanceTo(paris);
+Console.WriteLine($"Distance between locations: {distance}"); // Distance between locations: 
+
+// Test Location validation - three-letter country code throws
+try
+{
+    var invalidLocation = new Location("New York", "NY", "USA");
+}
+catch (ArgumentException ex)
+{
+    Console.WriteLine($"Caught expected exception: {ex.Message}");
+}
+```
+
 ## UserServiceTests
 
 The `UserServiceTests` class contains unit tests for the `UserService` class, verifying that it correctly handles user registration, email verification, account management, profile updates, and premium account features. It tests various business rules including email uniqueness validation, name length requirements, email verification token validation, premium account eligibility criteria, and account status validation.
