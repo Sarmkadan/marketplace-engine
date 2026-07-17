@@ -1079,6 +1079,93 @@ var publicProfile = await userService.GetPublicProfileAsync(newUser.Id);
 Console.WriteLine($"Public profile: {publicProfile.DisplayName} - {publicProfile.Bio}");
 ```
 
+## WatchlistService
+
+The `WatchlistService` class provides in-memory per-user watchlist functionality for tracking user interest in specific listings. It maintains watchlists that integrate with the recommendation system by recording Save signals when listings are added to watchlists, enabling personalized recommendations based on user preferences. The service supports adding/removing listings from watchlists, checking if a user is watching a listing, retrieving watched listings, and getting watcher counts for notifications.
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.Services;
+using MarketplaceEngine.Domain.Models;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
+
+// Initialize watchlist service (typically via dependency injection)
+var watchlistService = new WatchlistService(listingRepository, recommendationEngine);
+
+// Add a listing to user's watchlist
+var wasAdded = await watchlistService.AddAsync(
+    userId: Guid.Parse("11111111-1111-1111-1111-111111111111"),
+    listingId: Guid.Parse("33333333-3333-3333-3333-333333333333")
+);
+Console.WriteLine($"Listing added to watchlist: {wasAdded}");
+
+// Check if user is watching a listing
+var isWatching = watchlistService.IsWatching(
+    userId: Guid.Parse("11111111-1111-1111-1111-111111111111"),
+    listingId: Guid.Parse("33333333-3333-3333-3333-333333333333")
+);
+Console.WriteLine($"User is watching listing: {isWatching}");
+
+// Remove a listing from watchlist
+var wasRemoved = await watchlistService.RemoveAsync(
+    userId: Guid.Parse("11111111-1111-1111-1111-111111111111"),
+    listingId: Guid.Parse("33333333-3333-3333-3333-333333333333")
+);
+Console.WriteLine($"Listing removed from watchlist: {wasRemoved}");
+
+// Get all listings watched by a user
+var watchedListings = await watchlistService.GetWatchedListingsAsync(
+    userId: Guid.Parse("11111111-1111-1111-1111-111111111111")
+);
+Console.WriteLine($"User is watching {watchedListings.Count} listings");
+foreach (var listing in watchedListings.Take(5))
+{
+    Console.WriteLine($"- {listing.Title}: {listing.Price:C}");
+}
+
+// Get how many users are watching a specific listing
+var watcherCount = watchlistService.GetWatcherCount(
+    listingId: Guid.Parse("33333333-3333-3333-3333-333333333333")
+);
+Console.WriteLine($"Listing is watched by {watcherCount} users");
+
+// Get all user IDs watching a specific listing (for notifications)
+var watchers = watchlistService.GetWatchers(
+    listingId: Guid.Parse("33333333-3333-3333-3333-333333333333")
+);
+Console.WriteLine($"Listing watchers: {string.Join(", ", watchers.Take(10))}");
+
+// Add multiple listings to watchlist
+var listingIds = new[] {
+    Guid.Parse("33333333-3333-3333-3333-333333333333"),
+    Guid.Parse("44444444-4444-4444-4444-444444444444"),
+    Guid.Parse("55555555-5555-5555-5555-555555555555")
+};
+foreach (var id in listingIds)
+{
+    await watchlistService.AddAsync(
+        userId: Guid.Parse("11111111-1111-1111-1111-111111111111"),
+        listingId: id
+    );
+}
+Console.WriteLine("Multiple listings added to watchlist");
+
+// Check if listing exists before adding (to avoid KeyNotFoundException)
+var listingExists = await listingRepository.ExistsAsync(
+    Guid.Parse("33333333-3333-3333-3333-333333333333")
+);
+if (listingExists)
+{
+    await watchlistService.AddAsync(
+        userId: Guid.Parse("22222222-2222-2222-2222-222222222222"),
+        listingId: Guid.Parse("33333333-3333-3333-3333-333333333333")
+    );
+}
+```
+
 ## UserDto
 
 The `UserDto` class represents a user in the marketplace system. It contains essential user information including identification, profile details, seller metrics, and account status. This DTO is used throughout the application for user profiles, seller dashboards, and API responses.
