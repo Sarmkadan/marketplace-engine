@@ -95,11 +95,6 @@ public static class CacheServiceExtensions
         ArgumentNullException.ThrowIfNull(cacheService);
         ArgumentNullException.ThrowIfNull(pattern);
 
-        if (string.IsNullOrWhiteSpace(pattern))
-        {
-            return Array.Empty<string>();
-        }
-
         var matchingKeys = (cacheService
             .GetType()
             .GetField("_cache", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
@@ -107,7 +102,7 @@ public static class CacheServiceExtensions
             .Where(k => k.Contains(pattern, StringComparison.OrdinalIgnoreCase))
             .ToList();
 
-        return matchingKeys?.AsReadOnly() ?? Array.Empty<string>().AsReadOnly();
+        return matchingKeys?.AsReadOnly() ?? Array.AsReadOnly(Array.Empty<string>());
     }
 
     /// <summary>
@@ -132,18 +127,20 @@ public static class CacheServiceExtensions
             _ => $"{stats.TotalMemoryMb} MB"
         };
 
-        var oldestItemFormatted = stats.OldestItemAge.TotalDays >= 1
-            ? $"{stats.OldestItemAge.TotalDays:F1} days"
-            : stats.OldestItemAge.TotalHours >= 1
-                ? $"{stats.OldestItemAge.TotalHours:F1} hours"
-                : stats.OldestItemAge.TotalMinutes >= 1
-                    ? $"{stats.OldestItemAge.TotalMinutes:F1} minutes"
-                    : $"{stats.OldestItemAge.TotalSeconds:F1} seconds";
+        var oldestItemFormatted = FormatAge(stats.OldestItemAge);
 
         return $"Cache Statistics:\n" +
-               $"  Items: {stats.TotalItems}\n" +
-               $"  Memory: {memoryFormat}\n" +
-               $"  Oldest Item: {oldestItemFormatted}\n" +
-               $"  Hit Rate: N/A";
+               $" Items: {stats.TotalItems}\n" +
+               $" Memory: {memoryFormat}\n" +
+               $" Oldest Item: {oldestItemFormatted}\n" +
+               $" Hit Rate: N/A";
     }
+
+    private static string FormatAge(TimeSpan age) => age.TotalDays >= 1
+        ? $"{age.TotalDays:F1} days"
+        : age.TotalHours >= 1
+            ? $"{age.TotalHours:F1} hours"
+            : age.TotalMinutes >= 1
+                ? $"{age.TotalMinutes:F1} minutes"
+                : $"{age.TotalSeconds:F1} seconds";
 }
