@@ -43,15 +43,9 @@ public static class ApiResponseExtensions
                 response.Errors);
         }
 
-        if (response.Data is null)
-        {
-            return ApiResponse<TResult>.SuccessResponse(default, response.Message, response.RequestId);
-        }
-
-        return ApiResponse<TResult>.SuccessResponse(
-            mapper(response.Data),
-            response.Message,
-            response.RequestId);
+        return response.Data is null
+            ? ApiResponse<TResult>.SuccessResponse(default, response.Message, response.RequestId)
+            : ApiResponse<TResult>.SuccessResponse(mapper(response.Data), response.Message, response.RequestId);
     }
 
     /// <summary>
@@ -91,7 +85,7 @@ public static class ApiResponseExtensions
     /// <param name="response">The API response to convert.</param>
     /// <returns>
     /// A <see cref="PagedResponse{T}"/> containing the response data as a single item,
-    /// or an error response if the source response failed.
+    /// or an empty paged response if the source response failed.
     /// </returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="response"/> is null.</exception>
     public static PagedResponse<T> ToPagedResponse<T>(this ApiResponse<T> response)
@@ -100,7 +94,9 @@ public static class ApiResponseExtensions
 
         if (!response.Success)
         {
-            return new PagedResponse<T>();
+            var result = new PagedResponse<T>();
+            result.Items = []; // Ensure empty list instead of null
+            return result;
         }
 
         return new PagedResponse<T>
@@ -121,6 +117,7 @@ public static class ApiResponseExtensions
     /// <param name="requestId">The request ID to set.</param>
     /// <returns>A new response with the updated RequestId.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="response"/> is null.</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="requestId"/> is null or empty.</exception>
     public static ApiResponse<T> WithRequestId<T>(
         this ApiResponse<T> response,
         string requestId)
@@ -177,6 +174,7 @@ public static class ApiResponseExtensions
     /// <param name="requestId">Optional request ID for correlation.</param>
     /// <returns>A new validation error response.</returns>
     /// <exception cref="ArgumentException">Thrown when <paramref name="fieldName"/> is null or empty.</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="errorMessage"/> is null or empty.</exception>
     public static ApiResponse<T> FieldValidationError<T>(
         string fieldName,
         string errorMessage,
