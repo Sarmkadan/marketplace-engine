@@ -11,7 +11,7 @@ using System.Text.Json.Serialization.Metadata;
 namespace MarketplaceEngine.Tests;
 
 /// <summary>
-/// Provides System.Text.Json serialization extensions for <see cref="ModerationServiceTests"/>.
+/// Provides System.Text.Json serialization extensions for <see cref="ModerationServiceTests"/> test class.
 /// </summary>
 public static class ModerationServiceTestsJsonExtensions
 {
@@ -44,6 +44,7 @@ public static class ModerationServiceTestsJsonExtensions
     /// </summary>
     /// <param name="json">The JSON string to deserialize.</param>
     /// <returns>The deserialized instance, or <see langword="null"/> if the JSON represents a null value.</returns>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="json"/> is <see langword="null"/>, empty, or whitespace.</exception>
     /// <exception cref="JsonException">Thrown when the JSON is invalid or cannot be deserialized.</exception>
     public static ModerationServiceTests? FromJson(string json)
     {
@@ -56,8 +57,9 @@ public static class ModerationServiceTestsJsonExtensions
     /// Attempts to deserialize a JSON string to a <see cref="ModerationServiceTests"/> instance.
     /// </summary>
     /// <param name="json">The JSON string to deserialize.</param>
-    /// <param name="value">Receives the deserialized instance if successful, otherwise <see langword="null"/>.</param>
+    /// <param name="value">Receives the deserialized instance if successful; otherwise, <see langword="null"/>.</param>
     /// <returns><see langword="true"/> if deserialization succeeded; otherwise, <see langword="false"/>.</returns>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="json"/> is <see langword="null"/>, empty, or whitespace.</exception>
     public static bool TryFromJson(string json, out ModerationServiceTests? value)
     {
         ArgumentException.ThrowIfNullOrEmpty(json);
