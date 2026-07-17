@@ -321,4 +321,75 @@ class JsonDemo
         Console.WriteLine($"\nCompletePaymentRequest is null: {completeRequest == null}");
     }
 }
+## ValueObjectTestsExtensions
+
+The `ValueObjectTestsExtensions` class provides extension methods for creating and asserting value objects in unit tests. It simplifies the creation of test instances for domain value objects like `Money`, `Rating`, and `Location`, and provides fluent assertion methods to verify their properties. This extension class is particularly useful for testing domain logic that depends on these value objects.
+
+### Usage Example
+
+```csharp
+using FluentAssertions;
+using MarketplaceEngine.Domain.ValueObjects;
+using MarketplaceEngine.Tests;
+
+class ValueObjectTestsDemo
+{
+    static void Main()
+    {
+        // Example 1: Create Money instances for testing
+        var money1 = new ValueObjectTests().CreateMoney(99.99m, "USD");
+        var money2 = new ValueObjectTests().CreateMoney(149.99m, "EUR");
+        
+        Console.WriteLine($"Money 1: {money1.Amount} {money1.CurrencyCode}");
+        Console.WriteLine($"Money 2: {money2.Amount} {money2.CurrencyCode}");
+        
+        // Example 2: Create Rating instances for testing
+        var rating1 = new ValueObjectTests().CreateRating(5, 100);
+        var rating2 = new ValueObjectTests().CreateRating(4, 50);
+        
+        Console.WriteLine($"\nRating 1: Score {rating1.Score}, Total Reviews {rating1.TotalReviews}");
+        Console.WriteLine($"Rating 2: Score {rating2.Score}, Total Reviews {rating2.TotalReviews}");
+        
+        // Example 3: Create Location instances for testing
+        var location1 = new ValueObjectTests().CreateLocation(
+            "New York", 
+            "New York", 
+            "US",
+            "10001",
+            40.7128,
+            -74.0060
+        );
+        
+        var location2 = new ValueObjectTests().CreateLocation(
+            "London",
+            "England",
+            "GB",
+            "SW1A 1AA"
+        );
+        
+        Console.WriteLine($"\nLocation 1: {location1.City}, {location1.State}, {location1.CountryCode}");
+        Console.WriteLine($"Location 2: {location2.City}, {location2.State}, {location2.CountryCode}");
+        
+        // Example 4: Assert Money equivalence
+        var expectedMoney = new ValueObjectTests().CreateMoney(100.00m, "USD");
+        var actualMoney = new ValueObjectTests().CreateMoney(100.00m, "USD");
+        
+        new ValueObjectTests().ShouldBeEquivalentTo(expectedMoney, actualMoney);
+        Console.WriteLine("\nMoney equivalence assertion passed!");
+        
+        // Example 5: Assert Rating equivalence
+        var expectedRating = new ValueObjectTests().CreateRating(5, 200);
+        var actualRating = new ValueObjectTests().CreateRating(5, 200);
+        
+        new ValueObjectTests().ShouldBeEquivalentTo(expectedRating, actualRating);
+        Console.WriteLine("Rating equivalence assertion passed!");
+        
+        // Example 6: Assert Location equivalence
+        var expectedLocation = new ValueObjectTests().CreateLocation("Paris", "Ile-de-France", "FR", "75001");
+        var actualLocation = new ValueObjectTests().CreateLocation("Paris", "Ile-de-France", "FR", "75001");
+        
+        new ValueObjectTests().ShouldBeEquivalentTo(expectedLocation, actualLocation);
+        Console.WriteLine("Location equivalence assertion passed!");
+    }
+}
 ```
