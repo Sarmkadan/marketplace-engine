@@ -1219,6 +1219,71 @@ var delistedListing = await listingService.DelistListingAsync(newListing.Id);
 Console.WriteLine($"Listing delisted: {delistedListing.IsActive}");
 ```
 
+## ListingsController
+
+The `ListingsController` class provides RESTful API endpoints for managing marketplace listings. It handles CRUD operations for listings, search functionality, and integrates with caching services to improve performance. The controller supports pagination, individual listing retrieval, creation, updates, and full-text search capabilities.
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.Controllers;
+using MarketplaceEngine.DTOs;
+using Microsoft.AspNetCore.Mvc;
+using System;
+using System.Net.Http;
+using System.Net.Http.Json;
+using System.Threading.Tasks;
+
+// Initialize HTTP client for API calls
+var client = new HttpClient { BaseAddress = new Uri("https://api.marketplace.example.com") };
+
+// Get paginated listings (cached for 5 minutes)
+var response = await client.GetAsync("/api/v1/listings?page=1&pageSize=20");
+var listingsPage = await response.Content.ReadFromJsonAsync<PaginatedResponse<ListingDto>>();
+Console.WriteLine($"Found {listingsPage.Total} total listings, showing page {listingsPage.Page}");
+
+// Get a specific listing by ID (cached for 2 minutes)
+var listingResponse = await client.GetAsync($"/api/v1/listings/{Guid.Parse("3fa85f64-5717-4562-b3fc-2c963f66afa6")}");
+var listing = await listingResponse.Content.ReadFromJsonAsync<ListingDto>();
+Console.WriteLine($"Retrieved listing: {listing.Title} for {listing.Price:C}");
+
+// Create a new listing
+var newListing = new CreateListingRequest
+{
+    Title = "Premium Wireless Headphones",
+    Description = "Noise-cancelling wireless headphones with 30-hour battery life",
+    Price = 299.99m,
+    SellerId = Guid.Parse("11111111-1111-1111-1111-111111111111"),
+    CategoryId = Guid.Parse("3fa85f64-5717-4562-b3fc-2c963f66afa6"),
+    ImageUrls = new List<string> { "https://example.com/image1.jpg" }
+};
+
+var createResponse = await client.PostAsJsonAsync("/api/v1/listings", newListing);
+var createdListing = await createResponse.Content.ReadFromJsonAsync<ListingDto>();
+Console.WriteLine($"Created listing: {createdListing.Id} - {createdListing.Title}");
+
+// Update an existing listing
+var updateRequest = new UpdateListingRequest
+{
+    Title = "Premium Wireless Headphones - Updated",
+    Description = "Noise-cancelling wireless headphones with 30-hour battery life and Bluetooth 5.0",
+    Price = 349.99m,
+    CategoryId = Guid.Parse("3fa85f64-5717-4562-b3fc-2c963f66afa6")
+};
+
+var updateResponse = await client.PutAsJsonAsync(
+    $"/api/v1/listings/{createdListing.Id}",
+    updateRequest
+);
+var updatedListing = await updateResponse.Content.ReadFromJsonAsync<ListingDto>();
+Console.WriteLine($"Updated listing: {updatedListing.Title}");
+
+// Search listings
+var searchResponse = await client.GetAsync("/api/v1/listings/search?q=wireless&limit=10");
+var searchResults = await searchResponse.Content.ReadFromJsonAsync<SearchResultDto>();
+Console.WriteLine($"Search found {searchResults.Results.Count} listings matching 'wireless'");
+```
+
 ## UserService
 
 The `UserService` class provides core user management functionality for the Marketplace Engine, handling user registration, authentication, profile management, account status operations, and user statistics. It manages the complete user lifecycle from initial registration through account deactivation and reactivation, including email verification and premium account features.
