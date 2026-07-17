@@ -1276,6 +1276,89 @@ var delistedListing = await listingService.DelistListingAsync(newListing.Id);
 Console.WriteLine($"Listing delisted: {delistedListing.IsActive}");
 ```
 
+## ListingServiceTests
+
+The `ListingServiceTests` class provides unit tests for the `ListingService` class, verifying that it correctly handles various business rules and authorization scenarios. It tests listing creation with validation for seller existence and active status, delisting authorization based on ownership, and featured listing marking authorization based on admin privileges.
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.Services;
+using MarketplaceEngine.Domain.Entities;
+using MarketplaceEngine.Domain.Enums;
+using MarketplaceEngine.Exceptions;
+using MarketplaceEngine.Repositories;
+using Moq;
+using System;
+using System.Threading.Tasks;
+using Xunit;
+
+// Initialize mock repositories
+var listingRepoMock = new Mock<IListingRepository>();
+var userRepoMock = new Mock<IUserRepository>();
+
+// Create the service under test
+var listingService = new ListingService(listingRepoMock.Object, userRepoMock.Object);
+
+// Test 1: CreateListingAsync throws ResourceNotFoundException when seller is not found
+var nonExistentSellerId = Guid.NewGuid();
+userRepoMock.Setup(r => r.GetByIdAsync(nonExistentSellerId))
+    .ReturnsAsync((User)null);
+
+var act1 = async () => await listingService.CreateListingAsync(
+    sellerId: nonExistentSellerId,
+    title: "Quality Acoustic Guitar",
+    description: "A well-maintained acoustic guitar suitable for beginners and intermediate players.",
+    price: 149.99m,
+    currency: "USD",
+    categoryId: Guid.NewGuid(),
+    imageUrls: new[] { "https://img.example.com/guitar.jpg" }
+);
+
+await Assert.ThrowsAsync<ResourceNotFoundException>(act1);
+
+// Test 2: CreateListingAsync throws UnauthorizedException when seller is inactive
+var inactiveSellerId = Guid.NewGuid();
+var inactiveSeller = new User { Id = inactiveSellerId, IsActive = false };
+userRepoMock.Setup(r => r.GetByIdAsync(inactiveSellerId))
+    .ReturnsAsync(inactiveSeller);
+
+var act2 = async () => await listingService.CreateListingAsync(
+    sellerId: inactiveSellerId,
+    title: "Quality Acoustic Guitar",
+    description: "A well-maintained acoustic guitar suitable for beginners and intermediate players.",
+    price: 149.99m,
+    currency: "USD",
+    categoryId: Guid.NewGuid(),
+    imageUrls: new[] { "https://img.example.com/guitar.jpg" }
+);
+
+await Assert.ThrowsAsync<UnauthorizedException>(act2);
+
+// Test 3: DelistListingAsync throws UnauthorizedException when caller is not the seller
+var ownerId = Guid.NewGuid();
+var requesterId = Guid.NewGuid();
+var listingId = Guid.NewGuid();
+
+var listing = new Listing { Id = listingId, SellerId = ownerId, Status = ListingStatus.Active };
+listingRepoMock.Setup(r => r.GetByIdAsync(listingId))
+    .ReturnsAsync(listing);
+
+var act3 = async () => await listingService.DelistListingAsync(listingId, requesterId);
+
+await Assert.ThrowsAsync<UnauthorizedException>(act3);
+
+// Test 4: MarkAsFeaturedAsync throws UnauthorizedException when caller is not an admin
+var nonAdminId = Guid.NewGuid();
+var regularUser = new User { Id = nonAdminId, Role = UserRole.User };
+userRepoMock.Setup(r => r.GetByIdAsync(nonAdminId))
+    .ReturnsAsync(regularUser);
+
+var act4 = async () => await listingService.MarkAsFeaturedAsync(listingId, nonAdminId);
+
+await Assert.ThrowsAsync<UnauthorizedException>(act4);
+```
+
 ## ListingsController
 
 The `ListingsController` class provides RESTful API endpoints for managing marketplace listings. It handles CRUD operations for listings, search functionality, and integrates with caching services to improve performance. The controller supports pagination, individual listing retrieval, creation, updates, and full-text search capabilities.
