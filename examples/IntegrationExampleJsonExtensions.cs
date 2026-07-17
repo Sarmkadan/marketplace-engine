@@ -3,7 +3,7 @@
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
-// =====================================================================
+// ===================================================================
 
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -11,14 +11,18 @@ using System.Text.Json.Serialization;
 namespace MarketplaceEngine.Examples;
 
 /// <summary>
-/// Provides System.Text.Json serialization extensions for the IntegrationExample type.
-/// Enables serialization and deserialization of integration example metadata.
+/// Provides System.Text.Json serialization extensions for the <see cref="IntegrationExample"/> type.
+/// Enables serialization and deserialization of integration example metadata with camelCase naming convention.
 /// </summary>
 public static class IntegrationExampleJsonExtensions
 {
     /// <summary>
-    /// JSON serialization options with camelCase naming convention.
+    /// Gets the JSON serialization options with camelCase naming convention for IntegrationExample instances.
     /// </summary>
+    /// <remarks>
+    /// Uses Web defaults with camelCase property naming, ignores null values when writing,
+    /// and does not indent JSON output by default.
+    /// </remarks>
     private static readonly JsonSerializerOptions _jsonSerializerOptions = new(JsonSerializerDefaults.Web)
     {
         WriteIndented = false,
@@ -39,9 +43,7 @@ public static class IntegrationExampleJsonExtensions
 
         var options = indented
             ? new JsonSerializerOptions(_jsonSerializerOptions)
-            {
-                WriteIndented = true
-            }
+            { WriteIndented = true }
             : _jsonSerializerOptions;
 
         return JsonSerializer.Serialize(value, options);
