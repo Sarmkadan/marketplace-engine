@@ -2040,6 +2040,52 @@ var act8 = async () => await reviewService.RemoveReviewAsync(
 await Assert.ThrowsAsync<UnauthorizedException>(act8);
 ```
 
+## DateTimeUtilityJsonExtensions
+
+The `DateTimeUtilityJsonExtensions` class provides System.Text.Json serialization and deserialization extensions for DateTime values. It enables consistent JSON handling of DateTime values across the application by providing strongly-typed methods for converting DateTime to/from JSON strings, with automatic UTC conversion and proper error handling.
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.Utilities;
+using System;
+
+// Serialize a DateTime to JSON
+var now = DateTime.UtcNow;
+string json = now.ToJson();
+Console.WriteLine($"Serialized DateTime: {json}");
+
+// Serialize with indentation for readability
+string indentedJson = now.ToJson(indented: true);
+Console.WriteLine($"\nIndented JSON:\n{indentedJson}");
+
+// Deserialize a JSON string to DateTime
+string dateJson = "\"2024-06-19T14:30:00Z\"";
+var parsedDate = DateTimeUtilityJsonExtensions.FromJson(dateJson);
+Console.WriteLine($"\nDeserialized DateTime: {parsedDate}");
+
+// Use try pattern for safe deserialization
+if (DateTimeUtilityJsonExtensions.TryFromJson(dateJson, out var safeDate))
+{
+    Console.WriteLine($"Safe deserialization successful: {safeDate}");
+}
+else
+{
+    Console.WriteLine("Failed to deserialize DateTime");
+}
+
+// Handle null/empty JSON safely
+string nullJson = null;
+var nullDate = DateTimeUtilityJsonExtensions.FromJson(nullJson);
+Console.WriteLine($"\nNull JSON result: {nullDate}");
+
+// The converter automatically converts local times to UTC
+var localTime = new DateTime(2024, 6, 19, 14, 30, 0, DateTimeKind.Local);
+string localJson = localTime.ToJson();
+var convertedTime = DateTimeUtilityJsonExtensions.FromJson(localJson);
+Console.WriteLine($"\nLocal time converted to UTC: {convertedTime?.Kind}");
+```
+
 ## CollaborativeFilteringEngineExtensions
 
 The `CollaborativeFilteringEngineExtensions` class provides extension methods for the collaborative filtering recommendation engine that enable personalized listing recommendations, similar-item discovery, trending content identification, and user affinity calculations. These extensions integrate with the core recommendation system to provide flexible APIs for generating various types of recommendation feeds based on user behavior and listing interactions.
