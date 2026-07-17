@@ -33,19 +33,9 @@ public static class PaymentExtensions
     /// Calculates the total fees deducted from the payment amount.
     /// </summary>
     /// <param name="payment">The payment instance.</param>
-    /// <returns>The total fee amount, or null if not available.</returns>
+    /// <returns>The total fee amount, or null if the platform fee is not available.</returns>
     /// <exception cref="ArgumentNullException">Thrown when payment is null.</exception>
-    public static Money? GetTotalFees(this Payment payment)
-    {
-        ArgumentNullException.ThrowIfNull(payment);
-
-        if (payment.Amount is null || payment.PlatformFee is null)
-        {
-            return null;
-        }
-
-        return payment.Amount.Subtract(payment.PlatformFee);
-    }
+    public static Money? GetTotalFees(this Payment payment) => payment.PlatformFee;
 
     /// <summary>
     /// Determines whether the payment is refundable based on its current status.
