@@ -1339,6 +1339,98 @@ var deleteResponse = await client.DeleteAsync($"/api/v1/messages/{sentMessage.Id
 Console.WriteLine("Message deleted successfully");
 ```
 
+## PaymentsController
+
+The `PaymentsController` class provides RESTful API endpoints for managing the complete payment lifecycle in the marketplace. It handles payment initiation, processing, escrow management, completion, cancellation, and refunds. The controller integrates with the `PaymentService` to process transactions and manage funds throughout the purchase workflow, ensuring secure handling of buyer funds and seller payouts.
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.Controllers;
+using MarketplaceEngine.DTOs;
+using Microsoft.AspNetCore.Mvc;
+using System;
+using System.Net.Http;
+using System.Net.Http.Json;
+using System.Threading.Tasks;
+
+// Initialize HTTP client for API calls
+var client = new HttpClient { BaseAddress = new Uri("https://api.marketplace.example.com") };
+
+// Initiate a new payment for a listing purchase
+var initiateRequest = new InitiatePaymentRequest
+{
+  ListingId = Guid.Parse("3fa85f64-5717-4562-b3fc-2c963f66afa6"),
+  BuyerId = Guid.Parse("11111111-1111-1111-1111-111111111111"),
+  PaymentMethod = "CreditCard",
+  Currency = "USD"
+};
+
+var initiateResponse = await client.PostAsJsonAsync("/api/v1/payments", initiateRequest);
+var initiatedPayment = await initiateResponse.Content.ReadFromJsonAsync<PaymentDto>();
+Console.WriteLine($"Payment initiated: {initiatedPayment.Id} - {initiatedPayment.Amount:C}");
+
+// Get payment details by ID
+var paymentResponse = await client.GetAsync($"/api/v1/payments/{initiatedPayment.Id}");
+var payment = await paymentResponse.Content.ReadFromJsonAsync<PaymentDto>();
+Console.WriteLine($"Retrieved payment: Status={payment.Status}, Amount={payment.Amount:C}");
+
+// Start processing the payment (transition to processing state)
+var processResponse = await client.PostAsync($"/api/v1/payments/{initiatedPayment.Id}/process?requesterId={Guid.Parse("11111111-1111-1111-1111-111111111111")}", null);
+var processingPayment = await processResponse.Content.ReadFromJsonAsync<PaymentDto>();
+Console.WriteLine($"Payment processing started: {processingPayment.Status}");
+
+// Complete the payment after external provider confirmation
+var completeRequest = new CompletePaymentRequest
+{
+  ExternalTransactionId = "txn_1234567890"
+};
+
+var completeResponse = await client.PostAsJsonAsync($"/api/v1/payments/{initiatedPayment.Id}/complete", completeRequest);
+var completedPayment = await completeResponse.Content.ReadFromJsonAsync<PaymentDto>();
+Console.WriteLine($"Payment completed: {completedPayment.Status}");
+
+// Move payment to escrow (funds held until delivery confirmed)
+var escrowResponse = await client.PostAsync($"/api/v1/payments/{initiatedPayment.Id}/escrow", null);
+var escrowPayment = await escrowResponse.Content.ReadFromJsonAsync<PaymentDto>();
+Console.WriteLine($"Payment moved to escrow: {escrowPayment.Status}");
+
+// Release funds to seller after successful delivery confirmation
+var releaseRequest = new CompletePaymentRequest
+{
+  ExternalTransactionId = "payout_9876543210"
+};
+
+var releaseResponse = await client.PostAsJsonAsync($"/api/v1/payments/{initiatedPayment.Id}/escrow/release", releaseRequest);
+var releasedPayment = await releaseResponse.Content.ReadFromJsonAsync<PaymentDto>();
+Console.WriteLine($"Funds released to seller: {releasedPayment.Status}");
+
+// Get all payments made by a specific buyer
+var buyerPaymentsResponse = await client.GetAsync($"/api/v1/payments/buyer/{Guid.Parse("11111111-1111-1111-1111-111111111111")}");
+var buyerPayments = await buyerPaymentsResponse.Content.ReadFromJsonAsync<List<PaymentDto>>();
+Console.WriteLine($"Buyer has {buyerPayments.Count} payments");
+
+// Get all payments received by a specific seller
+var sellerPaymentsResponse = await client.GetAsync($"/api/v1/payments/seller/{Guid.Parse("22222222-2222-2222-2222-222222222222")}");
+var sellerPayments = await sellerPaymentsResponse.Content.ReadFromJsonAsync<List<PaymentDto>>();
+Console.WriteLine($"Seller has {sellerPayments.Count} payments");
+
+// Cancel a pending payment
+var cancelResponse = await client.PostAsync($"/api/v1/payments/{initiatedPayment.Id}/cancel?requesterId={Guid.Parse("11111111-1111-1111-1111-111111111111")}", null);
+var cancelledPayment = await cancelResponse.Content.ReadFromJsonAsync<PaymentDto>();
+Console.WriteLine($"Payment cancelled: {cancelledPayment.Status}");
+
+// Refund a completed payment
+var refundRequest = new RefundPaymentRequest
+{
+  Reason = "Buyer requested refund due to item not as described"
+};
+
+var refundResponse = await client.PostAsJsonAsync($"/api/v1/payments/{initiatedPayment.Id}/refund", refundRequest);
+var refundedPayment = await refundResponse.Content.ReadFromJsonAsync<PaymentDto>();
+Console.WriteLine($"Payment refunded: {refundedPayment.Status}");
+```
+
 ## UserService
 
 The `UserService` class provides core user management functionality for the Marketplace Engine, handling user registration, authentication, profile management, account status operations, and user statistics. It manages the complete user lifecycle from initial registration through account deactivation and reactivation, including email verification and premium account features.
