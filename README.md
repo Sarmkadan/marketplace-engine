@@ -397,6 +397,89 @@ Console.WriteLine($"Generated {recommendations.Count} recommendations");
 Console.WriteLine($"Total estimated value: {recommendations.Sum(r => r.Price):C}");
 ```
 
+## ReviewDto
+
+The `ReviewDto` class is a data transfer object that represents a review submitted by a user about a seller or listing. It contains all essential information about the review including the reviewer details, rating score, comment text, status, timestamps, and optional seller reply. This DTO is used in API responses to display review information to users and calculate seller ratings.
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.DTOs;
+using System;
+
+// Create a review DTO for a seller
+var reviewDto = new ReviewDto
+{
+    Id = Guid.Parse("12345678-1234-1234-1234-123456789012"),
+    ReviewerId = Guid.Parse("11111111-1111-1111-1111-111111111111"),
+    ReviewerName = "John Doe",
+    SellerId = Guid.Parse("22222222-2222-2222-2222-222222222222"),
+    ListingId = Guid.Parse("33333333-3333-3333-3333-333333333333"),
+    Score = 5,
+    Comment = "Excellent seller! Fast shipping and great communication.",
+    Status = "Approved",
+    SellerReply = "Thank you for your positive review! We appreciate your business.",
+    CreatedAt = DateTime.UtcNow.AddDays(-2),
+    UpdatedAt = DateTime.UtcNow.AddHours(-1)
+};
+
+// Display review information
+Console.WriteLine($"Review ID: {reviewDto.Id}");
+Console.WriteLine($"Reviewer: {reviewDto.RevieweeName} ({reviewDto.RevieweeId})");
+Console.WriteLine($"Score: {reviewDto.Score}/5");
+Console.WriteLine($"Comment: {reviewDto.Comment}");
+Console.WriteLine($"Status: {reviewDto.Status}");
+Console.WriteLine($"Created: {reviewDto.CreatedAt:yyyy-MM-dd HH:mm:ss}");
+Console.WriteLine($"Last updated: {reviewDto.UpdatedAt?.ToString("yyyy-MM-dd HH:mm:ss") ?? "Never updated"}");
+Console.WriteLine($"Seller reply: {reviewDto.SellerReply ?? "None"}");
+
+// Create a collection of reviews for a seller
+var sellerReviews = new List<ReviewDto>
+{
+    new ReviewDto
+    {
+        Id = Guid.NewGuid(),
+        ReviewerId = Guid.NewGuid(),
+        ReviewerName = "Alice Johnson",
+        SellerId = Guid.Parse("22222222-2222-2222-2222-222222222222"),
+        ListingId = Guid.NewGuid(),
+        Score = 5,
+        Comment = "Perfect transaction! Item exactly as described.",
+        Status = "Approved",
+        CreatedAt = DateTime.UtcNow.AddDays(-5)
+    },
+    new ReviewDto
+    {
+        Id = Guid.NewGuid(),
+        ReviewerId = Guid.NewGuid(),
+        ReviewerName = "Bob Smith",
+        SellerId = Guid.Parse("22222222-2222-2222-2222-222222222222"),
+        ListingId = Guid.NewGuid(),
+        Score = 4,
+        Comment = "Good seller, but shipping took longer than expected.",
+        Status = "Approved",
+        CreatedAt = DateTime.UtcNow.AddDays(-3)
+    },
+    new ReviewDto
+    {
+        Id = Guid.NewGuid(),
+        ReviewerId = Guid.NewGuid(),
+        ReviewerName = "Charlie Brown",
+        SellerId = Guid.Parse("22222222-2222-2222-2222-222222222222"),
+        ListingId = null,  // Review for seller without specific listing
+        Score = 3,
+        Comment = "Average experience. Item met basic expectations.",
+        Status = "Approved",
+        CreatedAt = DateTime.UtcNow.AddDays(-1)
+    }
+};
+
+// Calculate average rating from reviews
+var averageScore = sellerReviews.Average(r => r.Score);
+Console.WriteLine($"\nAverage rating: {averageScore:F1}/5 stars");
+Console.WriteLine($"Total reviews: {sellerReviews.Count}");
+```
+
 ## MessageDto
 
 The `MessageDto` class is a data transfer object used for API responses when retrieving messages between users in the marketplace. It represents a simplified view of a message containing the message content, sender and recipient information, read status, and creation timestamp. This DTO is commonly used in messaging APIs to provide a clean, serialized format for message data.
