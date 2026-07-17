@@ -791,6 +791,103 @@ listingToUpdate.UpdatedAt = DateTime.UtcNow;
 Console.WriteLine($"\nUpdated price for {listingToUpdate.Title}: {listingToUpdate.Price:C}");
 ```
 
+## ListingService
+
+The `ListingService` class provides core functionality for managing product listings within the marketplace. It handles listing creation, updates, visibility control, interest tracking, delisting, and retrieval operations including seller-specific, featured, recent, and paginated listings. The service also manages listing statistics and featured status.
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.Services;
+using MarketplaceEngine.Domain.Entities;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+
+// Initialize listing service (typically via dependency injection)
+var listingService = new ListingService(listingRepository, categoryRepository);
+
+// Create a new listing
+var newListing = await listingService.CreateListingAsync(
+    sellerId: Guid.Parse("11111111-1111-1111-1111-111111111111"),
+    title: "Premium Wireless Headphones",
+    description: "Noise-cancelling wireless headphones with 30-hour battery life",
+    price: 299.99m,
+    categoryId: Guid.Parse("3fa85f64-5717-4562-b3fc-2c963f66afa6"),
+    isFeatured: true
+);
+
+Console.WriteLine($"Created listing: {newListing.Id} - {newListing.Title}");
+
+// Update a listing (returns previous category ID)
+var (updatedListing, previousCategoryId) = await listingService.UpdateListingAsync(
+    listingId: newListing.Id,
+    newTitle: "Premium Wireless Headphones - Updated",
+    newDescription: "Noise-cancelling wireless headphones with 30-hour battery life and Bluetooth 5.0",
+    newPrice: 349.99m,
+    newCategoryId: Guid.Parse("3fa85f64-5717-4562-b3fc-2c963f66afa6")
+);
+
+Console.WriteLine($"Updated listing from category {previousCategoryId} to {updatedListing.CategoryId}");
+
+// Set listing visibility
+var visibleListing = await listingService.SetListingVisibilityAsync(
+    listingId: newListing.Id,
+    isVisible: false
+);
+
+Console.WriteLine($"Listing visibility set to: {visibleListing.IsVisible}");
+
+// Get listing with view tracking
+var listingWithView = await listingService.GetListingWithViewAsync(newListing.Id);
+Console.WriteLine($"Listing views: {listingWithView.ViewCount}");
+
+// Record user interest in a listing
+var interestedListing = await listingService.RecordInterestAsync(
+    listingId: newListing.Id,
+    userId: Guid.Parse("22222222-2222-2222-2222-222222222222")
+);
+
+Console.WriteLine($"User interest recorded for listing");
+
+// Get all listings for a specific seller
+var sellerListings = await listingService.GetSellerListingsAsync(
+    Guid.Parse("11111111-1111-1111-1111-111111111111")
+);
+Console.WriteLine($"Seller has {sellerListings.Count} active listings");
+
+// Get featured listings
+var featuredListings = await listingService.GetFeaturedListingsAsync(count: 10);
+Console.WriteLine($"Found {featuredListings.Count} featured listings");
+
+// Get recent listings
+var recentListings = await listingService.GetRecentListingsAsync(count: 20);
+Console.WriteLine($"Found {recentListings.Count} recent listings");
+
+// Get paginated listings with total count
+var (paginatedListings, totalCount) = await listingService.GetPaginatedListingsAsync(
+    page: 1,
+    pageSize: 25,
+    categoryId: Guid.Parse("3fa85f64-5717-4562-b3fc-2c963f66afa6")
+);
+Console.WriteLine($"Page 1: {paginatedListings.Count} of {totalCount} total listings");
+
+// Mark a listing as featured
+var featuredListing = await listingService.MarkAsFeaturedAsync(
+    listingId: newListing.Id,
+    featuredUntil: DateTime.UtcNow.AddDays(7)
+);
+Console.WriteLine($"Listing marked as featured until: {featuredListing.FeaturedUntil}");
+
+// Get total listing count
+var totalListings = await listingService.GetTotalListingCountAsync();
+Console.WriteLine($"Total listings in marketplace: {totalListings}");
+
+// Delist a listing
+var delistedListing = await listingService.DelistListingAsync(newListing.Id);
+Console.WriteLine($"Listing delisted: {delistedListing.IsActive}");
+```
+
 ## UserDto
 
 The `UserDto` class represents a user in the marketplace system. It contains essential user information including identification, profile details, seller metrics, and account status. This DTO is used throughout the application for user profiles, seller dashboards, and API responses.
