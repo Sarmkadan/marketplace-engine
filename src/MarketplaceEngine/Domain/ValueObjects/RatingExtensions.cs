@@ -11,9 +11,10 @@ public static class RatingExtensions
     /// <param name="rating">The current rating.</param>
     /// <param name="otherRating">The other rating to compare with.</param>
     /// <returns>true if the rating has improved; otherwise, false.</returns>
-    /// <exception cref="ArgumentNullException">Thrown if <paramref name="otherRating"/> is null.</exception>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="rating"/> or <paramref name="otherRating"/> is null.</exception>
     public static bool HasImproved(this Rating rating, Rating otherRating)
     {
+        ArgumentNullException.ThrowIfNull(rating);
         ArgumentNullException.ThrowIfNull(otherRating);
 
         return rating.AverageRating > otherRating.AverageRating;
@@ -26,10 +27,12 @@ public static class RatingExtensions
     /// <param name="ratings">The list of ratings to compare with.</param>
     /// <returns>The rating percentile.</returns>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="ratings"/> is null.</exception>
-    /// <exception cref="ArgumentException">Thrown if <paramref name="ratings"/> is empty.</exception>
+    /// <exception cref="ArgumentException">Thrown if <paramref name="ratings"/> is empty or if <paramref name="rating"/> is not found in the list.</exception>
     public static double CalculatePercentile(this Rating rating, IReadOnlyList<Rating> ratings)
     {
+        ArgumentNullException.ThrowIfNull(rating);
         ArgumentNullException.ThrowIfNull(ratings);
+
         if (ratings.Count == 0)
         {
             throw new ArgumentException("Ratings list cannot be empty.", nameof(ratings));
@@ -37,6 +40,11 @@ public static class RatingExtensions
 
         var sortedRatings = ratings.OrderBy(r => r.AverageRating).ToList();
         var index = sortedRatings.IndexOf(rating);
+
+        if (index == -1)
+        {
+            throw new ArgumentException("Rating not found in the provided list.", nameof(rating));
+        }
 
         return ((double)index / (sortedRatings.Count - 1)) * 100;
     }
@@ -46,19 +54,16 @@ public static class RatingExtensions
     /// </summary>
     /// <param name="rating">The rating to get the description for.</param>
     /// <returns>A string describing the rating.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="rating"/> is null.</exception>
     public static string GetDescription(this Rating rating)
     {
-        if (rating.AverageRating < 2)
+        ArgumentNullException.ThrowIfNull(rating);
+
+        return rating.AverageRating switch
         {
-            return "Poor";
-        }
-        else if (rating.AverageRating < 4)
-        {
-            return "Average";
-        }
-        else
-        {
-            return "Excellent";
-        }
+            < 2 => "Poor",
+            < 4 => "Average",
+            _ => "Excellent"
+        };
     }
 }
