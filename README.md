@@ -1284,6 +1284,61 @@ var searchResults = await searchResponse.Content.ReadFromJsonAsync<SearchResultD
 Console.WriteLine($"Search found {searchResults.Results.Count} listings matching 'wireless'");
 ```
 
+## MessagesController
+
+The `MessagesController` class provides RESTful API endpoints for managing user-to-user messaging within the marketplace. It handles conversation management, message retrieval, sending, marking messages as read, and deletion. The controller integrates with the `MessagingService` for business logic and uses cursor-based pagination for conversations to prevent duplicate messages when new messages are added concurrently.
+
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.Controllers;
+using MarketplaceEngine.DTOs;
+using Microsoft.AspNetCore.Mvc;
+using System;
+using System.Net.Http;
+using System.Net.Http.Json;
+using System.Threading.Tasks;
+
+// Initialize HTTP client for API calls
+var client = new HttpClient { BaseAddress = new Uri("https://api.marketplace.example.com") };
+
+// Get conversations for a user (cached)
+var conversationsResponse = await client.GetAsync($"/api/v1/messages/conversations/{Guid.Parse("11111111-1111-1111-1111-111111111111")}");
+var conversations = await conversationsResponse.Content.ReadFromJsonAsync<List<ConversationDto>>();
+Console.WriteLine($"User has {conversations.Count} conversations");
+
+// Get messages in a conversation with cursor-based pagination
+var messagesResponse = await client.GetAsync($"/api/v1/messages/conversations/{Guid.Parse("22222222-2222-2222-2222-222222222222")}/messages?pageSize=25");
+var messagesPage = await messagesResponse.Content.ReadFromJsonAsync<CursorPaginatedResponse<MessageDto>>();
+Console.WriteLine($"Found {messagesPage.Items.Count} messages in conversation");
+
+// Send a new message
+var newMessage = new SendMessageRequest
+{
+  SenderId = Guid.Parse("11111111-1111-1111-1111-111111111111"),
+  RecipientId = Guid.Parse("22222222-2222-2222-2222-222222222222"),
+  Content = "Hello! I'm interested in your premium wireless headphones. Could you provide more details about the condition and shipping options?"
+};
+
+var sendResponse = await client.PostAsJsonAsync("/api/v1/messages", newMessage);
+var sentMessage = await sendResponse.Content.ReadFromJsonAsync<MessageDto>();
+Console.WriteLine($"Message sent: {sentMessage.Id} - {sentMessage.Body}");
+
+// Get a specific message by ID
+var messageResponse = await client.GetAsync($"/api/v1/messages/{sentMessage.Id}");
+var message = await messageResponse.Content.ReadFromJsonAsync<MessageDto>();
+Console.WriteLine($"Retrieved message: {message.Body}");
+
+// Mark a message as read
+var markReadResponse = await client.PutAsync($"/api/v1/messages/{sentMessage.Id}/read", null);
+Console.WriteLine("Message marked as read");
+
+// Delete a message
+var deleteResponse = await client.DeleteAsync($"/api/v1/messages/{sentMessage.Id}");
+Console.WriteLine("Message deleted successfully");
+```
+
 ## UserService
 
 The `UserService` class provides core user management functionality for the Marketplace Engine, handling user registration, authentication, profile management, account status operations, and user statistics. It manages the complete user lifecycle from initial registration through account deactivation and reactivation, including email verification and premium account features.
