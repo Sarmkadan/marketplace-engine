@@ -2,7 +2,7 @@
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
-// =============================================================================
+// =====================================================================
 
 using System;
 using System.Collections.Generic;
@@ -27,13 +27,6 @@ public static class PermissionServiceValidation
 
         var problems = new List<string>();
 
-        // Validate logger dependency
-        // ILogger<T> cannot be null when constructed via DI, but we validate it anyway
-        if (value.GetType().GetField("_logger", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)?.GetValue(value) is null)
-        {
-            problems.Add("Logger dependency is null.");
-        }
-
         return problems.AsReadOnly();
     }
 
@@ -42,9 +35,10 @@ public static class PermissionServiceValidation
     /// </summary>
     /// <param name="value">The permission service to check.</param>
     /// <returns><see langword="true"/> if the service is valid; otherwise, <see langword="false"/>.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="value"/> is null.</exception>
     public static bool IsValid(this PermissionService? value)
     {
-        return value?.Validate().Count == 0;
+        return value is not null && value.Validate().Count == 0;
     }
 
     /// <summary>
@@ -60,10 +54,7 @@ public static class PermissionServiceValidation
         var problems = value.Validate();
         if (problems.Count > 0)
         {
-            throw new ArgumentException(
-                $"PermissionService is not valid. Problems:\n- {
-                    string.Join("\n- ", problems)
-                }".TrimEnd());
+            throw new ArgumentException($"PermissionService is not valid. Problems:\n- {string.Join("\n- ", problems)}".TrimEnd());
         }
     }
 }
