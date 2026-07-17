@@ -20,6 +20,12 @@ public static class ValidationUtilityJsonExtensions
         WriteIndented = false
     };
 
+    private static readonly JsonSerializerOptions _jsonSerializerOptionsIndented = new(JsonSerializerDefaults.Web)
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        WriteIndented = true
+    };
+
     /// <summary>
     /// Serializes validation-related data to a JSON string using camelCase property naming.
     /// </summary>
@@ -30,15 +36,7 @@ public static class ValidationUtilityJsonExtensions
     public static string ToJson(this object value, bool indented = false)
     {
         ArgumentNullException.ThrowIfNull(value);
-
-        var options = indented
-            ? new JsonSerializerOptions(_jsonSerializerOptions)
-            {
-                WriteIndented = true
-            }
-            : _jsonSerializerOptions;
-
-        return JsonSerializer.Serialize(value, options);
+        return JsonSerializer.Serialize(value, indented ? _jsonSerializerOptionsIndented : _jsonSerializerOptions);
     }
 
     /// <summary>
@@ -48,14 +46,11 @@ public static class ValidationUtilityJsonExtensions
     /// <param name="json">The JSON string to deserialize.</param>
     /// <returns>The deserialized object, or null if the JSON is null or empty.</returns>
     /// <exception cref="JsonException">Thrown when the JSON is invalid or cannot be deserialized.</exception>
-    public static T? FromJson<T>(string json)
+    public static T? FromJson<T>(string? json)
     {
-        if (string.IsNullOrWhiteSpace(json))
-        {
-            return default;
-        }
-
-        return JsonSerializer.Deserialize<T>(json, _jsonSerializerOptions);
+        return string.IsNullOrWhiteSpace(json)
+            ? default
+            : JsonSerializer.Deserialize<T>(json, _jsonSerializerOptions);
     }
 
     /// <summary>
@@ -65,10 +60,9 @@ public static class ValidationUtilityJsonExtensions
     /// <param name="json">The JSON string to deserialize.</param>
     /// <param name="value">The deserialized object, or null if deserialization fails.</param>
     /// <returns>True if deserialization succeeds; otherwise, false.</returns>
-    public static bool TryFromJson<T>(string json, out T? value)
+    public static bool TryFromJson<T>(string? json, out T? value)
     {
         value = default;
-
         if (string.IsNullOrWhiteSpace(json))
         {
             return false;
