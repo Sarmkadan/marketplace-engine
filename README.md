@@ -826,6 +826,63 @@ Console.WriteLine($"Total reviews: {sellerReviews.Count}");
 
 The `ReviewService` class provides essential functionality for managing user and listing reviews within the marketplace. It enables users to submit, retrieve, flag, and remove reviews, while also offering analytical insights like average scores and review distribution for sellers. This service acts as the central hub for all review-related operations in the application layer.
 
+## RecommendationsController
+
+The `RecommendationsController` class provides RESTful API endpoints for the collaborative filtering recommendation engine. It exposes personalised feeds, similar-item panels, trending galleries, category-affinity recommendations, and activity tracking. The controller integrates with the `RecommendationService` to deliver personalised content based on user behavior and listing interactions.
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.Controllers;
+using MarketplaceEngine.DTOs;
+using MarketplaceEngine.Recommendations;
+using Microsoft.AspNetCore.Mvc;
+using System;
+using System.Net.Http;
+using System.Net.Http.Json;
+using System.Threading.Tasks;
+
+// Initialize HTTP client for API calls
+var client = new HttpClient { BaseAddress = new Uri("https://api.marketplace.example.com") };
+
+// Get trending listings (public feed)
+var trendingResponse = await client.GetAsync("/api/v2/recommendations/trending?count=15");
+var trendingFeed = await trendingResponse.Content.ReadFromJsonAsync<RecommendationFeedDto>();
+Console.WriteLine($"Trending feed contains {trendingFeed.Items.Count} items");
+
+// Get personalised recommendations for a user
+var userId = Guid.Parse("11111111-1111-1111-1111-111111111111");
+var userResponse = await client.GetAsync($"/api/v2/recommendations/users/{userId}?count=20");
+var userFeed = await userResponse.Content.ReadFromJsonAsync<RecommendationFeedDto>();
+Console.WriteLine($"Personalised feed generated {userFeed.Items.Count} recommendations");
+Console.WriteLine($"Is personalised: {userFeed.IsPersonalised}");
+
+// Get category-affinity recommendations for a user
+var affinityResponse = await client.GetAsync($"/api/v2/recommendations/users/{userId}/affinity?count=15");
+var affinityFeed = await affinityResponse.Content.ReadFromJsonAsync<RecommendationFeedDto>();
+Console.WriteLine($"Category-affinity feed contains {affinityFeed.Items.Count} items");
+
+// Get similar listings for a specific listing
+var listingId = Guid.Parse("33333333-3333-3333-3333-333333333333");
+var similarResponse = await client.GetAsync($"/api/v2/recommendations/listings/{listingId}/similar?count=10");
+var similarFeed = await similarResponse.Content.ReadFromJsonAsync<RecommendationFeedDto>();
+Console.WriteLine($"Similar items panel contains {similarFeed.Items.Count} items");
+
+// Track user activity to improve future recommendations
+await client.PostAsJsonAsync("/api/v2/recommendations/track", new TrackActivityRequest
+{
+    UserId = userId,
+    ListingId = listingId,
+    SignalType = SignalType.View.ToString()
+});
+Console.WriteLine("User activity tracked successfully");
+
+// Get diagnostics snapshot for monitoring
+var diagnosticsResponse = await client.GetAsync("/api/v2/recommendations/diagnostics");
+var diagnostics = await diagnosticsResponse.Content.ReadFromJsonAsync<RecommendationDiagnosticsReport>();
+Console.WriteLine($"Diagnostics: {diagnostics.TrackerStats.TotalSignals} signals tracked");
+```
+
 ### Usage Example
 
 ```csharp
