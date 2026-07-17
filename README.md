@@ -2194,6 +2194,54 @@ Console.WriteLine($"Listing exists: {exists}");
 await listingRepository.DeleteAsync(newListing.Id);
 Console.WriteLine("Listing deleted.");
 
+## StringUtility
+
+The `StringUtility` class provides a collection of static helper methods for common string manipulation tasks throughout the Marketplace Engine. It includes utilities for text formatting, truncation, case conversion, slug generation, repetition, masking sensitive data, and removing special characters, making it easier to maintain consistent string handling across the application.
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.Utilities;
+using System;
+
+// Truncate a long string to a maximum length
+var longText = "This is a very long product description that needs to be shortened for display purposes";
+var truncated = StringUtility.Truncate(longText, 50);
+Console.WriteLine($"Truncated: {truncated}...");
+
+// Convert a string to title case (e.g., "product listing" -> "Product Listing")
+var titleCase = StringUtility.ToTitleCase("product listing");
+Console.WriteLine($"Title case: {titleCase}");
+
+// Generate a URL-friendly slug from a title
+var slug = StringUtility.ToSlug("My Awesome Product Listing");
+Console.WriteLine($"Slug: {slug}");
+
+// Repeat a string multiple times
+var repeated = StringUtility.Repeat("abc", 3);
+Console.WriteLine($"Repeated: {repeated}");
+
+// Check if a string contains any of multiple substrings
+var containsAny = StringUtility.ContainsAny("Hello World", new[] {"hello", "world", "test"});
+Console.WriteLine($"Contains any: {containsAny}");
+
+// Mask an email address (shows first 3 chars + domain)
+var maskedEmail = StringUtility.MaskEmail("user@example.com");
+Console.WriteLine($"Masked email: {maskedEmail}");
+
+// Mask a phone number (shows last 4 digits)
+var maskedPhone = StringUtility.MaskPhoneNumber("+1 (555) 123-4567");
+Console.WriteLine($"Masked phone: {maskedPhone}");
+
+// Remove special characters from a string
+var cleanText = StringUtility.RemoveSpecialCharacters("Product #1 - 2024!");
+Console.WriteLine($"Clean text: {cleanText}");
+
+// Generate a random string of specified length
+var randomString = StringUtility.GenerateRandomString(10);
+Console.WriteLine($"Random string: {randomString}");
+```
+
 ## MappingUtility
 
 The `MappingUtility` class provides a centralized mechanism for converting between domain model objects and their corresponding Data Transfer Objects (DTOs). This separation ensures that internal domain logic is decoupled from API representation, facilitating easier maintenance and API evolution.
