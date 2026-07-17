@@ -1,5 +1,12 @@
 # Marketplace Engine
 
+## Architecture
+
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for an overview of the system:
+project layout, the in-memory storage model, the DI/composition root, middleware
+pipeline, event bus, background jobs, extension points and known limitations.
+
+
 ## MarketplaceConfiguration
 
 The `MarketplaceConfiguration` class provides centralized configuration settings for the Marketplace Engine, including cache management, API rate limiting, background job scheduling, and dropshipping integration. It consolidates common application parameters into a single, strongly-typed configuration object.
