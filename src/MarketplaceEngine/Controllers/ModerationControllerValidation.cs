@@ -25,12 +25,7 @@ public static class ModerationControllerValidation
     {
         ArgumentNullException.ThrowIfNull(value);
 
-        var errors = new List<string>();
-
-        // The controller is valid if it's not null - the DI container ensures dependencies are injected
-        // This method provides a consistent validation API for all controllers
-
-        return errors.AsReadOnly();
+        return Array.Empty<string>();
     }
 
     /// <summary>
@@ -96,10 +91,7 @@ public static class ModerationControllerValidation
     /// <param name="page">The page number (1-based).</param>
     /// <param name="pageSize">The number of items per page (1-100).</param>
     /// <returns>True if valid; otherwise, false.</returns>
-    public static bool IsValidPagination(int page, int pageSize)
-    {
-        return ValidatePagination(page, pageSize).Count == 0;
-    }
+    public static bool IsValidPagination(int page, int pageSize) => ValidatePagination(page, pageSize).Count == 0;
 
     /// <summary>
     /// Ensures pagination parameters are valid for report retrieval methods.
@@ -141,10 +133,7 @@ public static class ModerationControllerValidation
     /// </summary>
     /// <param name="id">The report identifier.</param>
     /// <returns>True if valid; otherwise, false.</returns>
-    public static bool IsValidReportId(Guid id)
-    {
-        return ValidateReportId(id).Count == 0;
-    }
+    public static bool IsValidReportId(Guid id) => ValidateReportId(id).Count == 0;
 
     /// <summary>
     /// Ensures a report ID parameter is valid.
@@ -168,8 +157,11 @@ public static class ModerationControllerValidation
     /// </summary>
     /// <param name="actionNotes">The action notes to validate.</param>
     /// <returns>A list of human-readable validation problems, or an empty list if valid.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if actionNotes is null.</exception>
     public static IReadOnlyList<string> ValidateActionNotes(string? actionNotes)
     {
+        ArgumentNullException.ThrowIfNull(actionNotes);
+
         var errors = new List<string>();
 
         if (string.IsNullOrWhiteSpace(actionNotes))
@@ -189,18 +181,18 @@ public static class ModerationControllerValidation
     /// </summary>
     /// <param name="actionNotes">The action notes to check.</param>
     /// <returns>True if valid; otherwise, false.</returns>
-    public static bool IsValidActionNotes(string? actionNotes)
-    {
-        return ValidateActionNotes(actionNotes).Count == 0;
-    }
+    public static bool IsValidActionNotes(string? actionNotes) => ValidateActionNotes(actionNotes).Count == 0;
 
     /// <summary>
     /// Ensures action notes are valid.
     /// </summary>
     /// <param name="actionNotes">The action notes to validate.</param>
+    /// <exception cref="ArgumentNullException">Thrown if actionNotes is null.</exception>
     /// <exception cref="ArgumentException">Thrown if validation fails, containing a list of problems.</exception>
     public static void EnsureValidActionNotes(string? actionNotes)
     {
+        ArgumentNullException.ThrowIfNull(actionNotes);
+
         var errors = ValidateActionNotes(actionNotes);
         if (errors.Count > 0)
         {
@@ -216,8 +208,11 @@ public static class ModerationControllerValidation
     /// </summary>
     /// <param name="rejectionReason">The rejection reason to validate.</param>
     /// <returns>A list of human-readable validation problems, or an empty list if valid.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if rejectionReason is null.</exception>
     public static IReadOnlyList<string> ValidateRejectionReason(string? rejectionReason)
     {
+        ArgumentNullException.ThrowIfNull(rejectionReason);
+
         var errors = new List<string>();
 
         if (string.IsNullOrWhiteSpace(rejectionReason))
@@ -237,18 +232,18 @@ public static class ModerationControllerValidation
     /// </summary>
     /// <param name="rejectionReason">The rejection reason to check.</param>
     /// <returns>True if valid; otherwise, false.</returns>
-    public static bool IsValidRejectionReason(string? rejectionReason)
-    {
-        return ValidateRejectionReason(rejectionReason).Count == 0;
-    }
+    public static bool IsValidRejectionReason(string? rejectionReason) => ValidateRejectionReason(rejectionReason).Count == 0;
 
     /// <summary>
     /// Ensures rejection reasons are valid.
     /// </summary>
     /// <param name="rejectionReason">The rejection reason to validate.</param>
+    /// <exception cref="ArgumentNullException">Thrown if rejectionReason is null.</exception>
     /// <exception cref="ArgumentException">Thrown if validation fails, containing a list of problems.</exception>
     public static void EnsureValidRejectionReason(string? rejectionReason)
     {
+        ArgumentNullException.ThrowIfNull(rejectionReason);
+
         var errors = ValidateRejectionReason(rejectionReason);
         if (errors.Count > 0)
         {
@@ -264,8 +259,11 @@ public static class ModerationControllerValidation
     /// </summary>
     /// <param name="reason">The report reason to validate.</param>
     /// <returns>A list of human-readable validation problems, or an empty list if valid.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if reason is null.</exception>
     public static IReadOnlyList<string> ValidateReportReason(string? reason)
     {
+        ArgumentNullException.ThrowIfNull(reason);
+
         var errors = new List<string>();
 
         if (string.IsNullOrWhiteSpace(reason))
@@ -289,18 +287,18 @@ public static class ModerationControllerValidation
     /// </summary>
     /// <param name="reason">The report reason to check.</param>
     /// <returns>True if valid; otherwise, false.</returns>
-    public static bool IsValidReportReason(string? reason)
-    {
-        return ValidateReportReason(reason).Count == 0;
-    }
+    public static bool IsValidReportReason(string? reason) => ValidateReportReason(reason).Count == 0;
 
     /// <summary>
     /// Ensures report reasons are valid.
     /// </summary>
     /// <param name="reason">The report reason to validate.</param>
+    /// <exception cref="ArgumentNullException">Thrown if reason is null.</exception>
     /// <exception cref="ArgumentException">Thrown if validation fails, containing a list of problems.</exception>
     public static void EnsureValidReportReason(string? reason)
     {
+        ArgumentNullException.ThrowIfNull(reason);
+
         var errors = ValidateReportReason(reason);
         if (errors.Count > 0)
         {
@@ -317,8 +315,11 @@ public static class ModerationControllerValidation
     /// <param name="listingIds">The list of listing IDs to validate.</param>
     /// <param name="action">The moderation action to validate.</param>
     /// <returns>A list of human-readable validation problems, or an empty list if valid.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if listingIds or action is null.</exception>
     public static IReadOnlyList<string> ValidateBulkModeration(IReadOnlyList<Guid>? listingIds, string? action)
     {
+        ArgumentNullException.ThrowIfNull(action);
+
         var errors = new List<string>();
 
         if (listingIds is null || listingIds.Count == 0)
@@ -355,25 +356,26 @@ public static class ModerationControllerValidation
     /// <param name="action">The moderation action to validate.</param>
     /// <returns>True if valid; otherwise, false.</returns>
     public static bool IsValidBulkModeration(IReadOnlyList<Guid>? listingIds, string? action)
-    {
-        return ValidateBulkModeration(listingIds, action).Count == 0;
-    }
+        => ValidateBulkModeration(listingIds, action).Count == 0;
 
     /// <summary>
     /// Ensures bulk moderation requests are valid.
     /// </summary>
     /// <param name="listingIds">The list of listing IDs to validate.</param>
     /// <param name="action">The moderation action to validate.</param>
+    /// <exception cref="ArgumentNullException">Thrown if action is null.</exception>
     /// <exception cref="ArgumentException">Thrown if validation fails, containing a list of problems.</exception>
     public static void EnsureValidBulkModeration(IReadOnlyList<Guid>? listingIds, string? action)
     {
+        ArgumentNullException.ThrowIfNull(action);
+
         var errors = ValidateBulkModeration(listingIds, action);
         if (errors.Count > 0)
         {
             throw new ArgumentException(
                 "Bulk moderation request is invalid: " +
                 string.Join(" ", errors),
-                nameof(listingIds));
+                nameof(action));
         }
     }
 }
