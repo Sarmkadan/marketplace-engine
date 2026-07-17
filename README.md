@@ -1850,153 +1850,77 @@ await messagingService.DeleteMessageAsync(
 Console.WriteLine("Message deleted successfully");
 ```
 
-## ModerationService
 
-The `ModerationService` class provides comprehensive content moderation functionality for the Marketplace Engine. It handles reporting inappropriate content or user behavior, managing moderation workflows, assigning reports to moderators, and applying disciplinary actions such as content removal, user suspensions, and bans. The service supports both automated and manual moderation processes with detailed reporting and tracking capabilities.
+## PaymentRepository
+
+The `PaymentRepository` class provides data access operations for payment entities within the marketplace system. It handles CRUD operations for payments, as well as query methods for retrieving payments by buyer, seller, listing, or status, along with support for pagination and total revenue calculation.
 
 ### Usage Example
 
 ```csharp
-using MarketplaceEngine.Services;
-using MarketplaceEngine.DTOs;
+using MarketplaceEngine.Repositories;
+using MarketplaceEngine.Domain.Entities;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
-// Initialize moderation service (typically via dependency injection)
-var moderationService = new ModerationService();
+// Initialize payment repository
+var paymentRepository = new PaymentRepository();
 
-// Report a user for inappropriate behavior
-var userReport = await moderationService.ReportUserAsync(
-    reporterUserId: Guid.Parse("11111111-1111-1111-1111-111111111111"),
-    reportedUserId: Guid.Parse("22222222-2222-2222-2222-222222222222"),
-    reason: "Harassment and inappropriate comments"
+// Add a new payment
+var newPayment = await paymentRepository.AddAsync(new Payment
+{
+    BuyerId = Guid.Parse("11111111-1111-1111-1111-111111111111"),
+    SellerId = Guid.Parse("22222222-2222-2222-2222-222222222222"),
+    ListingId = Guid.Parse("33333333-3333-3333-3333-333333333333"),
+    Amount = 129.99m,
+    Status = "Pending",
+    CreatedAt = DateTime.UtcNow
+});
+
+Console.WriteLine($"Payment added: {newPayment.Id}");
+
+// Get payment by ID
+var payment = await paymentRepository.GetByIdAsync(newPayment.Id);
+Console.WriteLine($"Retrieved payment amount: {payment?.Amount:C}");
+
+// Get total revenue for all payments
+var totalRevenue = await paymentRepository.GetTotalRevenueAsync();
+Console.WriteLine($"Total revenue: {totalRevenue:C}");
+
+// Get payments for a buyer
+var buyerPayments = await paymentRepository.GetByBuyerIdAsync(Guid.Parse("11111111-1111-1111-1111-111111111111"));
+Console.WriteLine($"Buyer has {buyerPayments.Count} payments");
+
+// Get payments by status
+var pendingPayments = await paymentRepository.GetByStatusAsync("Pending");
+Console.WriteLine($"Pending payments: {pendingPayments.Count}");
+
+// Get paginated payments
+var (payments, totalCount) = await paymentRepository.GetPagedAsync(
+    page: 1,
+    pageSize: 10
 );
+Console.WriteLine($"Page 1 contains {payments.Count} of {totalCount} total payments");
 
-Console.WriteLine($"User report created: {userReport.Id}");
-Console.WriteLine($"Status: {userReport.Status}");
+// Check if a payment exists
+var exists = await paymentRepository.ExistsAsync(newPayment.Id);
+Console.WriteLine($"Payment exists: {exists}");
 
-// Report a listing for policy violation
-var listingReport = await moderationService.ReportListingAsync(
-    reporterUserId: Guid.Parse("33333333-3333-3333-3333-333333333333"),
-    listingId: Guid.Parse("44444444-4444-4444-4444-444444444444"),
-    reason: "Counterfeit goods detected"
-);
+// Update a payment
+newPayment.Status = "Completed";
+await paymentRepository.UpdateAsync(newPayment);
+Console.WriteLine("Payment updated to Completed");
 
-Console.WriteLine($"Listing report created: {listingReport.Id}");
+// Get payment count
+var paymentCount = await paymentRepository.CountAsync();
+Console.WriteLine($"Total payments: {paymentCount}");
 
-// Assign a report to a moderator
-var assignedReport = await moderationService.AssignReportAsync(
-    reportId: userReport.Id,
-    moderatorId: Guid.Parse("55555555-5555-5555-5555-55555555555")
-);
-
-Console.WriteLine($"Report assigned to moderator: {assignedReport.AssignedTo}");
-
-// Approve a report (content is appropriate)
-var approvedReport = await moderationService.ApproveReportAsync(
-    reportId: listingReport.Id,
-    moderatorId: Guid.Parse("55555555-5555-5555-5555-55555555555"),
-    notes: "Content reviewed and found to be compliant with policies"
-);
-
-Console.WriteLine($"Report approved: {approvedReport.Status}");
-
-// Reject a report (content is acceptable)
-var rejectedReport = await moderationService.RejectReportAsync(
-    reportId: userReport.Id,
-    moderatorId: Guid.Parse("55555555-5555-5555-5555-55555555555"),
-    notes: "Report does not violate community guidelines"
-);
-
-Console.WriteLine($"Report rejected: {rejectedReport.Status}");
-
-// Remove inappropriate content
-var removedContent = await moderationService.RemoveContentAsync(
-    reportId: listingReport.Id,
-    moderatorId: Guid.Parse("55555555-5555-5555-5555-55555555555"),
-    removalReason: "Counterfeit goods - policy violation"
-);
-
-Console.WriteLine($"Content removed: {removedContent.Status}");
-
-// Suspend a user account temporarily
-var suspendedUser = await moderationService.SuspendUserAsync(
-    userId: Guid.Parse("22222222-2222-2222-2222-222222222222"),
-    moderatorId: Guid.Parse("55555555-5555-5555-5555-55555555555"),
-    durationDays: 7,
-    reason: "Multiple policy violations and harassment"
-);
-
-Console.WriteLine($"User suspended for {suspendedUser.SuspensionDurationDays} days");
-
-// Ban a user permanently
-var bannedUser = await moderationService.BanUserAsync(
-    userId: Guid.Parse("66666666-6666-6666-6666-666666666666"),
-    moderatorId: Guid.Parse("55555555-5555-5555-5555-55555555555"),
-    reason: "Severe policy violations and repeated offenses"
-);
-
-Console.WriteLine($"User banned permanently: {bannedUser.IsBanned}");
-
-// Escalate a report to higher authority
-var escalatedReport = moderationService.EscalateReportAsync(
-    reportId: userReport.Id,
-    escalationReason: "Potential violation of terms of service requiring legal review"
-);
-
-Console.WriteLine("Report escalated for further review");
-
-// Apply bulk action to multiple reports
-await moderationService.ApplyBulkActionAsync(
-    reportIds: new[] { userReport.Id, listingReport.Id },
-    action: "Approve",
-    moderatorId: Guid.Parse("55555555-5555-5555-5555-55555555555"),
-    notes: "Batch processing of routine reports"
-);
-
-Console.WriteLine("Bulk action applied to multiple reports");
-
-// Get pending reports for moderator dashboard
-var pendingReports = await moderationService.GetPendingReportsAsync();
-Console.WriteLine($"Found {pendingReports.Count} pending reports");
-
-// Get a specific report by ID
-var specificReport = await moderationService.GetReportAsync(userReport.Id);
-Console.WriteLine($"Retrieved report: {specificReport.Id} - {specificReport.Reason}");
-
-// Update report status and notes
-var updatedReport = await moderationService.UpdateReportAsync(
-    reportId: userReport.Id,
-    newStatus: "InReview",
-    moderatorNotes: "Additional evidence required for decision"
-);
-
-Console.WriteLine($"Report updated: {updatedReport.Status}");
-
-// Create a new moderation report directly
-var newReport = await moderationService.CreateReportAsync(
-    reporterUserId: Guid.Parse("77777777-7777-7777-7777-777777777777"),
-    reportedUserId: Guid.Parse("88888888-8888-8888-8888-888888888888"),
-    reason: "Suspicious activity detected",
-    reportType: "UserBehavior"
-);
-
-Console.WriteLine($"New report created: {newReport.Id}");
-
-// Get reports by status
-var inReviewReports = await moderationService.GetReportsByStatusAsync("InReview");
-Console.WriteLine($"In-review reports: {inReviewReports.Count}");
-
-// Get moderator assignments
-var assignments = await moderationService.GetModeratorAssignmentsAsync(
-    moderatorId: Guid.Parse("55555555-5555-5555-5555-55555555555")
-);
-Console.WriteLine($"Moderator has {assignments.Count} assigned reports");
-
-// Get report statistics for dashboard
-var stats = await moderationService.GetReportStatsAsync();
-Console.WriteLine($"Dashboard stats - Pending: {stats.pending}, InReview: {stats.inReview}, Resolved: {stats.resolved}");
+// Delete a payment
+await paymentRepository.DeleteAsync(newPayment.Id);
+Console.WriteLine("Payment deleted");
 ```
+
 
 ## PricePoint
 
