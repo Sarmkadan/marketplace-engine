@@ -1649,6 +1649,84 @@ await userRepository.DeleteAsync(newUser.Id);
 Console.WriteLine("User deleted");
 ```
 
+## ModerationController
+
+The `ModerationController` class provides RESTful API endpoints for managing moderation tasks including report review and action enforcement. It handles the complete moderation workflow from report creation through review and resolution. The controller integrates with the `ModerationService` to process reports and enforce actions against listings or users, while managing cache invalidation to ensure data consistency after moderation actions.
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.Controllers;
+using MarketplaceEngine.DTOs;
+using Microsoft.AspNetCore.Mvc;
+using System;
+using System.Net.Http;
+using System.Net.Http.Json;
+using System.Threading.Tasks;
+
+// Initialize HTTP client for API calls
+var client = new HttpClient { BaseAddress = new Uri("https://api.marketplace.example.com") };
+
+// Create a moderation report for inappropriate content
+var reportRequest = new CreateReportRequest
+{
+    TargetListingId = Guid.Parse("3fa85f64-5717-4562-b3fc-2c963f66afa6"), // Listing to report
+    TargetUserId = Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"), // Optional: user to report
+    ReporterId = Guid.Parse("cccccccc-cccc-cccc-cccc-cccccccccccc"), // User reporting the content
+    Reason = "This listing contains inappropriate content and violates our terms of service"
+};
+
+var createReportResponse = await client.PostAsJsonAsync("/api/v1/moderation/reports", reportRequest);
+var createdReport = await createReportResponse.Content.ReadFromJsonAsync<ModerationReportDto>();
+Console.WriteLine($"Report created: {createdReport.Id} - Status: {createdReport.Status}");
+
+// Get pending reports for moderator review (not cached - real-time updates)
+var pendingReportsResponse = await client.GetAsync("/api/v1/moderation/reports?page=1&pageSize=20");
+var pendingReports = await pendingReportsResponse.Content.ReadFromJsonAsync<PaginatedResponse<ModerationReportDto>>();
+Console.WriteLine($"Found {pendingReports.Total} pending reports");
+
+// Get detailed report information including related entities
+var reportDetailsResponse = await client.GetAsync($"/api/v1/moderation/reports/{createdReport.Id}");
+var reportDetails = await reportDetailsResponse.Content.ReadFromJsonAsync<ModerationReportDetailsDto>();
+Console.WriteLine($"Report details: {reportDetails.Reason}");
+Console.WriteLine($"Target listing: {reportDetails.TargetListingId}");
+Console.WriteLine($"Target user: {reportDetails.TargetUserId}");
+
+// Approve a report and take moderation action
+var approveRequest = new ApproveReportRequest
+{
+    ActionNotes = "Listing removed due to violation of content policy - inappropriate images detected"
+};
+
+var approveResponse = await client.PostAsJsonAsync($"/api/v1/moderation/reports/{createdReport.Id}/approve", approveRequest);
+var approveResult = await approveResponse.Content.ReadFromJsonAsync<object>();
+Console.WriteLine($"Report approved: {approveResult}");
+
+// Get moderation statistics for dashboard
+var statsResponse = await client.GetAsync("/api/v1/moderation/statistics");
+var statistics = await statsResponse.Content.ReadFromJsonAsync<ModerationStatsDto>();
+Console.WriteLine($"Moderation Statistics:");
+Console.WriteLine($"- Pending reports: {statistics.PendingReports}");
+Console.WriteLine($"- Approved reports: {statistics.ApprovedReports}");
+Console.WriteLine($"- Rejected reports: {statistics.RejectedReports}");
+Console.WriteLine($"- Average resolution time: {statistics.AverageResolutionTime} hours");
+
+// Bulk moderation action (moderator/admin only)
+var bulkRequest = new BulkModerationRequest
+{
+    ListingIds = new List<Guid> {
+        Guid.Parse("3fa85f64-5717-4562-b3fc-2c963f66afa6"),
+        Guid.Parse("4fa85f64-5717-4562-b3fc-2c963f66afa7")
+    },
+    Action = "remove" // Action can be: approve, remove, escalate
+};
+
+// Note: In real usage, include X-User-Role header: "Moderator" or "Administrator"
+var bulkResponse = await client.PostAsJsonAsync("/api/v1/moderation/bulk", bulkRequest);
+var bulkResult = await bulkResponse.Content.ReadFromJsonAsync<BulkModerationResponse>();
+Console.WriteLine($"Bulk action completed. Success: {bulkResult.Results.Count(r => r.Success)}/{bulkResult.Results.Count}");
+```
+
 ## CategoriesController
 
 The `CategoriesController` class provides RESTful API endpoints for managing product categories in the marketplace. It handles CRUD operations for categories, category hierarchy management, and retrieval of category statistics. The controller supports retrieving individual categories, category trees, listing counts, and category-specific statistics including average prices and view metrics.
@@ -1716,6 +1794,84 @@ var updateRequest = new UpdateCategoryRequest
 var updateResponse = await client.PutAsJsonAsync($"/api/v1/categories/{createdCategory.Id}", updateRequest);
 var updatedCategory = await updateResponse.Content.ReadFromJsonAsync<CategoryDto>();
 Console.WriteLine($"Updated category: {updatedCategory.Name}");
+```
+
+## ModerationController
+
+The `ModerationController` class provides RESTful API endpoints for managing moderation tasks including report review and action enforcement. It handles the complete moderation workflow from report creation through review and resolution. The controller integrates with the `ModerationService` to process reports and enforce actions against listings or users, while managing cache invalidation to ensure data consistency after moderation actions.
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.Controllers;
+using MarketplaceEngine.DTOs;
+using Microsoft.AspNetCore.Mvc;
+using System;
+using System.Net.Http;
+using System.Net.Http.Json;
+using System.Threading.Tasks;
+
+// Initialize HTTP client for API calls
+var client = new HttpClient { BaseAddress = new Uri("https://api.marketplace.example.com") };
+
+// Create a moderation report for inappropriate content
+var reportRequest = new CreateReportRequest
+{
+    TargetListingId = Guid.Parse("3fa85f64-5717-4562-b3fc-2c963f66afa6"), // Listing to report
+    TargetUserId = Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"), // Optional: user to report
+    ReporterId = Guid.Parse("cccccccc-cccc-cccc-cccc-cccccccccccc"), // User reporting the content
+    Reason = "This listing contains inappropriate content and violates our terms of service"
+};
+
+var createReportResponse = await client.PostAsJsonAsync("/api/v1/moderation/reports", reportRequest);
+var createdReport = await createReportResponse.Content.ReadFromJsonAsync<ModerationReportDto>();
+Console.WriteLine($"Report created: {createdReport.Id} - Status: {createdReport.Status}");
+
+// Get pending reports for moderator review (not cached - real-time updates)
+var pendingReportsResponse = await client.GetAsync("/api/v1/moderation/reports?page=1&pageSize=20");
+var pendingReports = await pendingReportsResponse.Content.ReadFromJsonAsync<PaginatedResponse<ModerationReportDto>>();
+Console.WriteLine($"Found {pendingReports.Total} pending reports");
+
+// Get detailed report information including related entities
+var reportDetailsResponse = await client.GetAsync($"/api/v1/moderation/reports/{createdReport.Id}");
+var reportDetails = await reportDetailsResponse.Content.ReadFromJsonAsync<ModerationReportDetailsDto>();
+Console.WriteLine($"Report details: {reportDetails.Reason}");
+Console.WriteLine($"Target listing: {reportDetails.TargetListingId}");
+Console.WriteLine($"Target user: {reportDetails.TargetUserId}");
+
+// Approve a report and take moderation action
+var approveRequest = new ApproveReportRequest
+{
+    ActionNotes = "Listing removed due to violation of content policy - inappropriate images detected"
+};
+
+var approveResponse = await client.PostAsJsonAsync($"/api/v1/moderation/reports/{createdReport.Id}/approve", approveRequest);
+var approveResult = await approveResponse.Content.ReadFromJsonAsync<object>();
+Console.WriteLine($"Report approved: {approveResult}");
+
+// Get moderation statistics for dashboard
+var statsResponse = await client.GetAsync("/api/v1/moderation/statistics");
+var statistics = await statsResponse.Content.ReadFromJsonAsync<ModerationStatsDto>();
+Console.WriteLine($"Moderation Statistics:");
+Console.WriteLine($"- Pending reports: {statistics.PendingReports}");
+Console.WriteLine($"- Approved reports: {statistics.ApprovedReports}");
+Console.WriteLine($"- Rejected reports: {statistics.RejectedReports}");
+Console.WriteLine($"- Average resolution time: {statistics.AverageResolutionTime} hours");
+
+// Bulk moderation action (moderator/admin only)
+var bulkRequest = new BulkModerationRequest
+{
+    ListingIds = new List<Guid> {
+        Guid.Parse("3fa85f64-5717-4562-b3fc-2c963f66afa6"),
+        Guid.Parse("4fa85f64-5717-4562-b3fc-2c963f66afa7")
+    },
+    Action = "remove" // Action can be: approve, remove, escalate
+};
+
+// Note: In real usage, include X-User-Role header: "Moderator" or "Administrator"
+var bulkResponse = await client.PostAsJsonAsync("/api/v1/moderation/bulk", bulkRequest);
+var bulkResult = await bulkResponse.Content.ReadFromJsonAsync<BulkModerationResponse>();
+Console.WriteLine($"Bulk action completed. Success: {bulkResult.Results.Count(r => r.Success)}/{bulkResult.Results.Count}");
 ```
 
 ## CategoriesController
