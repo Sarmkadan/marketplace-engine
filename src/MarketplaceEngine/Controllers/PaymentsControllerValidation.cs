@@ -2,9 +2,10 @@
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
-// =============================================================================
+// =====================================================================
 
-using System.Globalization;
+using System;
+using System.Collections.Generic;
 
 namespace MarketplaceEngine.Controllers;
 
@@ -24,7 +25,19 @@ public static class PaymentsControllerValidation
     {
         ArgumentNullException.ThrowIfNull(value);
 
-        return Array.Empty<string>();
+        var errors = new List<string>();
+
+        if (value.GetPaymentService() is null)
+        {
+            errors.Add("PaymentService dependency is not initialized.");
+        }
+
+        if (value.GetLogger() is null)
+        {
+            errors.Add("Logger dependency is not initialized.");
+        }
+
+        return errors.AsReadOnly();
     }
 
     /// <summary>
@@ -46,5 +59,12 @@ public static class PaymentsControllerValidation
     public static void EnsureValid(this PaymentsController value)
     {
         ArgumentNullException.ThrowIfNull(value);
+
+        var errors = value.Validate();
+        if (errors.Count > 0)
+        {
+            throw new ArgumentException(
+                $"PaymentsController validation failed:{Environment.NewLine}- {string.Join($"{Environment.NewLine}- ", errors)}");
+        }
     }
 }

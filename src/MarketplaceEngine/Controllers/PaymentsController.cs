@@ -28,6 +28,16 @@ public class PaymentsController : ControllerBase
     }
 
     /// <summary>
+    /// Gets the PaymentService dependency for validation purposes.
+    /// </summary>
+    internal PaymentService GetPaymentService() => _paymentService;
+
+    /// <summary>
+    /// Gets the logger dependency for validation purposes.
+    /// </summary>
+    internal ILogger<PaymentsController> GetLogger() => _logger;
+
+    /// <summary>
     /// Initiates a new payment for a listing purchase.
     /// </summary>
     [HttpPost]
