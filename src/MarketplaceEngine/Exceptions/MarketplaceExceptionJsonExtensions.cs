@@ -63,13 +63,16 @@ public static class MarketplaceExceptionJsonExtensions
     /// <param name="json">The JSON string to deserialize.</param>
     /// <param name="value">Receives the deserialized exception if successful.</param>
     /// <returns>True if deserialization succeeded; otherwise, false.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="json"/> is null.</exception>
     public static bool TryFromJson(string json, out MarketplaceException? value)
     {
+        ArgumentNullException.ThrowIfNull(json);
+
         value = null;
 
         if (string.IsNullOrEmpty(json))
         {
-            return true;
+            return false;
         }
 
         try
