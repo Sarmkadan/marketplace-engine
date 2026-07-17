@@ -822,6 +822,63 @@ Console.WriteLine($"\nAverage rating: {averageScore:F1}/5 stars");
 Console.WriteLine($"Total reviews: {sellerReviews.Count}");
 ```
 
+## ReviewExtensions
+
+The `ReviewExtensions` class provides extension methods for working with review entities in the marketplace system. These utilities help determine review sentiment, calculate review age, check for seller responses, format status information, and generate summary text for reviews. The extensions are designed to simplify common review-related operations throughout the application.
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.Domain.Models;
+using System;
+
+// Create a recent review
+var recentReview = new Review
+{
+    Id = Guid.NewGuid(),
+    ReviewerId = Guid.Parse("11111111-1111-1111-1111-111111111111"),
+    SellerId = Guid.Parse("22222222-2222-2222-2222-222222222222"),
+    ListingId = Guid.Parse("33333333-3333-3333-3333-333333333333"),
+    Score = 5,
+    Comment = "Excellent seller! Fast shipping and great communication.",
+    Status = "Approved",
+    SellerReply = "Thank you for your positive review! We appreciate your business.",
+    CreatedAt = DateTime.UtcNow.AddDays(-2)
+};
+
+// Check if review is positive
+bool isPositive = recentReview.IsPositive();
+Console.WriteLine($"Is positive review: {isPositive}"); // Is positive review: True
+
+// Check if review is negative
+bool isNegative = recentReview.IsNegative();
+Console.WriteLine($"Is negative review: {isNegative}"); // Is negative review: False
+
+// Get review age in days
+int ageInDays = recentReview.GetAgeInDays();
+Console.WriteLine($"Review age: {ageInDays} days"); // Review age: 2 days
+
+// Check if seller has replied
+bool hasReply = recentReview.HasSellerReply();
+Console.WriteLine($"Has seller reply: {hasReply}"); // Has seller reply: True
+
+// Get formatted status string
+string statusString = recentReview.GetStatusString();
+Console.WriteLine($"Status: {statusString}"); // Status: Approved
+
+// Get score percentage
+string scorePercentage = recentReview.GetScorePercentage();
+Console.WriteLine($"Score percentage: {scorePercentage}"); // Score percentage: 100%
+
+// Check if review is recent (within 7 days)
+bool isRecent = recentReview.IsRecent(7);
+Console.WriteLine($"Is recent review: {isRecent}"); // Is recent review: True
+
+// Get comment summary (first 50 characters)
+string commentSummary = recentReview.GetCommentSummary();
+Console.WriteLine($"Comment summary: {commentSummary}"); // Comment summary: Excellent seller! Fast shipping and great...
+```
+
 ## ReviewService
 
 The `ReviewService` class provides essential functionality for managing user and listing reviews within the marketplace. It enables users to submit, retrieve, flag, and remove reviews, while also offering analytical insights like average scores and review distribution for sellers. This service acts as the central hub for all review-related operations in the application layer.
