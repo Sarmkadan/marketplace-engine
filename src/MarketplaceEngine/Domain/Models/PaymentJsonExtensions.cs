@@ -14,7 +14,7 @@ namespace MarketplaceEngine.Domain.Models;
 /// </summary>
 public static class PaymentJsonExtensions
 {
-    private static readonly JsonSerializerOptions _options = new(JsonSerializerDefaults.Web)
+    private static readonly JsonSerializerOptions _jsonOptions = new(JsonSerializerDefaults.Web)
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
         WriteIndented = false,
@@ -32,7 +32,11 @@ public static class PaymentJsonExtensions
     {
         ArgumentNullException.ThrowIfNull(value);
 
-        return JsonSerializer.Serialize(value, indented ? GetIndentedOptions() : _options);
+        var options = indented
+            ? new JsonSerializerOptions(_jsonOptions) { WriteIndented = true }
+            : _jsonOptions;
+
+        return JsonSerializer.Serialize(value, options);
     }
 
     /// <summary>
@@ -40,49 +44,48 @@ public static class PaymentJsonExtensions
     /// </summary>
     /// <param name="json">The JSON string to deserialize.</param>
     /// <returns>The deserialized payment, or null if the JSON is null or empty.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="json"/> is null.</exception>
     /// <exception cref="JsonException">Thrown when the JSON is invalid or cannot be deserialized.</exception>
-    public static Payment? FromJson(string json)
+    public static Payment? FromJson(string? json)
     {
-        if (string.IsNullOrWhiteSpace(json))
+        if (string.IsNullOrEmpty(json))
         {
             return null;
         }
 
-        return JsonSerializer.Deserialize<Payment>(json, _options);
+        return JsonSerializer.Deserialize<Payment>(json, _jsonOptions);
     }
 
     /// <summary>
     /// Attempts to deserialize a JSON string to a <see cref="Payment"/> object.
     /// </summary>
     /// <param name="json">The JSON string to deserialize.</param>
-    /// <param name="value">The deserialized payment, or null if deserialization fails.</param>
-    /// <returns>True if deserialization succeeds; otherwise, false.</returns>
+    /// <param name="value">Receives the deserialized payment if successful.</param>
+    /// <returns>True if deserialization succeeded; otherwise, false.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="json"/> is null.</exception>
     public static bool TryFromJson(string json, out Payment? value)
+    {
+        ArgumentNullException.ThrowIfNull(json);
+        return TryFromJsonCore(json, out value);
+    }
+
+    private static bool TryFromJsonCore(string json, out Payment? value)
     {
         value = null;
 
-        if (string.IsNullOrWhiteSpace(json))
+        if (string.IsNullOrEmpty(json))
         {
-            return true;
+            return false;
         }
 
         try
         {
-            value = JsonSerializer.Deserialize<Payment>(json, _options);
-            return true;
+            value = JsonSerializer.Deserialize<Payment>(json, _jsonOptions);
+            return value is not null;
         }
         catch (JsonException)
         {
             return false;
         }
-    }
-
-    private static JsonSerializerOptions GetIndentedOptions()
-    {
-        var options = new JsonSerializerOptions(_options)
-        {
-            WriteIndented = true
-        };
-        return options;
     }
 }
