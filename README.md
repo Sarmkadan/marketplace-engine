@@ -877,6 +877,102 @@ var refundedPayment = await paymentService.RefundPaymentAsync(newPayment.Id);
 Console.WriteLine($"Payment refunded: {refundedPayment.Status}");
 ```
 
+## MessagingService
+
+The `MessagingService` class provides comprehensive messaging functionality for user-to-user communication within the marketplace. It handles sending messages, managing conversations, marking messages as read/unread, flagging inappropriate content, adding replies, and performing administrative tasks like cleaning up old messages. The service supports both direct user messaging and listing-specific conversations.
+
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.Services;
+using MarketplaceEngine.Domain.Models;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+
+// Initialize messaging service
+var messagingService = new MessagingService(messageRepository, userRepository);
+
+// Send a message between users
+var newMessage = await messagingService.SendMessageAsync(
+    senderId: Guid.Parse("11111111-1111-1111-1111-111111111111"),
+    recipientId: Guid.Parse("22222222-2222-2222-2222-222222222222"),
+    subject: "Interested in your listing",
+    body: "Hello! I'm interested in your premium wireless headphones. Could you provide more details about the condition and shipping options?",
+    listingId: Guid.Parse("33333333-3333-3333-3333-333333333333")
+);
+
+Console.WriteLine($"Message sent: {newMessage.Id}");
+Console.WriteLine($"Subject: {newMessage.Subject}");
+Console.WriteLine($"Status: {newMessage.Status}");
+
+// Get received messages for a user
+var receivedMessages = await messagingService.GetReceivedMessagesAsync(
+    Guid.Parse("22222222-2222-2222-2222-222222222222")
+);
+Console.WriteLine($"\nReceived {receivedMessages.Count} messages");
+
+// Get unread messages
+var unreadMessages = await messagingService.GetUnreadMessagesAsync(
+    Guid.Parse("22222222-2222-2222-2222-222222222222")
+);
+Console.WriteLine($"Unread messages: {unreadMessages.Count}");
+
+// Get conversation between two users
+var conversation = await messagingService.GetConversationAsync(
+    Guid.Parse("11111111-1111-1111-1111-111111111111"),
+    Guid.Parse("22222222-2222-2222-2222-222222222222")
+);
+Console.WriteLine($"\nConversation contains {conversation.Count} messages");
+
+// Mark message as read
+var readMessage = await messagingService.MarkAsReadAsync(newMessage.Id);
+Console.WriteLine($"Message marked as read: {readMessage.IsRead}");
+
+// Add a reply to a message
+var reply = await messagingService.AddReplyAsync(
+    parentMessageId: newMessage.Id,
+    senderId: Guid.Parse("22222222-2222-2222-2222-222222222222"),
+    body: "Thank you for your interest! The headphones are in excellent condition and I offer free shipping."
+);
+Console.WriteLine($"Reply sent: {reply.Id}");
+
+// Get messages about a specific listing
+var listingMessages = await messagingService.GetListingMessagesAsync(
+    Guid.Parse("33333333-3333-3333-3333-333333333333")
+);
+Console.WriteLine($"\nListing has {listingMessages.Count} messages");
+
+// Get paginated messages
+var paginatedMessages = await messagingService.GetPaginatedMessagesAsync(
+    userId: Guid.Parse("22222222-2222-2222-2222-222222222222"),
+    pageNumber: 1,
+    pageSize: 25
+);
+Console.WriteLine($"\nPage 1 contains {paginatedMessages.items.Count} messages (total: {paginatedMessages.total})");
+
+// Get conversation count
+var conversationCount = await messagingService.GetConversationCountAsync(
+    Guid.Parse("22222222-2222-2222-2222-222222222222")
+);
+Console.WriteLine($"User has {conversationCount} conversations");
+
+// Flag inappropriate message (admin functionality)
+var flaggedMessage = await messagingService.FlagMessageAsync(
+    messageId: newMessage.Id,
+    flaggerId: Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa")
+);
+Console.WriteLine($"Message flagged: {flaggedMessage.IsFlagged}");
+
+// Delete a message
+await messagingService.DeleteMessageAsync(
+    messageId: newMessage.Id,
+    requesterId: Guid.Parse("11111111-1111-1111-1111-111111111111")
+);
+Console.WriteLine("Message deleted successfully");
+```
+
 ## ErrorHandlingMiddleware
 
 The `ErrorHandlingMiddleware` class provides centralized exception handling for the Marketplace Engine API. It catches all unhandled exceptions, logs them appropriately, and returns consistent error responses to clients without exposing sensitive error details in production. This middleware prevents the need for scattered exception handling logic across controllers and ensures a uniform error format throughout the application.
