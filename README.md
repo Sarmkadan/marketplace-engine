@@ -2106,6 +2106,65 @@ Console.WriteLine($"Search results: {searchResults.Count} users found");
 var topSellers = await userRepository.GetTopSellersAsync(limit: 10);
 Console.WriteLine($"Top sellers: {topSellers.Count} sellers found");
 
+## UtilityTests
+
+The `UtilityTests` class provides comprehensive utility functions for common marketplace operations including input validation, text processing, and data formatting. It includes methods for email validation, price validation, input sanitization, text truncation, URL-friendly slug generation, email masking, pagination calculations, and various string utilities that help maintain data quality and consistency across the marketplace system.
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.Tests;
+using System;
+
+// Initialize utility tests helper
+var utilityTests = new UtilityTests();
+
+// Validate email addresses
+var validEmail = utilityTests.IsValidEmail_VariousInputs_ReturnsExpectedResult("test@example.com");
+Console.WriteLine($"Valid email test: {validEmail}");
+
+var invalidEmail = utilityTests.IsValidEmail_VariousInputs_ReturnsExpectedResult("invalid-email");
+Console.WriteLine($"Invalid email test: {invalidEmail}");
+
+// Validate price minimum threshold
+var validPrice = utilityTests.IsValidPrice_BelowMinimum_ReturnsFalse(25.00m);
+Console.WriteLine($"Price validation (25.00): {validPrice}");
+
+var invalidPrice = utilityTests.IsValidPrice_BelowMinimum_ReturnsFalse(0.50m);
+Console.WriteLine($"Price validation (0.50): {invalidPrice}");
+
+// Sanitize user input to remove control characters
+var sanitizedInput = utilityTests.SanitizeInput_WithNullControlCharacters_RemovesThem("Hello WorldTest");
+Console.WriteLine($"Sanitized input: {sanitizedInput}");
+
+// Truncate text with ellipsis
+var truncatedText = utilityTests.Truncate_WhenTextExceedsMaxLength_TruncatesAndAppendsEllipsis(
+    "This is a very long text that needs to be truncated",
+    20
+);
+Console.WriteLine($"Truncated text: {truncatedText}");
+
+// Convert text to URL-friendly slug
+var slug = utilityTests.ToSlug_WithSpecialCharactersAndSpaces_ReturnsUrlFriendlySlug(
+    "Marketplace & E-commerce Platform - 2024 Edition!"
+);
+Console.WriteLine($"Generated slug: {slug}");
+
+// Mask email addresses for privacy
+var maskedEmail = utilityTests.MaskEmail_WithTypicalEmail_MasksLocalPartAndPreservesDomain(
+    "user.name@example.com"
+);
+Console.WriteLine($"Masked email: {maskedEmail}");
+
+// Calculate pagination offsets
+var offset = utilityTests.CalculateOffset_ForPage2WithSize10(2, 10);
+Console.WriteLine($"Offset for page 2 (size 10): {offset}");
+
+// Calculate total pages with ceiling
+var totalPages = utilityTests.CalculateTotalPages_WithNonDivisibleTotal_CeilsUp(123, 10);
+Console.WriteLine($"Total pages for 123 items (page size 10): {totalPages}");
+```
+
 // Get users by location
 var usersInNY = await userRepository.GetByLocationAsync("New York", "US");
 Console.WriteLine($"Users in New York, US: {usersInNY.Count}");
