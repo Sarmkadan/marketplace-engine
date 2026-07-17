@@ -1727,6 +1727,49 @@ var bulkResult = await bulkResponse.Content.ReadFromJsonAsync<BulkModerationResp
 Console.WriteLine($"Bulk action completed. Success: {bulkResult.Results.Count(r => r.Success)}/{bulkResult.Results.Count}");
 ```
 
+## HealthController
+
+The `HealthController` class provides health monitoring endpoints for the Marketplace Engine application. It implements both basic liveness checks for container orchestration systems and detailed readiness checks that validate critical dependencies including database connectivity and cache availability. The controller returns comprehensive status information including service version, uptime metrics, and dependency health.
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.Controllers;
+using Microsoft.AspNetCore.Mvc.Testing;
+using System;
+using System.Net;
+using System.Net.Http;
+using System.Net.Http.Json;
+using System.Threading.Tasks;
+
+// Initialize test client for API calls
+var client = new HttpClient { BaseAddress = new Uri("https://api.marketplace.example.com") };
+
+// Basic health check (liveness probe)
+var healthResponse = await client.GetAsync("/api/v1/health");
+var healthData = await healthResponse.Content.ReadFromJsonAsync<HealthController.HealthResponse>();
+
+Console.WriteLine($"Health Status: {healthData.Status}");
+Console.WriteLine($"Version: {healthData.Version}");
+Console.WriteLine($"Uptime: {healthData.Uptime}");
+Console.WriteLine($"Timestamp: {healthData.Timestamp:yyyy-MM-dd HH:mm:ss}");
+
+// Detailed readiness check with dependency validation
+var readinessResponse = await client.GetAsync("/api/v1/health/ready");
+var readinessData = await readinessResponse.Content.ReadFromJsonAsync<HealthController.DetailedHealthResponse>();
+
+Console.WriteLine($"\nReadiness Status: {readinessData.Status}");
+Console.WriteLine($"Dependencies:");
+foreach (var dependency in readinessData.Dependencies)
+{
+    Console.WriteLine($"  - {dependency.Key}: {dependency.Value}");
+}
+
+// Simple liveness probe for container orchestration
+var livenessResponse = await client.GetAsync("/api/v1/health/live");
+Console.WriteLine($"\nLiveness check status: {(int)livenessResponse.StatusCode} - {(livenessResponse.IsSuccessStatusCode ? "Service available" : "Service unavailable")}");
+```
+
 ## CategoriesController
 
 The `CategoriesController` class provides RESTful API endpoints for managing product categories in the marketplace. It handles CRUD operations for categories, category hierarchy management, and retrieval of category statistics. The controller supports retrieving individual categories, category trees, listing counts, and category-specific statistics including average prices and view metrics.
@@ -1872,6 +1915,49 @@ var bulkRequest = new BulkModerationRequest
 var bulkResponse = await client.PostAsJsonAsync("/api/v1/moderation/bulk", bulkRequest);
 var bulkResult = await bulkResponse.Content.ReadFromJsonAsync<BulkModerationResponse>();
 Console.WriteLine($"Bulk action completed. Success: {bulkResult.Results.Count(r => r.Success)}/{bulkResult.Results.Count}");
+```
+
+## HealthController
+
+The `HealthController` class provides health monitoring endpoints for the Marketplace Engine application. It implements both basic liveness checks for container orchestration systems and detailed readiness checks that validate critical dependencies including database connectivity and cache availability. The controller returns comprehensive status information including service version, uptime metrics, and dependency health.
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.Controllers;
+using Microsoft.AspNetCore.Mvc.Testing;
+using System;
+using System.Net;
+using System.Net.Http;
+using System.Net.Http.Json;
+using System.Threading.Tasks;
+
+// Initialize test client for API calls
+var client = new HttpClient { BaseAddress = new Uri("https://api.marketplace.example.com") };
+
+// Basic health check (liveness probe)
+var healthResponse = await client.GetAsync("/api/v1/health");
+var healthData = await healthResponse.Content.ReadFromJsonAsync<HealthController.HealthResponse>();
+
+Console.WriteLine($"Health Status: {healthData.Status}");
+Console.WriteLine($"Version: {healthData.Version}");
+Console.WriteLine($"Uptime: {healthData.Uptime}");
+Console.WriteLine($"Timestamp: {healthData.Timestamp:yyyy-MM-dd HH:mm:ss}");
+
+// Detailed readiness check with dependency validation
+var readinessResponse = await client.GetAsync("/api/v1/health/ready");
+var readinessData = await readinessResponse.Content.ReadFromJsonAsync<HealthController.DetailedHealthResponse>();
+
+Console.WriteLine($"\nReadiness Status: {readinessData.Status}");
+Console.WriteLine($"Dependencies:");
+foreach (var dependency in readinessData.Dependencies)
+{
+    Console.WriteLine($"  - {dependency.Key}: {dependency.Value}");
+}
+
+// Simple liveness probe for container orchestration
+var livenessResponse = await client.GetAsync("/api/v1/health/live");
+Console.WriteLine($"\nLiveness check status: {(int)livenessResponse.StatusCode} - {(livenessResponse.IsSuccessStatusCode ? "Service available" : "Service unavailable")}");
 ```
 
 ## CategoriesController
