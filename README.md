@@ -1718,6 +1718,81 @@ var updatedCategory = await updateResponse.Content.ReadFromJsonAsync<CategoryDto
 Console.WriteLine($"Updated category: {updatedCategory.Name}");
 ```
 
+## ReviewsController
+
+The `ReviewsController` class provides RESTful API endpoints for managing buyer reviews, seller replies, review retrieval, moderation actions, and aggregated rating statistics. It handles review submissions, retrieval of seller and listing reviews, seller reply functionality, review flagging for moderation, and review removal by moderators. The controller integrates with the `ReviewService` to provide comprehensive review management capabilities.
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.Controllers;
+using MarketplaceEngine.DTOs;
+using Microsoft.AspNetCore.Mvc;
+using System;
+using System.Net.Http;
+using System.Net.Http.Json;
+using System.Threading.Tasks;
+
+// Initialize HTTP client for API calls
+var client = new HttpClient { BaseAddress = new Uri("https://api.marketplace.example.com") };
+
+// Submit a new review for a seller
+var newReview = new CreateReviewRequest
+{
+    ReviewerId = Guid.Parse("11111111-1111-1111-1111-111111111111"),
+    SellerId = Guid.Parse("22222222-2222-2222-2222-222222222222"),
+    ListingId = Guid.Parse("33333333-3333-3333-3333-333333333333"),
+    Score = 5,
+    Comment = "Excellent seller! Fast shipping and great communication."
+};
+
+var createResponse = await client.PostAsJsonAsync("/api/v1/reviews", newReview);
+var createdReview = await createResponse.Content.ReadFromJsonAsync<ReviewDto>();
+Console.WriteLine($"Review created: {createdReview.Id} - Score: {createdReview.Score}/5");
+
+// Get a specific review by ID
+var reviewResponse = await client.GetAsync($"/api/v1/reviews/{createdReview.Id}");
+var review = await reviewResponse.Content.ReadFromJsonAsync<ReviewDto>();
+Console.WriteLine($"Retrieved review: {review.Comment}");
+
+// Get all reviews for a seller (paginated)
+var sellerReviewsResponse = await client.GetAsync($"/api/v1/reviews/seller/{Guid.Parse("22222222-2222-2222-2222-222222222222")}?page=1&pageSize=20");
+var sellerReviews = await sellerReviewsResponse.Content.ReadFromJsonAsync<PaginatedResponse<ReviewDto>>();
+Console.WriteLine($"Seller has {sellerReviews.Total} total reviews, showing page {sellerReviews.Page}");
+
+// Get all reviews for a specific listing
+var listingReviewsResponse = await client.GetAsync($"/api/v1/reviews/listing/{Guid.Parse("33333333-3333-3333-3333-333333333333")}");
+var listingReviews = await listingReviewsResponse.Content.ReadFromJsonAsync<List<ReviewDto>>();
+Console.WriteLine($"Listing has {listingReviews.Count} reviews");
+
+// Get seller rating summary
+var summaryResponse = await client.GetAsync($"/api/v1/reviews/seller/{Guid.Parse("22222222-2222-2222-2222-222222222222")}/summary");
+var summary = await summaryResponse.Content.ReadFromJsonAsync<ReviewSummaryDto>();
+Console.WriteLine($"Seller average score: {summary.AverageScore:F1}/5 stars");
+Console.WriteLine($"Total reviews: {summary.TotalReviews}");
+
+// Add a seller reply to a review
+var replyRequest = new SellerReplyRequest
+{
+    SellerId = Guid.Parse("22222222-2222-2222-2222-222222222222"),
+    Reply = "Thank you for your positive review! We appreciate your business."
+};
+
+var replyResponse = await client.PostAsJsonAsync($"/api/v1/reviews/{createdReview.Id}/reply", replyRequest);
+var reviewWithReply = await replyResponse.Content.ReadFromJsonAsync<ReviewDto>();
+Console.WriteLine($"Seller reply added: {reviewWithReply.SellerReply}");
+
+// Flag a review for moderator review
+var flagResponse = await client.PostAsync($"/api/v1/reviews/{createdReview.Id}/flag", null);
+var flaggedReview = await flagResponse.Content.ReadFromJsonAsync<ReviewDto>();
+Console.WriteLine($"Review flagged for moderation");
+
+// Remove a review (requires moderator role)
+var removeResponse = await client.DeleteAsync($"/api/v1/reviews/{createdReview.Id}?moderatorId={Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa")}");
+var removedReview = await removeResponse.Content.ReadFromJsonAsync<ReviewDto>();
+Console.WriteLine($"Review removed by moderator");
+```
+
 ## CategoryService
 
 The `CategoryService` class provides comprehensive category management functionality for the Marketplace Engine. It handles category hierarchy operations, including creating, updating, and organizing categories into parent-child relationships. The service supports retrieving categories by ID, searching categories, managing category trees for navigation, and retrieving popular categories based on listing activity.
