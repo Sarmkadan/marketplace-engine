@@ -1643,6 +1643,102 @@ var act8 = async () => await reviewService.RemoveReviewAsync(
 await Assert.ThrowsAsync<UnauthorizedException>(act8);
 ```
 
+## CollaborativeFilteringEngineExtensions
+
+The `CollaborativeFilteringEngineExtensions` class provides extension methods for the collaborative filtering recommendation engine that enable personalized listing recommendations, similar-item discovery, trending content identification, and user affinity calculations. These extensions integrate with the core recommendation system to provide flexible APIs for generating various types of recommendation feeds based on user behavior and listing interactions.
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.Recommendations;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
+
+// Initialize the recommendation engine
+var recommendationEngine = new CollaborativeFilteringEngine();
+
+// Compute personalized recommendations for a specific user
+var userRecommendations = await recommendationEngine.ComputeForUserAsync(
+    userId: Guid.Parse("11111111-1111-1111-1111-111111111111"),
+    count: 15
+);
+
+Console.WriteLine($"Generated {userRecommendations.Count} personalized recommendations");
+foreach (var item in userRecommendations.Take(5))
+{
+    Console.WriteLine($"- {item.Title}: {item.Score:P1}");
+}
+
+// Compute similar listings for a specific listing
+var listingId = Guid.Parse("33333333-3333-3333-3333-333333333333");
+var similarListings = await recommendationEngine.ComputeSimilarAsync(
+    listingId: listingId,
+    count: 10
+);
+
+Console.WriteLine($"Found {similarListings.Count} similar listings");
+
+// Compute trending listings (popular items)
+var trendingListings = await recommendationEngine.ComputeTrendingAsync(
+    count: 20,
+    timeWindowHours: 72
+);
+
+Console.WriteLine($"Top {trendingListings.Count} trending listings");
+
+// Compute recommendations based on user affinity (category preferences)
+var affinityRecommendations = await recommendationEngine.ComputeByAffinityAsync(
+    userId: Guid.Parse("11111111-1111-1111-1111-111111111111"),
+    count: 12
+);
+
+Console.WriteLine($"Generated {affinityRecommendations.Count} affinity-based recommendations");
+
+// Record user activity to improve future recommendations
+await recommendationEngine.RecordSignalAsync(
+    userId: Guid.Parse("11111111-1111-1111-1111-111111111111"),
+    listingId: listingId,
+    signalType: SignalType.View
+);
+
+Console.WriteLine("User activity recorded successfully");
+
+// Compute recommendations for multiple users at once (batch processing)
+var userIds = new[] {
+    Guid.Parse("11111111-1111-1111-1111-111111111111"),
+    Guid.Parse("22222222-2222-2222-2222-222222222222"),
+    Guid.Parse("33333333-3333-3333-3333-333333333333")
+};
+
+var batchRecommendations = await recommendationEngine.ComputeForUsersAsync(
+    userIds: userIds,
+    count: 8
+);
+
+foreach (var userRec in batchRecommendations)
+{
+    Console.WriteLine($"User {userRec.Key} has {userRec.Value.Count} recommendations");
+}
+
+// Compute similar listings for multiple listings at once (batch processing)
+var listingIds = new[] {
+    Guid.Parse("33333333-3333-3333-3333-333333333333"),
+    Guid.Parse("44444444-4444-4444-4444-444444444444"),
+    Guid.Parse("55555555-5555-5555-5555-555555555555")
+};
+
+var batchSimilar = await recommendationEngine.ComputeSimilarForListingsAsync(
+    listingIds: listingIds,
+    count: 5
+);
+
+foreach (var listingSim in batchSimilar)
+{
+    Console.WriteLine($"Listing {listingSim.Key} has {listingSim.Value.Count} similar items");
+}
+```
+
 ## RecommendationsController
 
 The `RecommendationsController` class provides RESTful API endpoints for the collaborative filtering recommendation engine. It exposes personalised feeds, similar-item panels, trending galleries, category-affinity recommendations, and activity tracking. The controller integrates with the `RecommendationService` to deliver personalised content based on user behavior and listing interactions.
