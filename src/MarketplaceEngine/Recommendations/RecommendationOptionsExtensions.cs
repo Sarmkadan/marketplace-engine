@@ -10,7 +10,7 @@ public static class RecommendationOptionsExtensions
     /// </summary>
     /// <param name="options">The recommendation options to create a view for.</param>
     /// <returns>A read-only view of the recommendation options.</returns>
-    /// <exception cref="ArgumentNullException">Thrown if <paramref name="options"/> is null.</exception>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="options"/> is <see langword="null"/>.</exception>
     public static IReadOnlyRecommendationOptions CreateReadOnlyView(this RecommendationOptions options)
     {
         ArgumentNullException.ThrowIfNull(options);
@@ -71,7 +71,22 @@ public static class RecommendationOptionsExtensions
     /// Validates the recommendation options and throws an exception if they are invalid.
     /// </summary>
     /// <param name="options">The recommendation options to validate.</param>
-    /// <exception cref="ArgumentException">Thrown if <paramref name="options"/> is invalid.</exception>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="options"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentException">
+    /// Thrown if any of the following conditions are violated:
+    /// <list type="bullet">
+    ///   <item><description><see cref="RecommendationOptions.MinOverlapForNeighbour"/> must be non-negative.</description></item>
+    ///   <item><description><see cref="RecommendationOptions.MaxNeighbours"/> must be non-negative.</description></item>
+    ///   <item><description><see cref="RecommendationOptions.MinSimilarityThreshold"/> must be between 0 and 1.</description></item>
+    ///   <item><description><see cref="RecommendationOptions.TrendingWindowHours"/> must be positive.</description></item>
+    ///   <item><description>All weight values (<see cref="RecommendationOptions.ViewWeight"/>, <see cref="RecommendationOptions.SaveWeight"/>, <see cref="RecommendationOptions.EnquiryWeight"/>, <see cref="RecommendationOptions.PurchaseWeight"/>) must be non-negative.</description></item>
+    ///   <item><description>All cache TTL values must be non-negative.</description></item>
+    ///   <item><description><see cref="RecommendationOptions.MaxSignalsPerUser"/> must be positive.</description></item>
+    ///   <item><description><see cref="RecommendationOptions.ActivityHistoryDays"/> must be positive.</description></item>
+    ///   <item><description><see cref="RecommendationOptions.MinAffinitySignals"/> must be non-negative.</description></item>
+    ///   <item><description><see cref="RecommendationOptions.MaxCategoryConcentration"/> must be between 0 and 1 (exclusive).</description></item>
+    /// </list>
+    /// </exception>
     public static void Validate(this RecommendationOptions options)
     {
         ArgumentNullException.ThrowIfNull(options);
@@ -89,6 +104,66 @@ public static class RecommendationOptionsExtensions
         if (options.MinSimilarityThreshold < 0 || options.MinSimilarityThreshold > 1)
         {
             throw new ArgumentException("MinSimilarityThreshold must be between 0 and 1.", nameof(options));
+        }
+
+        if (options.TrendingWindowHours <= 0)
+        {
+            throw new ArgumentException("TrendingWindowHours must be positive.", nameof(options));
+        }
+
+        if (options.ViewWeight < 0)
+        {
+            throw new ArgumentException("ViewWeight must be non-negative.", nameof(options));
+        }
+
+        if (options.SaveWeight < 0)
+        {
+            throw new ArgumentException("SaveWeight must be non-negative.", nameof(options));
+        }
+
+        if (options.EnquiryWeight < 0)
+        {
+            throw new ArgumentException("EnquiryWeight must be non-negative.", nameof(options));
+        }
+
+        if (options.PurchaseWeight < 0)
+        {
+            throw new ArgumentException("PurchaseWeight must be non-negative.", nameof(options));
+        }
+
+        if (options.UserFeedCacheTtlMinutes < 0)
+        {
+            throw new ArgumentException("UserFeedCacheTtlMinutes must be non-negative.", nameof(options));
+        }
+
+        if (options.TrendingFeedCacheTtlMinutes < 0)
+        {
+            throw new ArgumentException("TrendingFeedCacheTtlMinutes must be non-negative.", nameof(options));
+        }
+
+        if (options.ItemSimilarityCacheTtlMinutes < 0)
+        {
+            throw new ArgumentException("ItemSimilarityCacheTtlMinutes must be non-negative.", nameof(options));
+        }
+
+        if (options.MaxSignalsPerUser <= 0)
+        {
+            throw new ArgumentException("MaxSignalsPerUser must be positive.", nameof(options));
+        }
+
+        if (options.ActivityHistoryDays <= 0)
+        {
+            throw new ArgumentException("ActivityHistoryDays must be positive.", nameof(options));
+        }
+
+        if (options.MinAffinitySignals < 0)
+        {
+            throw new ArgumentException("MinAffinitySignals must be non-negative.", nameof(options));
+        }
+
+        if (options.MaxCategoryConcentration <= 0 || options.MaxCategoryConcentration > 1)
+        {
+            throw new ArgumentException("MaxCategoryConcentration must be between 0 and 1 (exclusive).", nameof(options));
         }
     }
 }
