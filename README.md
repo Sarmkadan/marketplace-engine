@@ -7,6 +7,33 @@ project layout, the in-memory storage model, the DI/composition root, middleware
 pipeline, event bus, background jobs, extension points and known limitations.
 
 
+## Rating
+
+The `Rating` class is an immutable value object that represents a user or listing rating. It encapsulates the score and review count, providing methods to calculate a weighted average rating and add new reviews while maintaining data integrity.
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.Domain.ValueObjects;
+using System;
+
+// Initialize a new rating for a listing or user
+var rating = new Rating(score: 5, totalReviews: 10);
+
+// Add a new review score
+var updatedRating = rating.AddReview(4);
+
+Console.WriteLine($"Original Rating: {rating}");
+Console.WriteLine($"Updated Rating: {updatedRating}");
+Console.WriteLine($"Average: {updatedRating.AverageRating:F2}");
+Console.WriteLine($"Score: {updatedRating.Score}");
+Console.WriteLine($"Total Reviews: {updatedRating.TotalReviews}");
+
+// Compare ratings
+var anotherRating = new Rating(5, 10);
+Console.WriteLine($"Ratings are equal: {rating.Equals(anotherRating)}");
+```
+
 ## MarketplaceConfiguration
 
 The `MarketplaceConfiguration` class provides centralized configuration settings for the Marketplace Engine, including cache management, API rate limiting, background job scheduling, and dropshipping integration. It consolidates common application parameters into a single, strongly-typed configuration object.
