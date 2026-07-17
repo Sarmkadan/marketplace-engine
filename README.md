@@ -1649,6 +1649,75 @@ await userRepository.DeleteAsync(newUser.Id);
 Console.WriteLine("User deleted");
 ```
 
+## CategoriesController
+
+The `CategoriesController` class provides RESTful API endpoints for managing product categories in the marketplace. It handles CRUD operations for categories, category hierarchy management, and retrieval of category statistics. The controller supports retrieving individual categories, category trees, listing counts, and category-specific statistics including average prices and view metrics.
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.Controllers;
+using MarketplaceEngine.DTOs;
+using Microsoft.AspNetCore.Mvc;
+using System;
+using System.Net.Http;
+using System.Net.Http.Json;
+using System.Threading.Tasks;
+
+// Initialize HTTP client for API calls
+var client = new HttpClient { BaseAddress = new Uri("https://api.marketplace.example.com") };
+
+// Get all categories with hierarchy
+var categoriesResponse = await client.GetAsync("/api/v1/categories/tree");
+var categories = await categoriesResponse.Content.ReadFromJsonAsync<List<CategoryDto>>();
+Console.WriteLine($"Found {categories.Count} root categories");
+
+// Get a specific category by ID
+var categoryId = Guid.Parse("3fa85f64-5717-4562-b3fc-2c963f66afa6");
+var categoryResponse = await client.GetAsync($"/api/v1/categories/{categoryId}");
+var category = await categoryResponse.Content.ReadFromJsonAsync<CategoryDto>();
+Console.WriteLine($"Retrieved category: {category.Name} ({category.Description})");
+Console.WriteLine($"Listing count: {category.ListingCount}");
+Console.WriteLine($"Subcategories: {category.SubCategories?.Count ?? 0}");
+
+// Get category statistics
+var statsResponse = await client.GetAsync($"/api/v1/categories/{categoryId}/statistics");
+var statistics = await statsResponse.Content.ReadFromJsonAsync<CategoryStatisticsDto>();
+Console.WriteLine($"Category statistics:");
+Console.WriteLine($"- Total listings: {statistics.TotalListings}");
+Console.WriteLine($"- Average price: {statistics.AveragePrice:C}");
+Console.WriteLine($"- Total views: {statistics.TotalViews}");
+Console.WriteLine($"- Average views: {statistics.AverageViews:F1}");
+
+// Get category listings
+var listingsResponse = await client.GetAsync($"/api/v1/categories/{categoryId}/listings");
+var listings = await listingsResponse.Content.ReadFromJsonAsync<List<ListingDto>>();
+Console.WriteLine($"Found {listings.Count} listings in category");
+
+// Create a new category (admin only)
+var newCategory = new CreateCategoryRequest
+{
+    Name = "Smart Home Devices",
+    Description = "Smart home automation devices and accessories",
+    ParentCategoryId = categoryId
+};
+
+var createResponse = await client.PostAsJsonAsync("/api/v1/categories", newCategory);
+var createdCategory = await createResponse.Content.ReadFromJsonAsync<CategoryDto>();
+Console.WriteLine($"Created category: {createdCategory.Id} - {createdCategory.Name}");
+
+// Update an existing category (admin only)
+var updateRequest = new UpdateCategoryRequest
+{
+    Name = "Smart Home & IoT Devices",
+    Description = "Smart home devices, IoT gadgets, and home automation equipment"
+};
+
+var updateResponse = await client.PutAsJsonAsync($"/api/v1/categories/{createdCategory.Id}", updateRequest);
+var updatedCategory = await updateResponse.Content.ReadFromJsonAsync<CategoryDto>();
+Console.WriteLine($"Updated category: {updatedCategory.Name}");
+```
+
 ## CategoryService
 
 The `CategoryService` class provides comprehensive category management functionality for the Marketplace Engine. It handles category hierarchy operations, including creating, updating, and organizing categories into parent-child relationships. The service supports retrieving categories by ID, searching categories, managing category trees for navigation, and retrieving popular categories based on listing activity.
