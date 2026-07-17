@@ -1508,6 +1508,199 @@ var act4 = async () => await listingService.MarkAsFeaturedAsync(listingId, nonAd
 await Assert.ThrowsAsync<UnauthorizedException>(act4);
 ```
 
+## PaymentServiceTests
+
+The `PaymentServiceTests` class contains unit tests for the `PaymentService` class, verifying that it correctly handles various payment operations and authorization scenarios. It tests payment initiation with validation for listing existence, listing status, and buyer identity; payment cancellation authorization; refund validation; and payment completion with listing delisting.
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.Services;
+using MarketplaceEngine.Domain.Entities;
+using MarketplaceEngine.Domain.Enums;
+using MarketplaceEngine.Domain.ValueObjects;
+using MarketplaceEngine.Exceptions;
+using MarketplaceEngine.Repositories;
+using Moq;
+using System;
+using System.Threading.Tasks;
+using Xunit;
+
+// Initialize mock repositories
+var paymentRepoMock = new Mock<IPaymentRepository>();
+var listingRepoMock = new Mock<IListingRepository>();
+var userRepoMock = new Mock<IUserRepository>();
+
+// Create the service under test
+var paymentService = new PaymentService(
+    paymentRepoMock.Object,
+    listingRepoMock.Object,
+    userRepoMock.Object
+);
+
+// Test 1: InitiatePaymentAsync throws ResourceNotFoundException when listing is not found
+var nonExistentListingId = Guid.NewGuid();
+listingRepoMock.Setup(r => r.GetByIdAsync(nonExistentListingId))
+    .ReturnsAsync((Listing)null);
+
+var act1 = async () => await paymentService.InitiatePaymentAsync(
+    listingId: nonExistentListingId,
+    buyerId: Guid.NewGuid(),
+    paymentMethod: "credit_card"
+);
+
+await Assert.ThrowsAsync<ResourceNotFoundException>(act1);
+
+// Test 2: InitiatePaymentAsync throws MarketplaceException when listing is inactive
+var inactiveListingId = Guid.NewGuid();
+var inactiveListing = new Listing {
+    Id = inactiveListingId,
+    Status = ListingStatus.Inactive,
+    Price = new Money(100m)
+};
+listingRepoMock.Setup(r => r.GetByIdAsync(inactiveListingId))
+    .ReturnsAsync(inactiveListing);
+
+var act2 = async () => await paymentService.InitiatePaymentAsync(
+    listingId: inactiveListingId,
+    buyerId: Guid.NewGuid(),
+    paymentMethod: "credit_card"
+);
+
+await Assert.ThrowsAsync<MarketplaceException>(act2);
+
+// Test 3: InitiatePaymentAsync throws MarketplaceException when buyer is seller
+var sellerId = Guid.NewGuid();
+var listingId = Guid.NewGuid();
+var sellerListing = new Listing {
+    Id = listingId,
+    SellerId = sellerId,
+    Status = ListingStatus.Active,
+    Price = new Money(200m)
+};
+var sellerUser = new User { Id = sellerId, IsActive = true };
+
+listingRepoMock.Setup(r => r.GetByIdAsync(listingId))
+    .ReturnsAsync(sellerListing);
+userRepoMock.Setup(r => r.GetByIdAsync(sellerId))
+    .ReturnsAsync(sellerUser);
+
+var act3 = async () => await paymentService.InitiatePaymentAsync(
+    listingId: listingId,
+    buyerId: sellerId,
+    paymentMethod: "credit_card"
+);
+
+await Assert.ThrowsAsync<MarketplaceException>(act3);
+
+// Test 4: InitiatePaymentAsync with valid data creates payment
+var validListingId = Guid.NewGuid();
+var validBuyerId = Guid.NewGuid();
+var validSellerId = Guid.NewGuid();
+var validListing = new Listing {
+    Id = validListingId,
+    SellerId = validSellerId,
+    Status = ListingStatus.Active,
+    Price = new Money(150m)
+};
+var validBuyer = new User { Id = validBuyerId, IsActive = true };
+
+listingRepoMock.Setup(r => r.GetByIdAsync(validListingId))
+    .ReturnsAsync(validListing);
+userRepoMock.Setup(r => r.GetByIdAsync(validBuyerId))
+    .ReturnsAsync(validBuyer);
+paymentRepoMock.Setup(r => r.AddAsync(It.IsAny<Payment>()))
+    .ReturnsAsync((Payment p) => { p.Id = Guid.NewGuid(); return p; });
+
+var payment = await paymentService.InitiatePaymentAsync(
+    listingId: validListingId,
+    buyerId: validBuyerId,
+    paymentMethod: "bank_transfer"
+);
+
+Assert.NotNull(payment);
+Assert.Equal(validBuyerId, payment.BuyerId);
+Assert.Equal(validSellerId, payment.SellerId);
+Assert.Equal(PaymentStatus.Pending, payment.Status);
+
+// Test 5: CancelPaymentAsync throws UnauthorizedException when caller is not buyer
+var paymentId = Guid.NewGuid();
+var otherUserId = Guid.NewGuid();
+var pendingPayment = new Payment {
+    Id = paymentId,
+    BuyerId = validBuyerId,
+    Status = PaymentStatus.Pending,
+    Amount = new Money(150m)
+};
+
+paymentRepoMock.Setup(r => r.GetByIdAsync(paymentId))
+    .ReturnsAsync(pendingPayment);
+
+var act5 = async () => await paymentService.CancelPaymentAsync(
+    paymentId: paymentId,
+    requesterId: otherUserId
+);
+
+await Assert.ThrowsAsync<UnauthorizedException>(act5);
+
+// Test 6: RefundPaymentAsync throws InvalidOperationException when payment is pending
+var pendingPaymentForRefund = new Payment {
+    Id = paymentId,
+    BuyerId = validBuyerId,
+    Status = PaymentStatus.Pending,
+    Amount = new Money(200m)
+};
+
+paymentRepoMock.Setup(r => r.GetByIdAsync(paymentId))
+    .ReturnsAsync(pendingPaymentForRefund);
+
+var act6 = async () => await paymentService.RefundPaymentAsync(
+    paymentId: paymentId,
+    reason: "Changed mind"
+);
+
+await Assert.ThrowsAsync<InvalidOperationException>(act6);
+
+// Test 7: CompletePaymentAsync with valid transaction ID marks listing as delisted
+var processingPaymentId = Guid.NewGuid();
+var processingPayment = new Payment {
+    Id = processingPaymentId,
+    BuyerId = validBuyerId,
+    SellerId = validSellerId,
+    ListingId = validListingId,
+    Status = PaymentStatus.Processing,
+    Amount = new Money(150m)
+};
+var activeListing = new Listing {
+    Id = validListingId,
+    SellerId = validSellerId,
+    Status = ListingStatus.Active,
+    Price = new Money(150m)
+};
+var seller = new User { Id = validSellerId, IsActive = true };
+
+paymentRepoMock.Setup(r => r.GetByIdAsync(processingPaymentId))
+    .ReturnsAsync(processingPayment);
+paymentRepoMock.Setup(r => r.UpdateAsync(It.IsAny<Payment>()))
+    .ReturnsAsync((Payment p) => p);
+listingRepoMock.Setup(r => r.GetByIdAsync(validListingId))
+    .ReturnsAsync(activeListing);
+listingRepoMock.Setup(r => r.UpdateAsync(It.IsAny<Listing>()))
+    .ReturnsAsync((Listing l) => l);
+userRepoMock.Setup(r => r.GetByIdAsync(validSellerId))
+    .ReturnsAsync(seller);
+userRepoMock.Setup(r => r.UpdateAsync(It.IsAny<User>()))
+    .ReturnsAsync((User u) => u);
+
+var completedPayment = await paymentService.CompletePaymentAsync(
+    paymentId: processingPaymentId,
+    transactionId: "txn_abc123"
+);
+
+Assert.Equal(PaymentStatus.Completed, completedPayment.Status);
+Assert.Equal(ListingStatus.Delisted, activeListing.Status);
+```
+
 ## ListingsController
 
 The `ListingsController` class provides RESTful API endpoints for managing marketplace listings. It handles CRUD operations for listings, search functionality, and integrates with caching services to improve performance. The controller supports pagination, individual listing retrieval, creation, updates, and full-text search capabilities.
