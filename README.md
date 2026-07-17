@@ -1233,6 +1233,10 @@ foreach (var listing in stats.TopListings)
 
 The `UserServiceTests` class contains unit tests for the `UserService` class, verifying that it correctly handles user registration, email verification, account management, profile updates, and premium account features. It tests various business rules including email uniqueness validation, name length requirements, email verification token validation, premium account eligibility criteria, and account status validation.
 
+## ListingServiceExtendedTests
+
+The `ListingServiceExtendedTests` class provides extended unit tests for the `ListingService` class, covering advanced scenarios, edge cases, and integration-style validations that complement the core unit tests. It tests various business rules including validation for negative prices, short titles, missing images, authorization checks, visibility control, view tracking, interest recording, and featured listing management.
+
 ### Usage Example
 
 ```csharp
