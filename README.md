@@ -975,6 +975,416 @@ var act8 = async () => await reviewService.RemoveReviewAsync(
 await Assert.ThrowsAsync<UnauthorizedException>(act8);
 ```
 
+## UserServiceTests
+
+The `UserServiceTests` class contains unit tests for the `UserService` class, verifying that it correctly handles user registration, email verification, account management, profile updates, and premium account features. It tests various business rules including email uniqueness validation, name length requirements, email verification token validation, premium account eligibility criteria, and account status validation.
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.Services;
+using MarketplaceEngine.Domain.Entities;
+using MarketplaceEngine.Domain.Enums;
+using MarketplaceEngine.Domain.ValueObjects;
+using MarketplaceEngine.Exceptions;
+using MarketplaceEngine.Repositories;
+using Moq;
+using System;
+using System.Threading.Tasks;
+using Xunit;
+
+// Initialize mock repositories
+var userRepoMock = new Mock<IUserRepository>();
+
+// Create the service under test
+var userService = new UserService(userRepoMock.Object);
+
+// Test 1: RegisterUserAsync returns a created user when provided with a unique email
+var createdUser = new User
+{
+    Id = Guid.NewGuid(),
+    Email = "new@example.com",
+    FullName = "Alice Smith",
+    IsActive = true,
+    IsVerified = false
+};
+
+userRepoMock.Setup(r => r.GetByEmailAsync("new@example.com"))
+    .ReturnsAsync((User)null);
+userRepoMock.Setup(r => r.AddAsync(It.IsAny<User>()))
+    .ReturnsAsync(createdUser);
+
+var result = await userService.RegisterUserAsync("new@example.com", "Alice Smith");
+
+Console.WriteLine($"User registered: {result.Id} - {result.Email}");
+
+// Test 2: RegisterUserAsync throws DuplicateResourceException when provided with a duplicate email
+var existing = new User { Id = Guid.NewGuid(), Email = "taken@example.com", FullName = "Bob Jones" };
+userRepoMock.Setup(r => r.GetByEmailAsync("taken@example.com"))
+    .ReturnsAsync(existing);
+
+var act2 = async () => await userService.RegisterUserAsync("taken@example.com", "Carol Green");
+await Assert.ThrowsAsync<DuplicateResourceException>(act2);
+
+// Test 3: RegisterUserAsync throws ArgumentException when provided with a short full name
+userRepoMock.Setup(r => r.GetByEmailAsync(It.IsAny<string>()))
+    .ReturnsAsync((User)null);
+
+var act3 = async () => await userService.RegisterUserAsync("x@example.com", "A");
+await Assert.ThrowsAsync<ArgumentException>(act3);
+
+// Test 4: GetUserAsync throws ResourceNotFoundException when the user is not found
+var missingId = Guid.NewGuid();
+userRepoMock.Setup(r => r.GetByIdAsync(missingId))
+    .ReturnsAsync((User)null);
+
+var act4 = async () => await userService.GetUserAsync(missingId);
+await Assert.ThrowsAsync<ResourceNotFoundException>(act4);
+
+// Test 5: GetUserAsync returns the user when the user exists
+var userId = Guid.NewGuid();
+var user = new User { Id = userId, Email = "u@example.com", FullName = "Test User" };
+userRepoMock.Setup(r => r.GetByIdAsync(userId))
+    .ReturnsAsync(user);
+
+var retrievedUser = await userService.GetUserAsync(userId);
+Console.WriteLine($"Retrieved user: {retrievedUser.DisplayName} ({retrievedUser.Email})");
+
+// Test 6: VerifyEmailAsync returns true when provided with a valid token
+var userWithToken = new User { Id = userId, Email = "u@example.com", FullName = "Test User" };
+userWithToken.GenerateVerificationToken();
+
+userRepoMock.Setup(r => r.GetByIdAsync(userId))
+    .ReturnsAsync(userWithToken);
+userRepoMock.Setup(r => r.UpdateAsync(userWithToken))
+    .ReturnsAsync(userWithToken);
+
+var verificationResult = await userService.VerifyEmailAsync(userId, userWithToken.VerificationToken!);
+Console.WriteLine($"Email verified: {verificationResult}");
+
+// Test 7: VerifyEmailAsync returns false when provided with the wrong token
+var wrongTokenResult = await userService.VerifyEmailAsync(userId, "wrong-token");
+Console.WriteLine($"Wrong token result: {wrongTokenResult}");
+
+// Test 8: VerifyEmailAsync returns false when provided with an expired token
+var expiredUser = new User
+{
+    Id = userId,
+    Email = "u@example.com",
+    FullName = "Test User",
+    VerificationToken = "some-token",
+    VerificationExpiry = DateTime.UtcNow.AddMinutes(-1) // already expired
+};
+userRepoMock.Setup(r => r.GetByIdAsync(userId))
+    .ReturnsAsync(expiredUser);
+
+var expiredTokenResult = await userService.VerifyEmailAsync(userId, "some-token");
+Console.WriteLine($"Expired token result: {expiredTokenResult}");
+
+// Test 9: PromoteToPremiumAsync throws InvalidOperationException when the user has insufficient sales
+var lowSalesUser = new User
+{
+    Id = userId,
+    Email = "u@example.com",
+    FullName = "Low Sales User",
+    TotalSales = 3,
+    Rating = new Rating(5, 10)
+};
+userRepoMock.Setup(r => r.GetByIdAsync(userId))
+    .ReturnsAsync(lowSalesUser);
+
+var act9 = async () => await userService.PromoteToPremiumAsync(userId);
+await Assert.ThrowsAsync<InvalidOperationException>(act9);
+
+// Test 10: PromoteToPremiumAsync throws InvalidOperationException when the user's rating is below the threshold
+var lowRatingUser = new User
+{
+    Id = userId,
+    Email = "u@example.com",
+    FullName = "Low Rating User",
+    TotalSales = 10,
+    Rating = new Rating(3, 10)
+};
+userRepoMock.Setup(r => r.GetByIdAsync(userId))
+    .ReturnsAsync(lowRatingUser);
+
+var act10 = async () => await userService.PromoteToPremiumAsync(userId);
+await Assert.ThrowsAsync<InvalidOperationException>(act10);
+
+// Test 11: PromoteToPremiumAsync throws InvalidOperationException when the user has no rating
+var noRatingUser = new User
+{
+    Id = userId,
+    Email = "u@example.com",
+    FullName = "No Rating User",
+    TotalSales = 10,
+    Rating = null
+};
+userRepoMock.Setup(r => r.GetByIdAsync(userId))
+    .ReturnsAsync(noRatingUser);
+
+var act11 = async () => await userService.PromoteToPremiumAsync(userId);
+await Assert.ThrowsAsync<InvalidOperationException>(act11);
+
+// Test 12: PromoteToPremiumAsync promotes the user when they are eligible
+var eligibleUser = new User
+{
+    Id = userId,
+    Email = "u@example.com",
+    FullName = "Good Seller",
+    TotalSales = 10,
+    Rating = new Rating(5, 20),
+    Role = UserRole.User
+};
+userRepoMock.Setup(r => r.GetByIdAsync(userId))
+    .ReturnsAsync(eligibleUser);
+userRepoMock.Setup(r => r.UpdateAsync(It.IsAny<User>()))
+    .ReturnsAsync(eligibleUser);
+
+var promotedUser = await userService.PromoteToPremiumAsync(userId);
+Console.WriteLine($"User promoted to: {promotedUser.Role}");
+
+// Test 13: DeactivateAccountAsync sets the user's active status to false when the user exists
+var activeUser = new User { Id = userId, Email = "u@example.com", FullName = "Active User", IsActive = true };
+userRepoMock.Setup(r => r.GetByIdAsync(userId))
+    .ReturnsAsync(activeUser);
+userRepoMock.Setup(r => r.UpdateAsync(It.IsAny<User>()))
+    .ReturnsAsync((User u) => u);
+
+var deactivatedUser = await userService.DeactivateAccountAsync(userId);
+Console.WriteLine($"Account deactivated: {deactivatedUser.IsActive}");
+
+// Test 14: ValidateUserAccessAsync throws UnauthorizedException when the user is inactive
+var inactiveUser = new User
+{
+    Id = userId,
+    Email = "u@example.com",
+    FullName = "Inactive User",
+    IsActive = false,
+    IsVerified = true
+};
+userRepoMock.Setup(r => r.GetByIdAsync(userId))
+    .ReturnsAsync(inactiveUser);
+
+var act14 = async () => await userService.ValidateUserAccessAsync(userId);
+await Assert.ThrowsAsync<UnauthorizedException>(act14);
+
+// Test 15: ValidateUserAccessAsync throws UnauthorizedException when the user is not verified
+var unverifiedUser = new User
+{
+    Id = userId,
+    Email = "u@example.com",
+    FullName = "Unverified User",
+    IsActive = true,
+    IsVerified = false
+};
+userRepoMock.Setup(r => r.GetByIdAsync(userId))
+    .ReturnsAsync(unverifiedUser);
+
+var act15 = async () => await userService.ValidateUserAccessAsync(userId);
+await Assert.ThrowsAsync<UnauthorizedException>(act15);
+
+// Test 16: ValidateUserAccessAsync does not throw when the user is active and verified
+var goodUser = new User
+{
+    Id = userId,
+    Email = "u@example.com",
+    FullName = "Good User",
+    IsActive = true,
+    IsVerified = true
+};
+userRepoMock.Setup(r => r.GetByIdAsync(userId))
+    .ReturnsAsync(goodUser);
+
+var act16 = async () => await userService.ValidateUserAccessAsync(userId);
+await Assert.ThrowsAsync<UnauthorizedException>(act16);
+
+// Test 17: UpdateProfileAsync updates the user's name when provided with a new full name
+var userForUpdate = new User { Id = userId, Email = "u@example.com", FullName = "Old Name" };
+userRepoMock.Setup(r => r.GetByIdAsync(userId))
+    .ReturnsAsync(userForUpdate);
+userRepoMock.Setup(r => r.UpdateAsync(It.IsAny<User>()))
+    .ReturnsAsync((User u) => u);
+
+var updatedUser = await userService.UpdateProfileAsync(userId, fullName: "New Name");
+Console.WriteLine($"Profile updated: {updatedUser.FullName}");
+
+// Test 18: UpdateProfileAsync clears the user's phone when provided with blank input
+var userWithPhone = new User
+{
+    Id = userId,
+    Email = "u@example.com",
+    FullName = "Test User",
+    Phone = "+1234567890"
+};
+userRepoMock.Setup(r => r.GetByIdAsync(userId))
+    .ReturnsAsync(userWithPhone);
+
+var phoneClearedUser = await userService.UpdateProfileAsync(userId, phone: " ");
+Console.WriteLine($"Phone cleared: {phoneClearedUser.Phone}");
+
+// Test 19: RecordSaleAsync increments the user's total sales count
+var sellerUser = new User
+{
+    Id = userId,
+    Email = "u@example.com",
+    FullName = "Seller User",
+    TotalSales = 4
+};
+userRepoMock.Setup(r => r.GetByIdAsync(userId))
+    .ReturnsAsync(sellerUser);
+userRepoMock.Setup(r => r.UpdateAsync(It.IsAny<User>()))
+    .ReturnsAsync((User u) => u);
+
+var userWithSale = await userService.RecordSaleAsync(userId);
+Console.WriteLine($"Total sales incremented: {userWithSale.TotalSales}");
+```
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.Services;
+using MarketplaceEngine.Domain.Entities;
+using MarketplaceEngine.Domain.Enums;
+using MarketplaceEngine.Exceptions;
+using MarketplaceEngine.Repositories;
+using Moq;
+using System;
+using System.Threading.Tasks;
+using Xunit;
+
+// Initialize mock repositories
+var reviewRepoMock = new Mock<IReviewRepository>();
+var userRepoMock = new Mock<IUserRepository>();
+var listingRepoMock = new Mock<IListingRepository>();
+
+// Create the service under test
+var reviewService = new ReviewService(reviewRepoMock.Object, userRepoMock.Object, listingRepoMock.Object);
+
+// Test 1: SubmitReviewAsync throws ResourceNotFoundException when reviewer is not found
+var nonExistentReviewerId = Guid.NewGuid();
+userRepoMock.Setup(r => r.GetByIdAsync(nonExistentReviewerId))
+    .ReturnsAsync((User)null);
+
+var act1 = async () => await reviewService.SubmitReviewAsync(
+    reviewerId: nonExistentReviewerId,
+    sellerId: Guid.NewGuid(),
+    listingId: Guid.NewGuid(),
+    score: 5,
+    comment: "Great seller!"
+);
+
+await Assert.ThrowsAsync<ResourceNotFoundException>(act1);
+
+// Test 2: SubmitReviewAsync throws UnauthorizedException when reviewer is inactive
+var inactiveReviewerId = Guid.NewGuid();
+var inactiveReviewer = new User { Id = inactiveReviewerId, IsActive = false };
+userRepoMock.Setup(r => r.GetByIdAsync(inactiveReviewerId))
+    .ReturnsAsync(inactiveReviewer);
+
+var act2 = async () => await reviewService.SubmitReviewAsync(
+    reviewerId: inactiveReviewerId,
+    sellerId: Guid.NewGuid(),
+    listingId: Guid.NewGuid(),
+    score: 5,
+    comment: "Great seller!"
+);
+
+await Assert.ThrowsAsync<UnauthorizedException>(act2);
+
+// Test 3: SubmitReviewAsync throws MarketplaceException when reviewer is seller
+var sellerReviewerId = Guid.NewGuid();
+var sellerUser = new User { Id = sellerReviewerId, Role = UserRole.Seller };
+userRepoMock.Setup(r => r.GetByIdAsync(sellerReviewerId))
+    .ReturnsAsync(sellerUser);
+
+var act3 = async () => await reviewService.SubmitReviewAsync(
+    reviewerId: sellerReviewerId,
+    sellerId: Guid.NewGuid(),
+    listingId: Guid.NewGuid(),
+    score: 5,
+    comment: "Great seller!"
+);
+
+await Assert.ThrowsAsync<MarketplaceException>(act3);
+
+// Test 4: SubmitReviewAsync throws DuplicateResourceException when duplicate review exists
+var existingReviewerId = Guid.NewGuid();
+var existingSellerId = Guid.NewGuid();
+var existingListingId = Guid.NewGuid();
+var existingReview = new Review { ReviewerId = existingReviewerId, SellerId = existingSellerId, ListingId = existingListingId };
+
+reviewRepoMock.Setup(r => r.ExistsForTransactionAsync(existingReviewerId, existingSellerId, existingListingId))
+    .ReturnsAsync(true);
+
+var act4 = async () => await reviewService.SubmitReviewAsync(
+    reviewerId: existingReviewerId,
+    sellerId: existingSellerId,
+    listingId: existingListingId,
+    score: 5,
+    comment: "Great seller!"
+);
+
+await Assert.ThrowsAsync<DuplicateResourceException>(act4);
+
+// Test 5: SubmitReviewAsync with valid data creates review and updates seller rating
+var validReviewerId = Guid.NewGuid();
+var validSellerId = Guid.NewGuid();
+var validListingId = Guid.NewGuid();
+var newReview = new Review { Id = Guid.NewGuid(), ReviewerId = validReviewerId, SellerId = validSellerId, ListingId = validListingId, Score = 5 };
+
+reviewRepoMock.Setup(r => r.AddAsync(It.IsAny<Review>()))
+    .ReturnsAsync(newReview);
+reviewRepoMock.Setup(r => r.GetAverageScoreAsync(validSellerId))
+    .ReturnsAsync(4.8);
+
+var createdReview = await reviewService.SubmitReviewAsync(
+    reviewerId: validReviewerId,
+    sellerId: validSellerId,
+    listingId: validListingId,
+    score: 5,
+    comment: "Excellent transaction! Fast shipping and great communication."
+);
+
+Console.WriteLine($"Review created: {createdReview.Id}");
+
+// Test 6: AddSellerReplyAsync throws UnauthorizedException when caller is not seller
+var reviewOwnerId = Guid.NewGuid();
+var nonSellerRequesterId = Guid.NewGuid();
+var reviewWithSeller = new Review { Id = Guid.NewGuid(), SellerId = reviewOwnerId };
+
+reviewRepoMock.Setup(r => r.GetByIdAsync(It.IsAny<Guid>()))
+    .ReturnsAsync(reviewWithSeller);
+
+var act6 = async () => await reviewService.AddSellerReplyAsync(
+    reviewId: reviewWithSeller.Id,
+    replyText: "Thank you for your review!",
+    requesterId: nonSellerRequesterId
+);
+
+await Assert.ThrowsAsync<UnauthorizedException>(act6);
+
+// Test 7: GetSellerStatsAsync returns correct average and distribution
+var sellerStats = await reviewService.GetSellerStatsAsync(validSellerId);
+Console.WriteLine($"Seller average rating: {sellerStats.AverageScore:F1}");
+Console.WriteLine($"Total reviews: {sellerStats.TotalReviews}");
+Console.WriteLine($"Distribution: 5-star: {sellerStats.Distribution.FiveStar}, 4-star: {sellerStats.Distribution.FourStar}, etc.");
+
+// Test 8: RemoveReviewAsync throws UnauthorizedException when caller is not moderator
+var reviewToRemove = new Review { Id = Guid.NewGuid(), ReviewerId = Guid.NewGuid() };
+var regularUserId = Guid.NewGuid();
+
+reviewRepoMock.Setup(r => r.GetByIdAsync(reviewToRemove.Id))
+    .ReturnsAsync(reviewToRemove);
+
+var act8 = async () => await reviewService.RemoveReviewAsync(
+    reviewId: reviewToRemove.Id,
+    requesterId: regularUserId
+);
+
+await Assert.ThrowsAsync<UnauthorizedException>(act8);
+```
+
 ## RecommendationsController
 
 The `RecommendationsController` class provides RESTful API endpoints for the collaborative filtering recommendation engine. It exposes personalised feeds, similar-item panels, trending galleries, category-affinity recommendations, and activity tracking. The controller integrates with the `RecommendationService` to deliver personalised content based on user behavior and listing interactions.
