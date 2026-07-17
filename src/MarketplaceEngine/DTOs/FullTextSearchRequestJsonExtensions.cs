@@ -39,7 +39,6 @@ public static class FullTextSearchRequestJsonExtensions
     public static string ToJson(this FullTextSearchRequest value, bool indented = false)
     {
         ArgumentNullException.ThrowIfNull(value);
-
         return JsonSerializer.Serialize(value, indented ? _indentedOptions : _options);
     }
 
@@ -47,26 +46,27 @@ public static class FullTextSearchRequestJsonExtensions
     /// Deserializes a JSON string to a <see cref="FullTextSearchRequest"/> instance.
     /// </summary>
     /// <param name="json">The JSON string to deserialize.</param>
-    /// <returns>The deserialized instance, or <see langword="null"/> if the JSON is empty.</returns>
+    /// <returns>
+    /// The deserialized instance, or <see langword="null"/> if the JSON is empty or whitespace.
+    /// </returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="json"/> is <see langword="null"/>.</exception>
     /// <exception cref="JsonException">Thrown when the JSON is invalid or cannot be deserialized.</exception>
     public static FullTextSearchRequest? FromJson(string json)
     {
         ArgumentNullException.ThrowIfNull(json);
 
-        if (string.IsNullOrWhiteSpace(json))
-        {
-            return null;
-        }
-
-        return JsonSerializer.Deserialize<FullTextSearchRequest>(json, _options);
+        return string.IsNullOrWhiteSpace(json)
+            ? null
+            : JsonSerializer.Deserialize<FullTextSearchRequest>(json, _options);
     }
 
     /// <summary>
     /// Attempts to deserialize a JSON string to a <see cref="FullTextSearchRequest"/> instance.
     /// </summary>
     /// <param name="json">The JSON string to deserialize.</param>
-    /// <param name="value">Receives the deserialized instance if successful.</param>
+    /// <param name="value">
+    /// Receives the deserialized instance if successful; otherwise, <see langword="null"/>.
+    /// </param>
     /// <returns><see langword="true"/> if deserialization succeeded; otherwise, <see langword="false"/>.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="json"/> is <see langword="null"/>.</exception>
     public static bool TryFromJson(string json, out FullTextSearchRequest? value)
