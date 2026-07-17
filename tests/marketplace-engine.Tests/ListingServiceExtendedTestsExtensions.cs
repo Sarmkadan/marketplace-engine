@@ -3,7 +3,7 @@
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
-// =============================================================================
+// =====================================================================
 
 using MarketplaceEngine.Domain.Models;
 using MarketplaceEngine.Domain.ValueObjects;
@@ -22,15 +22,18 @@ public static class ListingServiceExtendedTestsExtensions
     /// <summary>
     /// Creates a mock setup for CreateListingAsync that returns a valid listing.
     /// </summary>
-    /// <param name="mock">The mock repository to setup</param>
-    /// <param name="sellerId">The seller ID</param>
-    /// <param name="listingId">Optional listing ID</param>
-    /// <returns>The configured mock</returns>
+    /// <param name="mock">The mock repository to setup. Cannot be null.</param>
+    /// <param name="sellerId">The seller ID.</param>
+    /// <param name="listingId">Optional listing ID.</param>
+    /// <returns>The configured mock.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="mock"/> is null.</exception>
     public static Mock<IListingRepository> SetupCreateListingAsync(
         this Mock<IListingRepository> mock,
         Guid sellerId,
         Guid? listingId = null)
     {
+        ArgumentNullException.ThrowIfNull(mock);
+
         var listing = new Listing
         {
             Id = listingId ?? Guid.NewGuid(),
@@ -53,12 +56,13 @@ public static class ListingServiceExtendedTestsExtensions
     /// <summary>
     /// Creates a mock setup for UpdateListingAsync that returns an updated listing.
     /// </summary>
-    /// <param name="mock">The mock repository to setup</param>
-    /// <param name="listingId">The listing ID to update</param>
-    /// <param name="sellerId">The seller ID</param>
-    /// <param name="title">Optional new title</param>
-    /// <param name="price">Optional new price</param>
-    /// <returns>The configured mock</returns>
+    /// <param name="mock">The mock repository to setup. Cannot be null.</param>
+    /// <param name="listingId">The listing ID to update.</param>
+    /// <param name="sellerId">The seller ID.</param>
+    /// <param name="title">Optional new title.</param>
+    /// <param name="price">Optional new price.</param>
+    /// <returns>The configured mock.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="mock"/> is null.</exception>
     public static Mock<IListingRepository> SetupUpdateListingAsync(
         this Mock<IListingRepository> mock,
         Guid listingId,
@@ -66,6 +70,8 @@ public static class ListingServiceExtendedTestsExtensions
         string? title = null,
         decimal? price = null)
     {
+        ArgumentNullException.ThrowIfNull(mock);
+
         var listing = new Listing
         {
             Id = listingId,
@@ -91,15 +97,18 @@ public static class ListingServiceExtendedTestsExtensions
     /// <summary>
     /// Creates a mock setup for GetByIdAsync that returns a listing with the specified status.
     /// </summary>
-    /// <param name="mock">The mock repository to setup</param>
-    /// <param name="listingId">The listing ID</param>
-    /// <param name="status">The listing status to return</param>
-    /// <returns>The configured mock</returns>
+    /// <param name="mock">The mock repository to setup. Cannot be null.</param>
+    /// <param name="listingId">The listing ID.</param>
+    /// <param name="status">The listing status to return.</param>
+    /// <returns>The configured mock.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="mock"/> is null.</exception>
     public static Mock<IListingRepository> SetupGetListingWithStatusAsync(
         this Mock<IListingRepository> mock,
         Guid listingId,
         Domain.Enums.ListingStatus status)
     {
+        ArgumentNullException.ThrowIfNull(mock);
+
         var listing = new Listing
         {
             Id = listingId,
@@ -122,15 +131,19 @@ public static class ListingServiceExtendedTestsExtensions
     /// <summary>
     /// Creates a mock setup for GetFeaturedListingsAsync that returns a collection of listings.
     /// </summary>
-    /// <param name="mock">The mock repository to setup</param>
-    /// <param name="listings">The listings to return</param>
-    /// <param name="limit">The limit parameter</param>
-    /// <returns>The configured mock</returns>
+    /// <param name="mock">The mock repository to setup. Cannot be null.</param>
+    /// <param name="listings">The listings to return. Cannot be null.</param>
+    /// <param name="limit">The limit parameter.</param>
+    /// <returns>The configured mock.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="mock"/> or <paramref name="listings"/> is null.</exception>
     public static Mock<IListingRepository> SetupGetFeaturedListingsAsync(
         this Mock<IListingRepository> mock,
         List<Listing> listings,
         int limit = 10)
     {
+        ArgumentNullException.ThrowIfNull(mock);
+        ArgumentNullException.ThrowIfNull(listings);
+
         mock.Setup(r => r.GetFeaturedListingsAsync(limit))
             .ReturnsAsync(listings);
 
@@ -140,15 +153,19 @@ public static class ListingServiceExtendedTestsExtensions
     /// <summary>
     /// Creates a mock setup for GetBySellerIdAsync that returns listings for a seller.
     /// </summary>
-    /// <param name="mock">The mock repository to setup</param>
-    /// <param name="sellerId">The seller ID</param>
-    /// <param name="listings">The listings to return</param>
-    /// <returns>The configured mock</returns>
+    /// <param name="mock">The mock repository to setup. Cannot be null.</param>
+    /// <param name="sellerId">The seller ID.</param>
+    /// <param name="listings">The listings to return. Cannot be null.</param>
+    /// <returns>The configured mock.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="mock"/> or <paramref name="listings"/> is null.</exception>
     public static Mock<IListingRepository> SetupGetSellerListingsAsync(
         this Mock<IListingRepository> mock,
         Guid sellerId,
         List<Listing> listings)
     {
+        ArgumentNullException.ThrowIfNull(mock);
+        ArgumentNullException.ThrowIfNull(listings);
+
         mock.Setup(r => r.GetBySellerIdAsync(sellerId))
             .ReturnsAsync(listings);
 
@@ -158,15 +175,18 @@ public static class ListingServiceExtendedTestsExtensions
     /// <summary>
     /// Creates a mock setup for IncrementViewCountAsync that tracks view count increments.
     /// </summary>
-    /// <param name="mock">The mock repository to setup</param>
-    /// <param name="listingId">The listing ID to track</param>
-    /// <param name="initialViews">Optional initial view count</param>
-    /// <returns>The configured mock</returns>
+    /// <param name="mock">The mock repository to setup. Cannot be null.</param>
+    /// <param name="listingId">The listing ID to track.</param>
+    /// <param name="initialViews">Optional initial view count.</param>
+    /// <returns>The configured mock.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="mock"/> is null.</exception>
     public static Mock<IListingRepository> SetupIncrementViewCountAsync(
         this Mock<IListingRepository> mock,
         Guid listingId,
         int initialViews = 0)
     {
+        ArgumentNullException.ThrowIfNull(mock);
+
         var listing = new Listing
         {
             Id = listingId,
@@ -194,15 +214,18 @@ public static class ListingServiceExtendedTestsExtensions
     /// <summary>
     /// Creates a mock setup for IncrementInterestCountAsync that tracks interest count increments.
     /// </summary>
-    /// <param name="mock">The mock repository to setup</param>
-    /// <param name="listingId">The listing ID to track</param>
-    /// <param name="initialInterests">Optional initial interest count</param>
-    /// <returns>The configured mock</returns>
+    /// <param name="mock">The mock repository to setup. Cannot be null.</param>
+    /// <param name="listingId">The listing ID to track.</param>
+    /// <param name="initialInterests">Optional initial interest count.</param>
+    /// <returns>The configured mock.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="mock"/> is null.</exception>
     public static Mock<IListingRepository> SetupIncrementInterestCountAsync(
         this Mock<IListingRepository> mock,
         Guid listingId,
         int initialInterests = 0)
     {
+        ArgumentNullException.ThrowIfNull(mock);
+
         var listing = new Listing
         {
             Id = listingId,
@@ -230,15 +253,18 @@ public static class ListingServiceExtendedTestsExtensions
     /// <summary>
     /// Creates a mock setup for SetListingVisibilityAsync that tracks visibility changes.
     /// </summary>
-    /// <param name="mock">The mock repository to setup</param>
-    /// <param name="listingId">The listing ID</param>
-    /// <param name="isPublished">Whether the listing should be published</param>
-    /// <returns>The configured mock</returns>
+    /// <param name="mock">The mock repository to setup. Cannot be null.</param>
+    /// <param name="listingId">The listing ID.</param>
+    /// <param name="isPublished">Whether the listing should be published.</param>
+    /// <returns>The configured mock.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="mock"/> is null.</exception>
     public static Mock<IListingRepository> SetupSetListingVisibilityAsync(
         this Mock<IListingRepository> mock,
         Guid listingId,
         bool isPublished)
     {
+        ArgumentNullException.ThrowIfNull(mock);
+
         var listing = new Listing
         {
             Id = listingId,
@@ -266,8 +292,8 @@ public static class ListingServiceExtendedTestsExtensions
     /// <summary>
     /// Creates an active seller user for testing.
     /// </summary>
-    /// <param name="id">Optional seller ID</param>
-    /// <returns>A configured user</returns>
+    /// <param name="id">Optional seller ID.</param>
+    /// <returns>A configured user.</returns>
     public static User CreateActiveSeller(this User? _, Guid? id = null) => new()
     {
         Id = id ?? Guid.NewGuid(),
@@ -281,10 +307,10 @@ public static class ListingServiceExtendedTestsExtensions
     /// <summary>
     /// Creates an active listing for testing.
     /// </summary>
-    /// <param name="sellerId">Optional seller ID</param>
-    /// <param name="listingId">Optional listing ID</param>
-    /// <param name="price">Optional price</param>
-    /// <returns>A configured listing</returns>
+    /// <param name="sellerId">Optional seller ID.</param>
+    /// <param name="listingId">Optional listing ID.</param>
+    /// <param name="price">Optional price.</param>
+    /// <returns>A configured listing.</returns>
     public static Listing CreateActiveListing(
         this Listing? _,
         Guid? sellerId = null,
@@ -307,8 +333,8 @@ public static class ListingServiceExtendedTestsExtensions
     /// <summary>
     /// Creates an administrator user for testing.
     /// </summary>
-    /// <param name="id">Optional admin ID</param>
-    /// <returns>A configured administrator user</returns>
+    /// <param name="id">Optional admin ID.</param>
+    /// <returns>A configured administrator user.</returns>
     public static User CreateAdminUser(this User? _, Guid? id = null) => new()
     {
         Id = id ?? Guid.NewGuid(),
