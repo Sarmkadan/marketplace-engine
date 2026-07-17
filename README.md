@@ -2193,4 +2193,35 @@ Console.WriteLine($"Listing exists: {exists}");
 // Delete a listing
 await listingRepository.DeleteAsync(newListing.Id);
 Console.WriteLine("Listing deleted.");
+
+## MappingUtility
+
+The `MappingUtility` class provides a centralized mechanism for converting between domain model objects and their corresponding Data Transfer Objects (DTOs). This separation ensures that internal domain logic is decoupled from API representation, facilitating easier maintenance and API evolution.
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.Utilities;
+using MarketplaceEngine.Domain.Models;
+using MarketplaceEngine.DTOs;
+using System;
+using System.Collections.Generic;
+
+// Mapping a single domain model to a DTO
+var listing = new Listing { Id = Guid.NewGuid(), Title = "Sample Item" };
+var listingDto = MappingUtility.ToDto(listing);
+Console.WriteLine($"Mapped listing: {listingDto.Title}");
+
+// Mapping a list of domain models to DTOs
+var users = new List<User> { new User { Id = Guid.NewGuid(), Email = "test@example.com" } };
+var userDtos = MappingUtility.ToUserDtos(users);
+Console.WriteLine($"Mapped {userDtos.Count} users");
+
+// Similarly for Messages and ModerationReports
+var message = new Message { Id = Guid.NewGuid(), Body = "Hello" };
+var messageDto = MappingUtility.ToDto(message);
+
+var report = new ModerationReport { Id = Guid.NewGuid(), Reason = "Spam" };
+var reportDto = MappingUtility.ToDto(report);
+```
 ```
