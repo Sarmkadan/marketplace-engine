@@ -2134,3 +2134,63 @@ Console.WriteLine($"Last activity: {conversationDto.LastMessageAt:yyyy-MM-dd HH:
 Console.WriteLine($"Unread messages: {conversationDto.UnreadCount}");
 ```
 
+
+## ListingRepository
+
+The `ListingRepository` class provides comprehensive data access operations for managing listing entities within the marketplace system. It handles core CRUD operations, advanced querying for filtering listings by criteria such as seller, category, status, or location, and utility methods for tracking activity like view and interest counts.
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.Repositories;
+using MarketplaceEngine.Domain.Entities;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+
+// Initialize listing repository
+var listingRepository = new ListingRepository();
+
+// Add a new listing
+var newListing = await listingRepository.AddAsync(new Listing
+{
+    Title = "Premium Wireless Headphones",
+    Description = "Noise-cancelling wireless headphones.",
+    Price = 299.99m,
+    SellerId = Guid.Parse("11111111-1111-1111-1111-111111111111"),
+    CategoryId = Guid.Parse("22222222-2222-2222-2222-222222222222"),
+    Status = "Active",
+    CreatedAt = DateTime.UtcNow
+});
+
+Console.WriteLine($"Listing added: {newListing.Id}");
+
+// Get a listing by ID
+var listing = await listingRepository.GetByIdAsync(newListing.Id);
+Console.WriteLine($"Retrieved listing: {listing?.Title}");
+
+// Update a listing
+newListing.Price = 249.99m;
+await listingRepository.UpdateAsync(newListing);
+Console.WriteLine("Listing price updated.");
+
+// Get listings by category
+var electronics = await listingRepository.GetByCategoryIdAsync(Guid.Parse("22222222-2222-2222-2222-222222222222"));
+Console.WriteLine($"Found {electronics.Count} electronics listings.");
+
+// Increment view count
+await listingRepository.IncrementViewCountAsync(newListing.Id);
+Console.WriteLine("View count incremented.");
+
+// Get paginated listings
+var (items, total) = await listingRepository.GetPagedAsync(page: 1, pageSize: 10);
+Console.WriteLine($"Retrieved page 1 of {total} total listings.");
+
+// Check if listing exists
+var exists = await listingRepository.ExistsAsync(newListing.Id);
+Console.WriteLine($"Listing exists: {exists}");
+
+// Delete a listing
+await listingRepository.DeleteAsync(newListing.Id);
+Console.WriteLine("Listing deleted.");
+```
