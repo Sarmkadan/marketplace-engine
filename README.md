@@ -396,70 +396,89 @@ var recommendations = new List<RecommendationDto>
 Console.WriteLine($"Generated {recommendations.Count} recommendations");
 Console.WriteLine($"Total estimated value: {recommendations.Sum(r => r.Price):C}");
 ```
+
+## MessageDto
+
+The `MessageDto` class is a data transfer object used for API responses when retrieving messages between users in the marketplace. It represents a simplified view of a message containing the message content, sender and recipient information, read status, and creation timestamp. This DTO is commonly used in messaging APIs to provide a clean, serialized format for message data.
+
 ### Usage Example
 
 ```csharp
-using MarketplaceEngine.Domain.Models;
+using MarketplaceEngine.DTOs;
 using System;
-using System.Collections.Generic;
 
-// Create a new message between buyer and seller
-var message = new Message
+// Create a message DTO for a conversation
+var messageDto = new MessageDto
 {
-    Id = Guid.NewGuid(),
+    Id = Guid.Parse("12345678-1234-1234-1234-123456789012"),
     SenderId = Guid.Parse("11111111-1111-1111-1111-111111111111"),
-    Sender = new User
+    RecipientId = Guid.Parse("22222222-2222-2222-2222-222222222222"),
+    Content = "Hello! I'm interested in your listing. Could you provide more details about the condition?",
+    IsRead = false,
+    CreatedAt = DateTime.UtcNow.AddMinutes(-30)
+};
+
+// Display message information
+Console.WriteLine($"Message ID: {messageDto.Id}");
+Console.WriteLine($"From: {messageDto.SenderId}");
+Console.WriteLine($"To: {messageDto.RecipientId}");
+Console.WriteLine($"Content: {messageDto.Content}");
+Console.WriteLine($"Status: {(messageDto.IsRead ? "Read" : "Unread")}");
+Console.WriteLine($"Sent: {messageDto.CreatedAt:yyyy-MM-dd HH:mm:ss}");
+
+// Create a collection of message DTOs for a conversation thread
+var conversation = new List<MessageDto>
+{
+    new MessageDto
     {
         Id = Guid.Parse("11111111-1111-1111-1111-111111111111"),
-        FullName = "John Doe",
-        Email = "john@example.com"
+        SenderId = Guid.Parse("11111111-1111-1111-1111-111111111111"),
+        RecipientId = Guid.Parse("22222222-2222-2222-2222-222222222222"),
+        Content = "Hi there! I have a question about your item.",
+        IsRead = true,
+        CreatedAt = DateTime.UtcNow.AddHours(-2)
     },
-    RecipientId = Guid.Parse("22222222-2222-2222-2222-222222222222"),
-    Recipient = new User
+    new MessageDto
     {
         Id = Guid.Parse("22222222-2222-2222-2222-222222222222"),
-        FullName = "Jane Smith",
-        Email = "jane@example.com"
+        SenderId = Guid.Parse("22222222-2222-2222-2222-222222222222"),
+        RecipientId = Guid.Parse("11111111-1111-1111-1111-111111111111"),
+        Content = "Sure! What would you like to know?",
+        IsRead = true,
+        CreatedAt = DateTime.UtcNow.AddHours(-1)
     },
-    ListingId = Guid.Parse("33333333-3333-3333-3333-333333333333"),
-    Listing = new Listing
-    {
-        Id = Guid.Parse("33333333-3333-3333-3333-333333333333"),
-        Title = "Premium Mountain Bike",
-        Price = 799.99m
-    },
-    Subject = "Question about your bike listing",
-    Body = "Hi Jane, I'm interested in your mountain bike. Is it still available? Could you provide more details about its condition?",
-    AttachmentUrls = new List<string> { "https://example.com/images/bike-photo.jpg" },
-    CreatedAt = DateTime.UtcNow
+    messageDto // The new message
 };
 
-// Validate message before sending
-message.ValidateBeforeSending();
+Console.WriteLine($"\nConversation contains {conversation.Count} messages");
+Console.WriteLine($"Unread messages: {conversation.Count(m => !m.IsRead)}");
+```
 
-// Mark message as read when recipient views it
-message.MarkAsRead();
+## ConversationDto
 
-// Add a reply to the conversation
-var reply = new Message
+The `ConversationDto` class provides a summary view of a conversation between a user and another participant in the marketplace. It includes information about the other user, the last message in the conversation, and the count of unread messages. This DTO is useful for displaying conversation previews in user interfaces and listing conversations in a compact format.
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.DTOs;
+using System;
+
+// Create a conversation summary
+var conversationDto = new ConversationDto
 {
-    Id = Guid.NewGuid(),
-    SenderId = Guid.Parse("22222222-2222-2222-2222-222222222222"),
-    Sender = message.Recipient,
-    RecipientId = Guid.Parse("11111111-1111-1111-1111-111111111111"),
-    Recipient = message.Sender,
-    Subject = "Re: Question about your bike listing",
-    Body = "Hi John, yes the bike is still available. It's in excellent condition with minimal wear and tear.",
-    CreatedAt = DateTime.UtcNow.AddMinutes(5)
+    ConversationId = Guid.Parse("33333333-3333-3333-3333-333333333333"),
+    OtherUserId = Guid.Parse("22222222-2222-2222-2222-222222222222"),
+    OtherUserName = "Jane Smith",
+    LastMessage = "I'm interested in your bike. Is it still available?",
+    LastMessageAt = DateTime.UtcNow.AddMinutes(-15),
+    UnreadCount = 1
 };
 
-message.AddReply(reply);
-
-// Check message status
-Console.WriteLine($"Message ID: {message.Id}");
-Console.WriteLine($"Subject: {message.Subject}");
-Console.WriteLine($"Status: {message.GetReadStatus()}");
-Console.WriteLine($"Has {message.Replies.Count} replies");
-Console.WriteLine($"Attachments: {message.AttachmentUrls.Count}");
+// Display conversation information
+Console.WriteLine($"Conversation with: {conversationDto.OtherUserName}");
+Console.WriteLine($"Last message: {conversationDto.LastMessage}");
+Console.WriteLine($"Last activity: {conversationDto.LastMessageAt:yyyy-MM-dd HH:mm}");
+Console.WriteLine($"Unread messages: {conversationDto.UnreadCount}");
 ```
 
