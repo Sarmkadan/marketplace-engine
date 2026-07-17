@@ -7,7 +7,9 @@
 using MarketplaceEngine.Domain.Enums;
 using MarketplaceEngine.Domain.Models;
 using MarketplaceEngine.Domain.ValueObjects;
-using System.Globalization;
+using System;
+using System.Collections.Generic;
+using System.Text.RegularExpressions;
 
 namespace MarketplaceEngine.Services;
 
@@ -27,13 +29,7 @@ public static class UserServiceValidation
     {
         ArgumentNullException.ThrowIfNull(value);
 
-        var problems = new List<string>();
-
-        // Validate that the repository is not null
-        // Note: This would be validated in the constructor, so we skip it here
-        // as we're validating the service instance itself
-
-        return problems.AsReadOnly();
+        return Array.Empty<string>();
     }
 
     /// <summary>
@@ -44,6 +40,7 @@ public static class UserServiceValidation
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null</exception>
     public static bool IsValid(this UserService? value)
     {
+        ArgumentNullException.ThrowIfNull(value);
         return Validate(value).Count == 0;
     }
 
@@ -75,6 +72,7 @@ public static class UserServiceValidation
     /// <param name="fullName">The user's full name</param>
     /// <param name="phone">Optional phone number</param>
     /// <returns>A list of validation problems, or empty if valid</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="email"/> or <paramref name="fullName"/> is null</exception>
     public static IReadOnlyList<string> ValidateForRegistration(
         string? email,
         string? fullName,
@@ -82,13 +80,16 @@ public static class UserServiceValidation
     {
         var problems = new List<string>();
 
+        ArgumentException.ThrowIfNullOrEmpty(email);
+        ArgumentException.ThrowIfNullOrEmpty(fullName);
+
         if (string.IsNullOrWhiteSpace(email))
         {
             problems.Add("Email is required");
         }
-        else if (!email.Contains("@", StringComparison.Ordinal))
+        else if (!IsValidEmail(email))
         {
-            problems.Add("Email must contain an @ symbol");
+            problems.Add("Email must be a valid email address");
         }
 
         if (string.IsNullOrWhiteSpace(fullName))
@@ -187,6 +188,7 @@ public static class UserServiceValidation
     /// <param name="userId">The user ID</param>
     /// <param name="verificationToken">The verification token to validate</param>
     /// <returns>A list of validation problems, or empty if valid</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="verificationToken"/> is null</exception>
     public static IReadOnlyList<string> ValidateForEmailVerification(
         Guid userId,
         string? verificationToken)
@@ -198,10 +200,7 @@ public static class UserServiceValidation
             problems.Add("User ID cannot be empty");
         }
 
-        if (string.IsNullOrWhiteSpace(verificationToken))
-        {
-            problems.Add("Verification token is required");
-        }
+        ArgumentException.ThrowIfNullOrEmpty(verificationToken);
 
         return problems.AsReadOnly();
     }
@@ -278,6 +277,7 @@ public static class UserServiceValidation
     /// <param name="userId">The user ID</param>
     /// <param name="rating">The new rating</param>
     /// <returns>A list of validation problems, or empty if valid</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="rating"/> is null</exception>
     public static IReadOnlyList<string> ValidateForRatingUpdate(
         Guid userId,
         Rating? rating)
@@ -289,21 +289,16 @@ public static class UserServiceValidation
             problems.Add("User ID cannot be empty");
         }
 
-        if (rating is null)
-        {
-            problems.Add("Rating is required");
-        }
-        else
-        {
-            if (rating.Score < 1 || rating.Score > 5)
-            {
-                problems.Add("Rating score must be between 1 and 5");
-            }
+        ArgumentNullException.ThrowIfNull(rating);
 
-            if (rating.TotalReviews < 0)
-            {
-                problems.Add("Rating total reviews cannot be negative");
-            }
+        if (rating.Score < 1 || rating.Score > 5)
+        {
+            problems.Add("Rating score must be between 1 and 5");
+        }
+
+        if (rating.TotalReviews < 0)
+        {
+            problems.Add("Rating total reviews cannot be negative");
         }
 
         return problems.AsReadOnly();
@@ -385,5 +380,29 @@ public static class UserServiceValidation
         }
 
         return problems.AsReadOnly();
+    }
+
+    /// <summary>
+    /// Validates that an email address has a valid format.
+    /// </summary>
+    /// <param name="email">The email address to validate</param>
+    /// <returns>True if the email is valid; otherwise, false</returns>
+    private static bool IsValidEmail(string email)
+    {
+        if (string.IsNullOrWhiteSpace(email))
+        {
+            return false;
+        }
+
+        try
+        {
+            // Basic email regex pattern
+            var pattern = @"^[^@\s]+@[^@\s]+\.[^@\s]+$";
+            return Regex.IsMatch(email, pattern, RegexOptions.IgnoreCase);
+        }
+        catch (RegexMatchTimeoutException)
+        {
+            return false;
+        }
     }
 }
