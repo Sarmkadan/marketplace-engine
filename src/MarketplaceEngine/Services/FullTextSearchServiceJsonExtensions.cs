@@ -16,6 +16,10 @@ namespace MarketplaceEngine.Services;
 /// </summary>
 public static class FullTextSearchServiceJsonExtensions
 {
+    /// <summary>
+    /// Gets the default JSON serialization options used by the serialization extensions.
+    /// Uses camelCase naming policy, ignores cycles, and does not indent output.
+    /// </summary>
     private static readonly JsonSerializerOptions _jsonOptions = new(JsonSerializerDefaults.Web)
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
@@ -47,6 +51,7 @@ public static class FullTextSearchServiceJsonExtensions
     /// </summary>
     /// <param name="json">The JSON string to deserialize.</param>
     /// <returns>The deserialized service instance, or null if the JSON is invalid.</returns>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="json"/> is null or empty.</exception>
     public static FullTextSearchService? FromJson(string json)
     {
         ArgumentException.ThrowIfNullOrEmpty(json);
@@ -67,6 +72,7 @@ public static class FullTextSearchServiceJsonExtensions
     /// <param name="json">The JSON string to deserialize.</param>
     /// <param name="value">Receives the deserialized service instance if successful.</param>
     /// <returns>True if deserialization succeeded; otherwise, false.</returns>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="json"/> is null or empty.</exception>
     public static bool TryFromJson(string json, out FullTextSearchService? value)
     {
         ArgumentException.ThrowIfNullOrEmpty(json);
