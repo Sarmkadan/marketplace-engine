@@ -42,11 +42,11 @@ public static class MarketplaceWorkflowTestsJsonExtensions
     /// Deserializes a JSON string to a <see cref="MarketplaceWorkflowTests"/> instance.
     /// </summary>
     /// <param name="json">The JSON string to deserialize.</param>
-    /// <returns>The deserialized instance, or <see langword="null"/> if the JSON is empty or whitespace.</returns>
+    /// <returns>The deserialized instance, or <see langword="null"/> if the JSON is invalid or whitespace.</returns>
     /// <exception cref="JsonException">Thrown when the JSON is invalid or cannot be deserialized.</exception>
     public static MarketplaceWorkflowTests? FromJson(string json)
     {
-        ArgumentException.ThrowIfNullOrEmpty(json);
+        ArgumentNullException.ThrowIfNull(json);
 
         return JsonSerializer.Deserialize<MarketplaceWorkflowTests>(json, _jsonOptions);
     }
@@ -57,14 +57,15 @@ public static class MarketplaceWorkflowTestsJsonExtensions
     /// <param name="json">The JSON string to deserialize.</param>
     /// <param name="value">Receives the deserialized instance if successful.</param>
     /// <returns><see langword="true"/> if deserialization succeeds; otherwise, <see langword="false"/>.</returns>
-    public static bool TryFromJson(string json, out MarketplaceWorkflowTests? value)
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="json"/> is <see langword="null"/>.</exception>
+public static bool TryFromJson(string json, out MarketplaceWorkflowTests? value)
     {
-        ArgumentException.ThrowIfNullOrEmpty(json);
+        ArgumentNullException.ThrowIfNull(json);
 
         try
         {
             value = JsonSerializer.Deserialize<MarketplaceWorkflowTests>(json, _jsonOptions);
-            return true;
+            return value is not null;
         }
         catch (JsonException)
         {
