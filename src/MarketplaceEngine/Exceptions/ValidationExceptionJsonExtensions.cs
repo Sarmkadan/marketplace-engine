@@ -2,7 +2,7 @@
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
-// =============================================================================
+// =====================================================================
 
 using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
@@ -46,16 +46,20 @@ public static class ValidationExceptionJsonExtensions
     /// Deserializes a JSON string into a <see cref="ValidationException"/>.
     /// </summary>
     /// <param name="json">The JSON string to deserialize.</param>
-    /// <returns>The deserialized validation exception, or <see langword="null"/> if the JSON is empty.</returns>
+    /// <returns>The deserialized validation exception, or <see langword="null"/> if the JSON is empty or whitespace.</returns>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="json"/> is empty or consists only of whitespace.</exception>
     /// <exception cref="JsonException">Thrown when the JSON is invalid or cannot be deserialized.</exception>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="json"/> is <see langword="null"/>.</exception>
     public static ValidationException? FromJson(string json)
     {
         ArgumentNullException.ThrowIfNull(json);
 
-        return json.Length == 0
-            ? null
-            : JsonSerializer.Deserialize<ValidationException>(json, _options);
+        if (string.IsNullOrWhiteSpace(json))
+        {
+            return null;
+        }
+
+        return JsonSerializer.Deserialize<ValidationException>(json, _options);
     }
 
     /// <summary>
