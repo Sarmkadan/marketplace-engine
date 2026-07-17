@@ -267,654 +267,84 @@ Console.WriteLine($"Recommendation settings: MinOverlap={options.MinOverlapForNe
                 $"TrendingWindow={options.TrendingWindowHours}h");
 ```
 
-## IRecommendationEngine
+## RecommendationDto
 
-The `IRecommendationEngine` interface defines the contract for recommendation engine implementations in the Marketplace Engine. It supports multiple recommendation strategies including collaborative filtering, item-based similarity, category-affinity, and trending-based recommendations with graceful fallbacks for cold-start scenarios. Implementations record user signals and compute personalized recommendations that power the marketplace's feed and discovery features.
-
-### Usage Example
-
-```csharp
-using MarketplaceEngine.Recommendations;
-using System;
-using System.Threading;
-
-// Initialize the recommendation engine with required dependencies
-// (In a real application, these would be injected via DI container)
-var options = RecommendationOptions.CreateDefault();
-var cacheService = new CacheService("RecommendationsCache");
-var activityTracker = new UserActivityTracker(options, null);
-var listingRepository = new ListingRepository(); // Mock implementation
-var logger = new Logger<CollaborativeFilteringEngine>(null);
-
-var engine = new CollaborativeFilteringEngine(
-    activityTracker,
-    listingRepository,
-    cacheService,
-    options,
-    logger);
-
-// Record user activity signals to build recommendation data
-var userId = Guid.NewGuid();
-var listingId = Guid.NewGuid();
-
-await engine.RecordSignalAsync(new UserActivitySignal
-{
-    UserId = userId,
-    ListingId = listingId,
-    SignalType = SignalType.View,
-    OccurredAt = DateTime.UtcNow
-});
-
-// Get personalized recommendations for a user
-var userRecommendations = await engine.ComputeForUserAsync(userId, 10);
-Console.WriteLine($"Found {userRecommendations.Count} personalized recommendations");
-
-// Get similar listings to a specific listing
-var similarListings = await engine.ComputeSimilarAsync(listingId, 5);
-Console.WriteLine($"Found {similarListings.Count} similar listings");
-
-// Get trending listings based on recent activity
-var trendingListings = await engine.ComputeTrendingAsync(10);
-Console.WriteLine($"Found {trendingListings.Count} trending listings");
-
-// Get recommendations based on category affinity
-var affinityRecommendations = await engine.ComputeByAffinityAsync(userId, 8);
-Console.WriteLine($"Found {affinityRecommendations.Count} affinity-based recommendations");
-```
-
-## UserActivityTracker
-
-The `UserActivityTracker` class provides an in-memory store for tracking user activity signals across marketplace listings. It maintains chronological interaction histories for individual users and a reverse index mapping listings to their audiences, enabling both user-based and item-based collaborative filtering scenarios. The tracker is designed for single-instance deployments and includes configurable signal retention limits.
+The `RecommendationDto` class represents a single recommendation item in the marketplace recommendation system. It encapsulates all essential information about a recommended listing including the listing details, recommendation score, reasoning, and metadata about the recommendation strategy and generation time. This DTO is used to serialize recommendation results for API responses and client consumption.
 
 ### Usage Example
 
 ```csharp
-using MarketplaceEngine.Recommendations;
-using System;
-
-// Initialize activity tracker with recommendation options
-var options = new RecommendationOptions
-{
-    MaxSignalsPerUser = 1000,
-    SignalRetentionWindow = TimeSpan.FromDays(30)
-};
-var tracker = new UserActivityTracker(options, logger);
-
-// Record user interactions with listings
-var userId = Guid.NewGuid();
-var listingId = Guid.NewGuid();
-
-var viewSignal = new UserActivitySignal
-{
-    UserId = userId,
-    ListingId = listingId,
-    SignalType = UserActivityType.View,
-    OccurredAt = DateTime.UtcNow
-};
-
-var purchaseSignal = new UserActivitySignal
-{
-    UserId = userId,
-    ListingId = listingId,
-    SignalType = UserActivityType.Purchase,
-    OccurredAt = DateTime.UtcNow.AddSeconds(-30)
-};
-
-await tracker.RecordAsync(viewSignal);
-await tracker.RecordAsync(purchaseSignal);
-
-// Retrieve user interaction history
-var userHistory = await tracker.GetUserHistoryAsync(userId);
-Console.WriteLine($"User has {userHistory.Count} recorded interactions");
-
-// Get audience for a specific listing
-var audience = await tracker.GetListingAudienceAsync(listingId);
-Console.WriteLine($"Listing has {audience.Count} unique viewers");
-
-// Retrieve signals within a specific time window
-var recentSignals = await tracker.GetSignalsInWindowAsync(TimeSpan.FromHours(1));
-Console.WriteLine($"Found {recentSignals.Count} signals in the last hour");
-```
-
-## MarketplaceException
-
-The `MarketplaceException` class is the base exception type for all marketplace-related errors in the Marketplace Engine. It extends the standard `Exception` class with additional properties for error tracking and validation error handling, making it ideal for scenarios like API validation failures, business rule violations, and service-level errors.
-
-### Usage Example
-
-```csharp
-using MarketplaceEngine.Exceptions;
-using System;
-using System.Collections.Generic;
-
-// Create a simple marketplace exception
-var exception = new MarketplaceException("Product not found", "PRODUCT_NOT_FOUND");
-Console.WriteLine($"Error: {exception.Message}, Code: {exception.ErrorCode}");
-
-// Create an exception with validation errors
-var validationErrors = new Dictionary<string, string[]>
-{
-    { "Price", new[] { "Price must be greater than 0", "Price must be a valid decimal" } },
-    { "Title", new[] { "Title is required", "Title must be at least 5 characters" } }
-};
-var validationException = new MarketplaceException(
-    "Product validation failed",
-    validationErrors,
-    "VALIDATION_ERROR"
-);
-Console.WriteLine($"Validation errors: {validationException.ValidationErrors?.Count}");
-
-// Create an exception with inner exception
-try
-{
-    // Some operation that can fail
-}
-catch (Exception ex)
-{
-    var wrappedException = new MarketplaceException(
-        "Failed to process product listing",
-        ex,
-        "PROCESSING_ERROR"
-    );
-}
-
-// Create exception with context using the static factory method
-var contextException = MarketplaceException.CreateWithContext(
-    "Invalid category specified",
-    "category:electronics"
-);
-Console.WriteLine($"Context exception: {contextException.Message}");
-```
-
-## CollaborativeFilteringEngine
-
-The `CollaborativeFilteringEngine` class implements a recommendation engine that combines user-based collaborative filtering, item-based collaborative filtering, category-affinity scoring, and popularity-based trending to provide personalized recommendations. It uses cosine similarity on interaction vectors for user-based recommendations, co-interaction co-occurrence for item similarity, weighted category preferences for affinity scoring, and signal velocity for trending recommendations.
-
-### Usage Example
-
-```csharp
-using MarketplaceEngine.Recommendations;
 using MarketplaceEngine.DTOs;
 using System;
-using System.Threading;
-
-// Initialize the recommendation engine with required dependencies
-// (In a real application, these would be injected via DI container)
-var options = RecommendationOptions.CreateDefault();
-var cacheService = new CacheService("RecommendationsCache");
-var activityTracker = new UserActivityTracker(options, null);
-var listingRepository = new ListingRepository(); // Mock implementation
-var logger = new Logger<CollaborativeFilteringEngine>(null);
-
-var engine = new CollaborativeFilteringEngine(
-    activityTracker,
-    listingRepository,
-    cacheService,
-    options,
-    logger);
-
-// Record user activity signals
-var userId = Guid.NewGuid();
-var listingId = Guid.NewGuid();
-
-await engine.RecordSignalAsync(new UserActivitySignal
-{
-    UserId = userId,
-    ListingId = listingId,
-    SignalType = SignalType.View,
-    OccurredAt = DateTime.UtcNow
-});
-
-// Get personalized recommendations for a user
-var userRecommendations = await engine.ComputeForUserAsync(userId, 10);
-Console.WriteLine($"Found {userRecommendations.Count} personalized recommendations");
-
-// Get similar listings to a specific listing
-var similarListings = await engine.ComputeSimilarAsync(listingId, 5);
-Console.WriteLine($"Found {similarListings.Count} similar listings");
-
-// Get trending listings
-var trendingListings = await engine.ComputeTrendingAsync(10);
-Console.WriteLine($"Found {trendingListings.Count} trending listings");
-
-// Get recommendations based on category affinity
-var affinityRecommendations = await engine.ComputeByAffinityAsync(userId, 8);
-Console.WriteLine($"Found {affinityRecommendations.Count} affinity-based recommendations");
-
-// Record additional signals to refine future recommendations
-await engine.RecordSignalAsync(new UserActivitySignal
-{
-    UserId = userId,
-    ListingId = Guid.NewGuid(), // Different listing
-    SignalType = SignalType.Purchase,
-    OccurredAt = DateTime.UtcNow.AddMinutes(-15)
-});
-```
-
-## Category
-
-The `Category` class represents a marketplace category for organizing listings hierarchically. It supports parent-child relationships, maintains listing counts, and provides methods for managing subcategories and validating category data. Categories are essential for navigation, search filtering, and recommendation engines.
-
-### Usage Example
-
-```csharp
-using MarketplaceEngine.Domain.Models;
-using System;
-
-// Create a parent category
-var electronics = new Category
-{
-    Id = Guid.NewGuid(),
-    Name = "Electronics",
-    Description = "Electronic devices and components",
-    IconUrl = "/icons/electronics.png",
-    DisplayOrder = 1,
-    IsActive = true,
-    CreatedAt = DateTime.UtcNow
-};
-
-// Validate and initialize the category
-electronics.ValidateAndInitialize();
-
-// Create a subcategory
-var smartphones = new Category
-{
-    Id = Guid.NewGuid(),
-    Name = "Smartphones",
-    Description = "Mobile phones and accessories",
-    IconUrl = "/icons/smartphones.png",
-    DisplayOrder = 1,
-    IsActive = true,
-    CreatedAt = DateTime.UtcNow
-};
-
-smartphones.ValidateAndInitialize();
-
-// Add subcategory to parent
-electronics.AddSubCategory(smartphones);
-
-// Create a listing and add it to the category
-var phoneListing = new Listing
-{
-    Id = Guid.NewGuid(),
-    Title = "iPhone 15 Pro",
-    Description = "Latest smartphone with advanced features",
-    Price = 999.99m,
-    SellerId = Guid.NewGuid(),
-    Status = ListingStatus.Active,
-    CreatedAt = DateTime.UtcNow
-};
-
-// Add listing to category
-category.Listings.Add(phoneListing);
-category.IncrementListingCount();
-
-// Check if category has active listings
-var hasActive = category.HasActiveListings();
-Console.WriteLine($"Category has active listings: {hasActive}");
-
-// Get full category path
-var fullPath = category.GetFullPath();
-Console.WriteLine($"Category path: {fullPath}");
-
-// Remove a subcategory
-var removed = category.RemoveSubCategory(smartphones.Id);
-Console.WriteLine($"Subcategory removed: {removed}");
-```
-
-## Listing
-
-The `Listing` class represents a product or service listing in the marketplace. It encapsulates all essential information about a marketplace item including seller details, pricing, location, media, tags, engagement metrics, and status tracking. Listings are the core entity for buying and selling activities in the marketplace.
-
-### Usage Example
-
-```csharp
-using MarketplaceEngine.Domain.Models;
-using MarketplaceEngine.Domain.ValueObjects;
-using System;
-
-// Create a new listing
-var listing = new Listing
-{
-    Id = Guid.NewGuid(),
-    SellerId = Guid.NewGuid(),
-    Title = "Premium Mountain Bike",
-    Description = "Hardtail mountain bike with 29-inch wheels, hydraulic disc brakes, and 12-speed drivetrain. Excellent condition, barely used.",
-    Price = new Money(799.99m, "USD"),
-    CategoryId = Guid.NewGuid(),
-    Status = ListingStatus.Active,
-    Location = new Location("New York", "NY", "10001", "Manhattan", "123 Main St"),
-    ImageUrls = new List<string>
-    {
-        "https://example.com/images/bike-1.jpg",
-        "https://example.com/images/bike-2.jpg"
-    },
-    Tags = new List<string> { "bike", "mountain", "outdoor", "sports" },
-    IsFeatured = true,
-    DueDate = DateTime.UtcNow.AddDays(30),
-    Condition = "Like New"
-};
-
-// Publish the listing
-listing.Publish();
-
-Console.WriteLine($"Listing published: {listing.PublishedAt}");
-Console.WriteLine($"Status: {listing.Status}");
-
-// Record user engagement
-listing.RecordView();
-listing.RecordInterest();
-
-// Add additional tags
-listing.AddTag("cycling");
-listing.AddTag("recreational");
-
-// Add more images
-listing.AddImage("https://example.com/images/bike-3.jpg");
-
-// Mark as featured
-listing.MarkAsFeatured();
-
-Console.WriteLine($"View count: {listing.ViewCount}");
-Console.WriteLine($"Interest count: {listing.InterestCount}");
-Console.WriteLine($"Tags: {string.Join(", ", listing.Tags)}");
-Console.WriteLine($"Is featured: {listing.IsFeatured}");
-
-// Archive when sold
-listing.Delist();
-```
-
-## Review
-
-The `Review` class represents a customer's feedback on a listing, allowing reviewers to rate their experience, provide comments, and flag content for moderation. It manages the review lifecycle including seller replies, status tracking, and validation logic to ensure high-quality, authentic feedback within the marketplace.
-
-### Usage Example
-
-```csharp
-using MarketplaceEngine.Domain.Models;
-using System;
-
-// Create a new review
-var review = new Review
-{
-    Id = Guid.NewGuid(),
-    ReviewerId = Guid.NewGuid(),
-    SellerId = Guid.NewGuid(),
-    ListingId = Guid.NewGuid(),
-    Score = 5,
-    Comment = "Great service and fast shipping!",
-    Status = ReviewStatus.Pending,
-    CreatedAt = DateTime.UtcNow
-};
-
-// Validate the review content
-review.ValidateReview();
-
-// Add a seller reply
-review.AddSellerReply("Thank you for your kind words!");
-
-// Flag for review if necessary
-review.FlagForReview();
-
-// Mark the review as removed/hidden if it violates policies
-review.Remove();
-
-Console.WriteLine($"Review status: {review.Status}");
-Console.WriteLine($"Seller reply: {review.SellerReply}");
-```
-
-## Payment
-
-The `Payment` class represents a financial transaction within the marketplace, capturing essential details such as the parties involved, the amount, and the transaction's lifecycle status. It tracks the payment from creation through to completion, refund, or failure, ensuring auditability and traceability using metadata and external transaction identifiers.
-
-### Usage Example
-
-```csharp
-using MarketplaceEngine.Domain.Models;
-using System;
 using System.Collections.Generic;
 
-// Create a new payment instance
-var payment = new Payment
+// Create a single recommendation for a user
+var recommendation = new RecommendationDto
 {
-    Id = Guid.NewGuid(),
     ListingId = Guid.NewGuid(),
-    BuyerId = Guid.NewGuid(),
+    Title = "Wireless Bluetooth Headphones",
+    Price = 129.99m,
+    Currency = "USD",
+    ThumbnailUrl = "https://example.com/images/headphones.jpg",
+    Score = 0.92,
+    Reason = "Based on your recent purchase of premium audio equipment",
+    CategoryId = Guid.NewGuid(),
     SellerId = Guid.NewGuid(),
-    Amount = new Money(100.00m, "USD"),
-    Status = PaymentStatus.Pending,
-    CreatedAt = DateTime.UtcNow,
-    Metadata = new Dictionary<string, string>
+    UserId = Guid.NewGuid(),
+    BasedOnListingId = Guid.NewGuid(),
+    Count = 1,
+    Strategy = RecommendationStrategy.CollaborativeFiltering,
+    IsPersonalised = true,
+    GeneratedAt = DateTime.UtcNow
+};
+
+Console.WriteLine($"Recommendation: {recommendation.Title}");
+Console.WriteLine($"Score: {recommendation.Score:P1}");
+Console.WriteLine($"Reason: {recommendation.Reason}");
+Console.WriteLine($"Strategy: {recommendation.Strategy}");
+
+// Create a collection of recommendations
+var recommendations = new List<RecommendationDto>
+{
+    new RecommendationDto
     {
-        { "Reference", "INV-1001" },
-        { "Channel", "Web" }
+        ListingId = Guid.NewGuid(),
+        Title = "Smart Watch with Heart Rate Monitor",
+        Price = 199.99m,
+        Currency = "USD",
+        ThumbnailUrl = "https://example.com/images/smartwatch.jpg",
+        Score = 0.87,
+        Reason = "Similar customers also purchased this item",
+        CategoryId = Guid.NewGuid(),
+        SellerId = Guid.NewGuid(),
+        UserId = Guid.NewGuid(),
+        Count = 1,
+        Strategy = RecommendationStrategy.ItemSimilarity,
+        IsPersonalised = true,
+        GeneratedAt = DateTime.UtcNow
+    },
+    new RecommendationDto
+    {
+        ListingId = Guid.NewGuid(),
+        Title = "Portable Bluetooth Speaker",
+        Price = 89.99m,
+        Currency = "USD",
+        ThumbnailUrl = "https://example.com/images/speaker.jpg",
+        Score = 0.78,
+        Reason = "Trending in your category",
+        CategoryId = Guid.NewGuid(),
+        SellerId = Guid.NewGuid(),
+        UserId = Guid.NewGuid(),
+        Count = 1,
+        Strategy = RecommendationStrategy.Trending,
+        IsPersonalised = true,
+        GeneratedAt = DateTime.UtcNow
     }
 };
 
-Console.WriteLine($"Payment created: {payment.Id}");
-Console.WriteLine($"Amount: {payment.Amount.Value} {payment.Amount.Currency}");
-Console.WriteLine($"Status: {payment.Status}");
+Console.WriteLine($"Generated {recommendations.Count} recommendations");
+Console.WriteLine($"Total estimated value: {recommendations.Sum(r => r.Price):C}");
 ```
-
-## Money
-
-The `Money` value object represents immutable monetary amounts with associated currency codes. It provides type-safe currency handling for financial calculations, ensuring that operations like addition, subtraction, and multiplication maintain currency consistency and prevent mixing of different currencies. The class implements value-based equality and provides standard overrides for proper comparison and hashing.
-
-
-### Usage Example
-
-```csharp
-using MarketplaceEngine.Domain.ValueObjects;
-using System;
-
-// Create money instances with different amounts and currencies
-var productPrice = new Money(799.99m, "USD");
-var taxAmount = new Money(63.99m, "USD");
-var shippingCost = new Money(15.50m, "EUR");
-
-Console.WriteLine($"Product price: {productPrice}");
-Console.WriteLine($"Tax amount: {taxAmount}");
-Console.WriteLine($"Shipping cost: {shippingCost}");
-
-// Perform arithmetic operations (same currency only)
-var totalPrice = productPrice.Add(taxAmount);
-Console.WriteLine($"Total price: {totalPrice}");
-
-var discount = new Money(50.00m, "USD");
-var discountedPrice = totalPrice.Subtract(discount);
-Console.WriteLine($"Discounted price: {discountedPrice}");
-
-// Multiply by a scalar value
-var bulkPrice = productPrice.Multiply(5);
-Console.WriteLine($"Bulk price (5 units): {bulkPrice}");
-
-// Compare money values
-var price1 = new Money(100.00m, "USD");
-var price2 = new Money(100.00m, "USD");
-var price3 = new Money(99.99m, "USD");
-
-Console.WriteLine($"Price1 equals Price2: {price1.Equals(price2)}"); // True
-Console.WriteLine($"Price1 equals Price3: {price1.Equals(price3)}"); // False
-
-// Check hash codes
-Console.WriteLine($"Price1 hash code: {price1.GetHashCode()}");
-Console.WriteLine($"Price2 hash code: {price2.GetHashCode()}"); // Same as Price1
-```
-
-## User
-
-The `User` class represents a marketplace user who can act as both a buyer and seller. It encapsulates user profile information, authentication state, activity tracking, and seller statistics. The class provides methods for email verification, profile validation, account management, and activity tracking.
-
-### Usage Example
-
-```csharp
-using MarketplaceEngine.Domain.Models;
-using MarketplaceEngine.Domain.ValueObjects;
-using System;
-
-// Create a new user
-var user = new User
-{
-    Id = Guid.NewGuid(),
-    Email = "john.doe@example.com",
-    FullName = "John Doe",
-    Phone = "+1-555-123-4567",
-    ProfileImageUrl = "/avatars/john-doe.jpg",
-    Bio = "Experienced software developer and tech enthusiast",
-    Role = UserRole.Seller,
-    Location = new Location("San Francisco", "CA", "94105", "Downtown", "123 Market St"),
-    IsVerified = true,
-    IsActive = true,
-    TotalListings = 25,
-    TotalSales = 42,
-    CreatedAt = DateTime.UtcNow.AddDays(-30)
-};
-
-// Validate user profile and email
-user.ValidateProfile();
-user.ValidateEmail();
-
-// Record user activity
-user.UpdateLastActivity();
-
-// Promote to premium seller if eligible
-if (user.TotalSales >= 10)
-{
-    user.PromoteToPremiumSeller();
-}
-
-// Record a successful sale
-user.RecordSale();
-
-// Generate verification token for email confirmation
-user.GenerateVerificationToken();
-
-Console.WriteLine($"User: {user.FullName} ({user.Email})");
-Console.WriteLine($"Role: {user.Role}");
-Console.WriteLine($"Total listings: {user.TotalListings}");
-Console.WriteLine($"Total sales: {user.TotalSales}");
-Console.WriteLine($"Is verified: {user.IsVerified}");
-```
-
-## ModerationReport
-
-The `ModerationReport` class represents a submission reporting a violation of platform guidelines, such as inappropriate user behavior, harmful content in listings, or message abuse. It tracks the reporter, the target (user, listing, or message), the reason for the report, and the current administrative status for review.
-
-### Usage Example
-
-```csharp
-using MarketplaceEngine.Domain.Models;
-using System;
-
-// Create a new moderation report for a user violation
-var moderationReport = new ModerationReport
-{
-    Id = Guid.NewGuid(),
-    ReporterId = Guid.NewGuid(),
-    TargetUserId = Guid.NewGuid(),
-    Reason = "Harassment",
-    Details = "User sent offensive messages.",
-    Status = ModerationStatus.Pending,
-    Priority = 2,
-    CreatedAt = DateTime.UtcNow
-};
-
-Console.WriteLine($"Report ID: {moderationReport.Id}");
-Console.WriteLine($"Report Status: {moderationReport.Status}");
-```
-
-## ApiResponse
-
-The `ApiResponse` and `ApiResponse<T>` classes provide a consistent, structured wrapper for all API endpoint responses within the Marketplace Engine. They encapsulate the operation's success status, optional data, messages, and metadata (such as timestamps and request IDs) to ensure predictable and reliable communication between the API and its consumers.
-
-### Usage Example
-
-```csharp
-using MarketplaceEngine.DTOs;
-using System;
-using System.Collections.Generic;
-
-// 1. Using ApiResponse<T> for a successful response with data
-var productData = new { Id = 1, Name = "Premium Widget" };
-var successResponse = ApiResponse<object>.SuccessResponse(productData, "Product retrieved successfully");
-
-Console.WriteLine($"Success: {successResponse.Success}");
-Console.WriteLine($"Timestamp: {successResponse.Timestamp}");
-
-// 2. Using non-generic ApiResponse for operations without return data
-var actionResponse = ApiResponse.SuccessResponse("Operation completed successfully");
-
-Console.WriteLine($"Message: {actionResponse.Message}");
-
-// 3. Using ApiResponse<T> for a failure response with error details
-var errorResponse = ApiResponse<object>.ErrorResponse("NOT_FOUND", "Resource not found");
-
-Console.WriteLine($"Error Code: {errorResponse.ErrorCode}");
-Console.WriteLine($"Message: {errorResponse.Message}");
-```
-
-## PaymentDto
-
-The `PaymentDto` class is a data transfer object that represents a payment transaction in the marketplace. It encapsulates all essential payment details including the transaction parties, amounts, fees, status, and timestamps, providing a clean interface for payment processing and display.
-
-### Usage Example
-
-```csharp
-using MarketplaceEngine.DTOs;
-using System;
-
-// Create a new payment DTO for a completed transaction
-var paymentDto = new PaymentDto
-{
-    Id = Guid.NewGuid(),
-    ListingId = Guid.NewGuid(),
-    BuyerId = Guid.NewGuid(),
-    SellerId = Guid.NewGuid(),
-    Amount = 99.99m,
-    Currency = "USD",
-    PlatformFee = 4.99m,
-    SellerPayout = 95.00m,
-    Status = "Completed",
-    PaymentMethod = "Credit Card",
-    ExternalTransactionId = "ch_1234567890",
-    CreatedAt = DateTime.UtcNow,
-    CompletedAt = DateTime.UtcNow.AddSeconds(30)
-};
-
-Console.WriteLine($"Payment ID: {paymentDto.Id}");
-Console.WriteLine($"Amount: {paymentDto.Amount} {paymentDto.Currency}");
-Console.WriteLine($"Platform Fee: {paymentDto.PlatformFee} {paymentDto.Currency}");
-Console.WriteLine($"Seller Payout: {paymentDto.SellerPayout} {paymentDto.Currency}");
-Console.WriteLine($"Status: {paymentDto.Status}");
-Console.WriteLine($"Payment Method: {paymentDto.PaymentMethod}");
-Console.WriteLine($"Completed At: {paymentDto.CompletedAt}");
-
-// Create a payment DTO from a domain Payment entity
-var payment = new Payment
-{
-    Id = Guid.NewGuid(),
-    ListingId = Guid.NewGuid(),
-    BuyerId = Guid.NewGuid(),
-    SellerId = Guid.NewGuid(),
-    Amount = new Money(99.99m, "USD"),
-    PlatformFee = new Money(4.99m, "USD"),
-    SellerPayout = new Money(95.00m, "USD"),
-    Status = PaymentStatus.Completed,
-    PaymentMethod = "PayPal",
-    ExternalTransactionId = "paypal_12345",
-    CreatedAt = DateTime.UtcNow,
-    CompletedAt = DateTime.UtcNow.AddMinutes(2)
-};
-
-var paymentFromEntity = new PaymentDto(payment);
-Console.WriteLine($"Payment from entity - Status: {paymentFromEntity.Status}");
-Console.WriteLine($"Amount: {paymentFromEntity.Amount} {paymentFromEntity.Currency}");
-```
-
-## Message
-
-The `Message` class represents a private message exchanged between marketplace users. It supports one-to-one messaging, conversation threading through parent-child relationships, attachment management, read status tracking, and flagging for moderation. Messages can be associated with specific listings for context during transactions.
-
 ### Usage Example
 
 ```csharp
