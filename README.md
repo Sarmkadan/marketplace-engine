@@ -826,9 +826,95 @@ Console.WriteLine($"Total reviews: {sellerReviews.Count}");
 
 The `ReviewService` class provides essential functionality for managing user and listing reviews within the marketplace. It enables users to submit, retrieve, flag, and remove reviews, while also offering analytical insights like average scores and review distribution for sellers. This service acts as the central hub for all review-related operations in the application layer.
 
-## ReviewServiceTests
+## SearchServiceTests
 
-The `ReviewServiceTests` class provides unit tests for the `ReviewService` class, verifying that it correctly handles various business rules and authorization scenarios. It tests review submission with validation for reviewer existence and status, duplicate review prevention, seller reply functionality, seller statistics calculation, and moderation authorization.
+The `SearchServiceTests` class provides unit tests for the `SearchService` class, validating its search functionality across listings and users. It tests various search methods including full-text search, tag-based search, geospatial queries, category filtering, and advanced search capabilities with validation for input parameters and proper delegation to repository methods.
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.Services;
+using MarketplaceEngine.Domain.Entities;
+using MarketplaceEngine.Domain.Enums;
+using MarketplaceEngine.Exceptions;
+using MarketplaceEngine.Repositories;
+using Moq;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+
+// Initialize mock repositories
+var listingRepoMock = new Mock<IListingRepository>();
+var userRepoMock = new Mock<IUserRepository>();
+
+// Create the service under test
+var searchService = new SearchService(listingRepoMock.Object, userRepoMock.Object);
+
+// Test 1: SearchListingsAsync throws ValidationException when provided with an empty search query
+var act1 = async () => await searchService.SearchListingsAsync(" ");
+await Assert.ThrowsAsync<ValidationException>(act1);
+
+// Test 2: SearchListingsAsync throws ValidationException when provided with a single-character search query
+var act2 = async () => await searchService.SearchListingsAsync("x");
+await Assert.ThrowsAsync<ValidationException>(act2);
+
+// Test 3: SearchListingsAsync with valid query delegates to repository
+var listings = new List<Listing> { new Listing { Id = Guid.NewGuid(), Title = "Premium Headphones", Description = "High quality wireless headphones", Price = new Money(299.99m, "USD"), CategoryId = Guid.NewGuid(), Status = ListingStatus.Active } };
+listingRepoMock.Setup(r => r.SearchAsync("headphones")).ReturnsAsync(listings);
+var searchResults = await searchService.SearchListingsAsync("headphones");
+Console.WriteLine($"Found {searchResults.Count} listings matching 'headphones'");
+
+// Test 4: SearchByTagsAsync throws ValidationException when provided with an empty tag list
+var act4 = async () => await searchService.SearchByTagsAsync(new List<string>());
+await Assert.ThrowsAsync<ValidationException>(act4);
+
+// Test 5: SearchByTagsAsync throws ValidationException when provided with a null tag list
+var act5 = async () => await searchService.SearchByTagsAsync(null!);
+await Assert.ThrowsAsync<ValidationException>(act5);
+
+// Test 6: SearchByTagsAsync with valid tags delegates to repository
+var tagResults = await searchService.SearchByTagsAsync(new List<string> { "electronics", "audio" });
+Console.WriteLine($"Found {tagResults.Count} listings with specified tags");
+
+// Test 7: FindNearbyListingsAsync throws ValidationException when latitude is below -90
+var act7 = async () => await searchService.FindNearbyListingsAsync(-91, 0);
+await Assert.ThrowsAsync<ValidationException>(act7);
+
+// Test 8: FindNearbyListingsAsync throws ValidationException when longitude is below -180
+var act8 = async () => await searchService.FindNearbyListingsAsync(0, -181);
+await Assert.ThrowsAsync<ValidationException>(act8);
+
+// Test 9: FindNearbyListingsAsync throws ValidationException when radius is below minimum
+var act9 = async () => await searchService.FindNearbyListingsAsync(40, -74, 0.05);
+await Assert.ThrowsAsync<ValidationException>(act9);
+
+// Test 10: FindNearbyListingsAsync with valid parameters delegates to repository
+var nearbyResults = await searchService.FindNearbyListingsAsync(40.7128, -74.0060, 5.0);
+Console.WriteLine($"Found {nearbyResults.Count} listings within 5km radius of New York");
+
+// Test 11: SearchByCategoryAsync throws ValidationException when provided with an empty category GUID
+var act11 = async () => await searchService.SearchByCategoryAsync(Guid.Empty, 1, 20);
+await Assert.ThrowsAsync<ValidationException>(act11);
+
+// Test 12: SearchByCategoryAsync with valid category ID returns paginated results
+var (categoryResults, totalCount) = await searchService.SearchByCategoryAsync(Guid.Parse("3fa85f64-5717-4562-b3fc-2c963f66afa6"), 1, 25);
+Console.WriteLine($"Page 1: {categoryResults.Count} of {totalCount} listings in category");
+
+// Test 13: AdvancedSearchAsync with keyword filter returns matching listings
+var keywordResults = await searchService.AdvancedSearchAsync(keyword: "laptop");
+Console.WriteLine($"Found {keywordResults.Count} listings matching keyword 'laptop'");
+
+// Test 14: AdvancedSearchAsync with price range filter returns listings in range
+var priceResults = await searchService.AdvancedSearchAsync(minPrice: 100, maxPrice: 500);
+Console.WriteLine($"Found {priceResults.Count} listings in price range $100-$500");
+
+// Test 15: AdvancedSearchAsync with category filter returns only matching category
+var categoryId = Guid.Parse("3fa85f64-5717-4562-b3fc-2c963f66afa6");
+var categoryResults2 = await searchService.AdvancedSearchAsync(categoryId: categoryId);
+Console.WriteLine($"Found {categoryResults2.Count} listings in specified category");
+```
+
+## ReviewServiceTests
 
 ### Usage Example
 
