@@ -2465,3 +2465,85 @@ var paginationInfo = new PaginationInfo
 Console.WriteLine($"Page {paginationInfo.CurrentPage} of {paginationInfo.TotalPages}");
 Console.WriteLine($"Items: {paginationInfo.TotalItems}, Has next: {paginationInfo.HasNextPage}, Has previous: {paginationInfo.HasPreviousPage}");
 ```
+
+## ValidationUtility
+
+The `ValidationUtility` class provides comprehensive validation and sanitization utilities for the Marketplace Engine. It includes methods for validating email addresses, phone numbers, text content, URLs, prices, ratings, GUIDs, pagination parameters, and search queries. The utility also provides input sanitization to prevent XSS and injection attacks, ensuring data integrity and security throughout the application.
+
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.Utilities;
+using System;
+
+// Validate an email address
+var isValidEmail = ValidationUtility.IsValidEmail("user@example.com");
+Console.WriteLine($"Email is valid: {isValidEmail}");
+
+// Validate a phone number (supports various formats)
+var isValidPhone = ValidationUtility.IsValidPhoneNumber("+1 (555) 123-4567");
+Console.WriteLine($"Phone number is valid: {isValidPhone}");
+
+// Validate text content (length and character restrictions)
+var isValidText = ValidationUtility.IsValidText("This is a valid product description", maxLength: 500);
+Console.WriteLine($"Text is valid: {isValidText}");
+
+// Validate a URL
+var isValidUrl = ValidationUtility.IsValidUrl("https://example.com/product/123");
+Console.WriteLine($"URL is valid: {isValidUrl}");
+
+// Validate a price (positive value)
+var isValidPrice = ValidationUtility.IsValidPrice(199.99m);
+Console.WriteLine($"Price is valid: {isValidPrice}");
+
+// Validate a rating (between 0 and 5)
+var isValidRating = ValidationUtility.IsValidRating(4.5);
+Console.WriteLine($"Rating is valid: {isValidRating}");
+
+// Validate a GUID
+var isValidGuid = ValidationUtility.IsValidGuid(Guid.NewGuid());
+Console.WriteLine($"GUID is valid: {isValidGuid}");
+
+// Validate pagination parameters
+var isValidPagination = ValidationUtility.IsValidPagination(page: 1, pageSize: 25);
+Console.WriteLine($"Pagination is valid: {isValidPagination}");
+
+// Sanitize user input to prevent XSS and injection
+var userInput = "<script>alert('xss')</script><b>Hello</b>";
+var sanitizedInput = ValidationUtility.SanitizeInput(userInput);
+Console.WriteLine($"Sanitized input: {sanitizedInput}");
+
+// Validate a search query
+var isValidSearchQuery = ValidationUtility.IsValidSearchQuery("wireless headphones");
+Console.WriteLine($"Search query is valid: {isValidSearchQuery}");
+
+// Complete validation example for user registration
+var email = "user@example.com";
+var phone = "+1 (555) 123-4567";
+var description = "Premium product description";
+var website = "https://example.com";
+var price = 299.99m;
+var rating = 4.5;
+var userId = Guid.NewGuid();
+var page = 1;
+var pageSize = 25;
+var searchTerm = "laptop";
+
+if (ValidationUtility.IsValidEmail(email) &&
+    ValidationUtility.IsValidPhoneNumber(phone) &&
+    ValidationUtility.IsValidText(description, maxLength: 1000) &&
+    ValidationUtility.IsValidUrl(website) &&
+    ValidationUtility.IsValidPrice(price) &&
+    ValidationUtility.IsValidRating(rating) &&
+    ValidationUtility.IsValidGuid(userId) &&
+    ValidationUtility.IsValidPagination(page, pageSize) &&
+    ValidationUtility.IsValidSearchQuery(searchTerm))
+{
+    Console.WriteLine("All validations passed!");
+}
+else
+{
+    Console.WriteLine("One or more validations failed!");
+}
+```
