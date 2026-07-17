@@ -3816,6 +3816,296 @@ else
     Console.WriteLine("One or more validations failed!");
 }
 
+## ModerationServiceTests
+
+The `ModerationServiceTests` class provides unit tests for the `ModerationService` class, verifying that it correctly handles various moderation workflows and authorization scenarios. It tests report submission with validation for reporter existence and status, duplicate prevention, report assignment to moderators, report status transitions (InReview, Approved, Rejected), user suspension functionality, and escalation logic for high-priority reports.
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.Services;
+using MarketplaceEngine.Domain.Entities;
+using MarketplaceEngine.Domain.Enums;
+using MarketplaceEngine.Exceptions;
+using MarketplaceEngine.Repositories;
+using Moq;
+using System;
+using System.Threading.Tasks;
+using Xunit;
+
+// Initialize mock repositories
+var reportRepoMock = new Mock<IModerationReportRepository>();
+var userRepoMock = new Mock<IUserRepository>();
+var listingRepoMock = new Mock<IListingRepository>();
+
+// Create the service under test
+var moderationService = new ModerationService(reportRepoMock.Object, userRepoMock.Object, listingRepoMock.Object);
+
+// Test 1: ReportUserAsync throws ResourceNotFoundException when reporter is not found
+var nonExistentReporterId = Guid.NewGuid();
+userRepoMock.Setup(r => r.GetByIdAsync(nonExistentReporterId))
+.ReturnsAsync((User)null);
+
+var act1 = async () => await moderationService.ReportUserAsync(
+reporterId: nonExistentReporterId,
+reportedUserId: Guid.NewGuid(),
+reason: "User making inappropriate comments"
+);
+
+await Assert.ThrowsAsync<ResourceNotFoundException>(act1);
+
+// Test 2: ReportUserAsync throws UnauthorizedException when reporter is inactive
+var inactiveReporterId = Guid.NewGuid();
+var inactiveReporter = new User { Id = inactiveReporterId, IsActive = false };
+userRepoMock.Setup(r => r.GetByIdAsync(inactiveReporterId))
+.ReturnsAsync(inactiveReporter);
+
+var act2 = async () => await moderationService.ReportUserAsync(
+reporterId: inactiveReporterId,
+reportedUserId: Guid.NewGuid(),
+reason: "User making inappropriate comments"
+);
+
+await Assert.ThrowsAsync<UnauthorizedException>(act2);
+
+// Test 3: ReportUserAsync throws UnauthorizedException when reporter email is not verified
+var unverifiedReporterId = Guid.NewGuid();
+var unverifiedReporter = new User { Id = unverifiedReporterId, IsActive = true, EmailVerified = false };
+userRepoMock.Setup(r => r.GetByIdAsync(unverifiedReporterId))
+.ReturnsAsync(unverifiedReporter);
+
+var act3 = async () => await moderationService.ReportUserAsync(
+reporterId: unverifiedReporterId,
+reportedUserId: Guid.NewGuid(),
+reason: "User making inappropriate comments"
+);
+
+await Assert.ThrowsAsync<UnauthorizedException>(act3);
+
+// Test 4: ReportUserAsync throws ResourceNotFoundException when target user is not found
+var validReporterId = Guid.NewGuid();
+var activeReporter = new User { Id = validReporterId, IsActive = true, EmailVerified = true };
+userRepoMock.Setup(r => r.GetByIdAsync(validReporterId))
+.ReturnsAsync(activeReporter);
+userRepoMock.Setup(r => r.GetByIdAsync(Guid.NewGuid()))
+.ReturnsAsync((User)null);
+
+var act4 = async () => await moderationService.ReportUserAsync(
+reporterId: validReporterId,
+reportedUserId: Guid.NewGuid(),
+reason: "User making inappropriate comments"
+);
+
+await Assert.ThrowsAsync<ResourceNotFoundException>(act4);
+
+// Test 5: ReportUserAsync with valid data returns submitted report
+var targetUserId = Guid.NewGuid();
+var targetUser = new User { Id = targetUserId, IsActive = true };
+userRepoMock.Setup(r => r.GetByIdAsync(targetUserId))
+.ReturnsAsync(targetUser);
+
+var report = new ModerationReport { Id = Guid.NewGuid(), Status = ReportStatus.Pending };
+reportRepoMock.Setup(r => r.AddAsync(It.IsAny<ModerationReport>()))
+.ReturnsAsync(report);
+
+var result = await moderationService.ReportUserAsync(
+reporterId: validReporterId,
+reportedUserId: targetUserId,
+reason: "User making inappropriate comments"
+);
+
+Assert.NotNull(result);
+Assert.Equal(ReportStatus.Pending, result.Status);
+
+// Test 6: ReportUserAsync with short reason throws ArgumentException
+var act6 = async () => await moderationService.ReportUserAsync(
+reporterId: validReporterId,
+reportedUserId: targetUserId,
+reason: "Short"
+);
+
+await Assert.ThrowsAsync<ArgumentException>(act6);
+
+// Test 7: ReportListingAsync throws ResourceNotFoundException when listing is not found
+var validListingId = Guid.NewGuid();
+listingRepoMock.Setup(r => r.GetByIdAsync(validListingId))
+.ReturnsAsync((Listing)null);
+
+var act7 = async () => await moderationService.ReportListingAsync(
+reporterId: validReporterId,
+listingId: validListingId,
+reason: "Listing contains inappropriate content"
+);
+
+await Assert.ThrowsAsync<ResourceNotFoundException>(act7);
+
+// Test 8: ReportListingAsync with valid data returns submitted report
+var validListing = new Listing { Id = validListingId, SellerId = Guid.NewGuid() };
+listingRepoMock.Setup(r => r.GetByIdAsync(validListingId))
+.ReturnsAsync(validListing);
+
+var listingReport = new ModerationReport { Id = Guid.NewGuid(), Status = ReportStatus.Pending };
+reportRepoMock.Setup(r => r.AddAsync(It.IsAny<ModerationReport>()))
+.ReturnsAsync(listingReport);
+
+var listingResult = await moderationService.ReportListingAsync(
+reporterId: validReporterId,
+listingId: validListingId,
+reason: "Listing contains inappropriate content"
+);
+
+Assert.NotNull(listingResult);
+Assert.Equal(ReportStatus.Pending, listingResult.Status);
+
+// Test 9: AssignReportAsync throws ResourceNotFoundException when moderator is not found
+var nonExistentModeratorId = Guid.NewGuid();
+userRepoMock.Setup(r => r.GetByIdAsync(nonExistentModeratorId))
+.ReturnsAsync((User)null);
+
+var reportToAssign = new ModerationReport { Id = Guid.NewGuid(), Status = ReportStatus.Pending };
+reportRepoMock.Setup(r => r.GetByIdAsync(reportToAssign.Id))
+.ReturnsAsync(reportToAssign);
+
+var act9 = async () => await moderationService.AssignReportAsync(
+reportId: reportToAssign.Id,
+moderatorId: nonExistentModeratorId
+);
+
+await Assert.ThrowsAsync<ResourceNotFoundException>(act9);
+
+// Test 10: AssignReportAsync throws UnauthorizedException when user is regular user
+var regularUserId = Guid.NewGuid();
+var regularUser = new User { Id = regularUserId, Role = UserRole.User };
+userRepoMock.Setup(r => r.GetByIdAsync(regularUserId))
+.ReturnsAsync(regularUser);
+
+var act10 = async () => await moderationService.AssignReportAsync(
+reportId: reportToAssign.Id,
+moderatorId: regularUserId
+);
+
+await Assert.ThrowsAsync<UnauthorizedException>(act10);
+
+// Test 11: AssignReportAsync when moderator is valid sets report in review
+var moderatorId = Guid.NewGuid();
+var moderator = new User { Id = moderatorId, Role = UserRole.Moderator };
+userRepoMock.Setup(r => r.GetByIdAsync(moderatorId))
+.ReturnsAsync(moderator);
+
+var assignedReport = new ModerationReport { Id = Guid.NewGuid(), Status = ReportStatus.Pending };
+reportRepoMock.Setup(r => r.GetByIdAsync(assignedReport.Id))
+.ReturnsAsync(assignedReport);
+reportRepoMock.Setup(r => r.UpdateAsync(It.IsAny<ModerationReport>()))
+.ReturnsAsync((ModerationReport r) => r);
+
+var result11 = await moderationService.AssignReportAsync(
+reportId: assignedReport.Id,
+moderatorId: moderatorId
+);
+
+Assert.Equal(ReportStatus.InReview, result11.Status);
+
+// Test 12: AssignReportAsync when administrator sets report in review
+var adminId = Guid.NewGuid();
+var admin = new User { Id = adminId, Role = UserRole.Administrator };
+userRepoMock.Setup(r => r.GetByIdAsync(adminId))
+.ReturnsAsync(admin);
+
+var adminReport = new ModerationReport { Id = Guid.NewGuid(), Status = ReportStatus.Pending };
+reportRepoMock.Setup(r => r.GetByIdAsync(adminReport.Id))
+.ReturnsAsync(adminReport);
+
+var result12 = await moderationService.AssignReportAsync(
+reportId: adminReport.Id,
+moderatorId: adminId
+);
+
+Assert.Equal(ReportStatus.InReview, result12.Status);
+
+// Test 13: ApproveReportAsync throws InvalidOperationException when report is not assigned
+var unassignedReport = new ModerationReport { Id = Guid.NewGuid(), Status = ReportStatus.Pending };
+reportRepoMock.Setup(r => r.GetByIdAsync(unassignedReport.Id))
+.ReturnsAsync(unassignedReport);
+
+var act13 = async () => await moderationService.ApproveReportAsync(
+reportId: unassignedReport.Id,
+moderatorId: moderatorId
+);
+
+await Assert.ThrowsAsync<InvalidOperationException>(act13);
+
+// Test 14: ApproveReportAsync when assigned sets status approved
+var assignedReportForApproval = new ModerationReport { Id = Guid.NewGuid(), Status = ReportStatus.InReview, AssignedModeratorId = moderatorId };
+reportRepoMock.Setup(r => r.GetByIdAsync(assignedReportForApproval.Id))
+.ReturnsAsync(assignedReportForApproval);
+reportRepoMock.Setup(r => r.UpdateAsync(It.IsAny<ModerationReport>()))
+.ReturnsAsync((ModerationReport r) => r);
+
+var approvedReport = await moderationService.ApproveReportAsync(
+reportId: assignedReportForApproval.Id,
+moderatorId: moderatorId
+);
+
+Assert.Equal(ReportStatus.Approved, approvedReport.Status);
+
+// Test 15: RejectReportAsync throws InvalidOperationException when report is not assigned
+var unassignedReportForRejection = new ModerationReport { Id = Guid.NewGuid(), Status = ReportStatus.Pending };
+reportRepoMock.Setup(r => r.GetByIdAsync(unassignedReportForRejection.Id))
+.ReturnsAsync(unassignedReportForRejection);
+
+var act15 = async () => await moderationService.RejectReportAsync(
+reportId: unassignedReportForRejection.Id,
+moderatorId: moderatorId
+);
+
+await Assert.ThrowsAsync<InvalidOperationException>(act15);
+
+// Test 16: RejectReportAsync when assigned sets status rejected
+var assignedReportForRejection = new ModerationReport { Id = Guid.NewGuid(), Status = ReportStatus.InReview, AssignedModeratorId = moderatorId };
+reportRepoMock.Setup(r => r.GetByIdAsync(assignedReportForRejection.Id))
+.ReturnsAsync(assignedReportForRejection);
+reportRepoMock.Setup(r => r.UpdateAsync(It.IsAny<ModerationReport>()))
+.ReturnsAsync((ModerationReport r) => r);
+
+var rejectedReport = await moderationService.RejectReportAsync(
+reportId: assignedReportForRejection.Id,
+moderatorId: moderatorId
+);
+
+Assert.Equal(ReportStatus.Rejected, rejectedReport.Status);
+
+// Test 17: EscalateReportAsync when priority below 5 increases priority
+var lowPriorityReport = new ModerationReport { Id = Guid.NewGuid(), Priority = 3 };
+reportRepoMock.Setup(r => r.GetByIdAsync(lowPriorityReport.Id))
+.ReturnsAsync(lowPriorityReport);
+reportRepoMock.Setup(r => r.UpdateAsync(It.IsAny<ModerationReport>()))
+.ReturnsAsync((ModerationReport r) => r);
+
+var escalatedReport = await moderationService.EscalateReportAsync(lowPriorityReport.Id);
+
+Assert.Equal(4, escalatedReport.Priority);
+
+// Test 18: EscalateReportAsync when already at max priority does not exceed 5
+var maxPriorityReport = new ModerationReport { Id = Guid.NewGuid(), Priority = 5 };
+reportRepoMock.Setup(r => r.GetByIdAsync(maxPriorityReport.Id))
+.ReturnsAsync(maxPriorityReport);
+
+var noChangeReport = await moderationService.EscalateReportAsync(maxPriorityReport.Id);
+
+Assert.Equal(5, noChangeReport.Priority);
+
+// Test 19: SuspendUserAsync when target user exists deactivates user
+var userToSuspend = new User { Id = Guid.NewGuid(), IsActive = true };
+userRepoMock.Setup(r => r.GetByIdAsync(userToSuspend.Id))
+.ReturnsAsync(userToSuspend);
+userRepoMock.Setup(r => r.UpdateAsync(It.IsAny<User>()))
+.ReturnsAsync((User u) => u);
+
+var suspendedUser = await moderationService.SuspendUserAsync(userToSuspend.Id);
+
+Assert.False(suspendedUser.IsActive);
+```
+
 ## MessagingServiceTests
 
 The `MessagingServiceTests` class provides comprehensive unit tests for the `MessagingService` class, covering all public API methods including message sending, retrieval, marking as read/unread, deletion, flagging, and reply functionality. It validates both success and error paths, ensuring proper exception handling for edge cases like non-existent senders, recipients, or messages.
