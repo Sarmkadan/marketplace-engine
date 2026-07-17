@@ -2194,6 +2194,78 @@ Console.WriteLine($"Listing exists: {exists}");
 await listingRepository.DeleteAsync(newListing.Id);
 Console.WriteLine("Listing deleted.");
 
+## EnumUtility
+
+The `EnumUtility` class provides static utility methods for working with enumeration types in the Marketplace Engine. It includes functionality for getting enum descriptions, safe parsing, value/name extraction, dictionary conversion, and flag checking, enabling consistent enum handling across the application.
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.Utilities;
+using System;
+using System.Linq;
+
+// Define an enum with Description attributes
+public enum ListingStatus
+{
+    [Description("Active listing available for purchase")]
+    Active = 1,
+    
+    [Description("Listing temporarily unavailable")]
+    Inactive = 2,
+    
+    [Description("Listing sold and completed")]
+    Sold = 3,
+    
+    [Description("Listing removed by seller")]
+    Removed = 4
+}
+
+// Get description from enum value
+var activeDescription = EnumUtility.GetDescription(ListingStatus.Active);
+Console.WriteLine($"Active status: {activeDescription}");
+
+// Try parse enum from string (case-insensitive)
+var parsedStatus = EnumUtility.TryParseEnum<ListingStatus>("inactive");
+Console.WriteLine($"Parsed status: {parsedStatus}");
+
+// Get all enum values
+var allStatuses = EnumUtility.GetEnumValues<ListingStatus>();
+Console.WriteLine($"Total statuses: {allStatuses.Count}");
+foreach (var status in allStatuses)
+{
+    Console.WriteLine($"- {status} ({EnumUtility.GetDescription(status)})");
+}
+
+// Get all enum names
+var statusNames = EnumUtility.GetEnumNames<ListingStatus>();
+Console.WriteLine($"Status names: {string.Join(", ", statusNames)}");
+
+// Convert enum to dictionary
+var statusDictionary = EnumUtility.GetEnumDictionary<ListingStatus>();
+Console.WriteLine("Status dictionary:");
+foreach (var kvp in statusDictionary)
+{
+    Console.WriteLine($"  {kvp.Key}: {kvp.Value}");
+}
+
+// Define a flags enum
+[Flags]
+public enum UserPermissions
+{
+    None = 0,
+    Read = 1,
+    Write = 2,
+    Delete = 4,
+    Admin = 8
+}
+
+// Check if enum has specific flag
+var userPermissions = UserPermissions.Read | UserPermissions.Write;
+var hasWritePermission = EnumUtility.HasFlag(userPermissions, UserPermissions.Write);
+Console.WriteLine($"User has write permission: {hasWritePermission}");
+```
+
 ## StringUtility
 
 The `StringUtility` class provides a collection of static helper methods for common string manipulation tasks throughout the Marketplace Engine. It includes utilities for text formatting, truncation, case conversion, slug generation, repetition, masking sensitive data, and removing special characters, making it easier to maintain consistent string handling across the application.
