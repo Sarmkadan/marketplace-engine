@@ -51,9 +51,12 @@ if (app.Environment.IsDevelopment())
 }
 
 // Register middleware (order matters!)
+// Error handling must be outermost so exceptions thrown by any later
+// middleware (logging, rate limiting) or endpoint are converted to the
+// standard JSON error envelope instead of escaping as raw 500s.
+app.UseMiddleware<ErrorHandlingMiddleware>();
 app.UseMiddleware<RequestLoggingMiddleware>();
 app.UseMiddleware<RateLimitingMiddleware>();
-app.UseMiddleware<ErrorHandlingMiddleware>();
 
 // Enable HTTPS redirection
 app.UseHttpsRedirection();
@@ -72,6 +75,10 @@ app.MapRecommendationEndpoints();
 
 // Map full-text search endpoints
 app.MapFullTextSearchEndpoints();
+
+// Subscribe DI-registered domain event handlers to the event bus.
+// Without this the handlers are constructed by DI but never receive events.
+app.SubscribeMarketplaceEventHandlers();
 
 // Start background job queue
 var backgroundQueue = app.Services.GetRequiredService<BackgroundJobQueue>();
