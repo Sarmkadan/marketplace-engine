@@ -1336,6 +1336,107 @@ var publicProfile = await userService.GetPublicProfileAsync(newUser.Id);
 Console.WriteLine($"Public profile: {publicProfile.DisplayName} - {publicProfile.Bio}");
 ```
 
+## UserRepository
+
+The `UserRepository` class provides data access operations for user entities in the Marketplace Engine. It handles CRUD operations for users, including querying by ID, email, role, verification status, location, and active status. The repository also provides methods for searching users, checking email existence, and retrieving paginated user lists.
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.Repositories;
+using MarketplaceEngine.Domain.Models;
+using System;
+using System.Threading.Tasks;
+
+// Initialize user repository
+var userRepository = new UserRepository();
+
+// Add a new user to the system
+var newUser = await userRepository.AddAsync(new User
+{
+    Email = "john.doe@example.com",
+    FullName = "John Doe",
+    PasswordHash = "hashed-password",
+    Role = UserRole.Buyer,
+    IsActive = true,
+    IsVerified = false,
+    EmailVerified = false,
+    CreatedAt = DateTime.UtcNow
+});
+
+Console.WriteLine($"User created: {newUser.Id} - {newUser.Email}");
+
+// Get a user by ID
+var user = await userRepository.GetByIdAsync(newUser.Id);
+Console.WriteLine($"Retrieved user: {user?.FullName} ({user?.Email})");
+
+// Get all users in the system
+var allUsers = await userRepository.GetAllAsync();
+Console.WriteLine($"Total users in system: {allUsers.Count}");
+
+// Update a user's profile
+user.FullName = "John Doe Updated";
+user.Bio = "Technology enthusiast and software developer";
+var updatedUser = await userRepository.UpdateAsync(user);
+Console.WriteLine($"User updated: {updatedUser.FullName}");
+
+// Check if a user exists
+var exists = await userRepository.ExistsAsync(newUser.Id);
+Console.WriteLine($"User exists: {exists}");
+
+// Get total user count
+var userCount = await userRepository.CountAsync();
+Console.WriteLine($"Total users: {userCount}");
+
+// Get user by email
+var userByEmail = await userRepository.GetByEmailAsync("john.doe@example.com");
+Console.WriteLine($"Found user by email: {userByEmail?.FullName}");
+
+// Get all active users
+var activeUsers = await userRepository.GetActiveUsersAsync();
+Console.WriteLine($"Active users: {activeUsers.Count}");
+
+// Get all verified users
+var verifiedUsers = await userRepository.GetVerifiedUsersAsync();
+Console.WriteLine($"Verified users: {verifiedUsers.Count}");
+
+// Get users by role (e.g., UserRole.Seller = 2)
+var sellers = await userRepository.GetByRoleAsync(2);
+Console.WriteLine($"Sellers: {sellers.Count}");
+
+// Search for users by name or email
+var searchResults = await userRepository.SearchAsync("John");
+Console.WriteLine($"Search results: {searchResults.Count} users found");
+
+// Get top sellers by rating and sales
+var topSellers = await userRepository.GetTopSellersAsync(limit: 10);
+Console.WriteLine($"Top sellers: {topSellers.Count} sellers found");
+
+// Get users by location
+var usersInNY = await userRepository.GetByLocationAsync("New York", "US");
+Console.WriteLine($"Users in New York, US: {usersInNY.Count}");
+
+// Check if email exists (useful for registration validation)
+var emailExists = await userRepository.EmailExistsAsync("john.doe@example.com");
+Console.WriteLine($"Email exists: {emailExists}");
+
+// Get user by verification token (for email verification flow)
+var userByToken = await userRepository.GetByVerificationTokenAsync("verification-token-here");
+Console.WriteLine($"User by token: {userByToken?.Email}");
+
+// Get paginated users with total count
+var (pagedUsers, totalCount) = await userRepository.GetPagedAsync(pageNumber: 1, pageSize: 25);
+Console.WriteLine($"Page 1: {pagedUsers.Count} of {totalCount} total users");
+
+// Update user's last activity timestamp
+await userRepository.UpdateLastActivityAsync(newUser.Id);
+Console.WriteLine("Last activity updated");
+
+// Delete a user (soft delete via repository)
+await userRepository.DeleteAsync(newUser.Id);
+Console.WriteLine("User deleted");
+```
+
 ## CategoryService
 
 The `CategoryService` class provides comprehensive category management functionality for the Marketplace Engine. It handles category hierarchy operations, including creating, updating, and organizing categories into parent-child relationships. The service supports retrieving categories by ID, searching categories, managing category trees for navigation, and retrieving popular categories based on listing activity.
