@@ -5,7 +5,11 @@
 // CTO & Software Architect
 // =============================================================================
 
-using System.Globalization;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace MarketplaceEngine.Recommendations;
 
@@ -106,6 +110,10 @@ public static class CollaborativeFilteringEngineExtensions
     {
         ArgumentNullException.ThrowIfNull(engine);
         ArgumentOutOfRangeException.ThrowIfLessThan(weight, 0.0);
+        if (!Enum.IsDefined(typeof(SignalType), signalType))
+        {
+            throw new ArgumentException("Signal type must be a valid enum value.", nameof(signalType));
+        }
 
         var signal = new UserActivitySignal
         {
@@ -128,8 +136,7 @@ public static class CollaborativeFilteringEngineExtensions
     /// <param name="cancellationToken">A cancellation token.</param>
     /// <returns>A dictionary mapping user IDs to their respective recommendation lists.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="engine"/> or <paramref name="userIds"/> is <see langword="null"/></exception>
-    public static async Task<IReadOnlyDictionary<Guid, IReadOnlyList<ScoredListing>>>
-        ComputeForUsersAsync(
+    public static async Task<IReadOnlyDictionary<Guid, IReadOnlyList<ScoredListing>>> ComputeForUsersAsync(
         this CollaborativeFilteringEngine engine,
         IEnumerable<Guid> userIds,
         int count,
@@ -137,7 +144,16 @@ public static class CollaborativeFilteringEngineExtensions
     {
         ArgumentNullException.ThrowIfNull(engine);
         ArgumentNullException.ThrowIfNull(userIds);
+        ArgumentOutOfRangeException.ThrowIfLessThan(count, 1);
+        return await ComputeForUsersCoreAsync(engine, userIds, count, cancellationToken);
+    }
 
+    private static async Task<IReadOnlyDictionary<Guid, IReadOnlyList<ScoredListing>>> ComputeForUsersCoreAsync(
+        CollaborativeFilteringEngine engine,
+        IEnumerable<Guid> userIds,
+        int count,
+        CancellationToken cancellationToken)
+    {
         var results = new Dictionary<Guid, IReadOnlyList<ScoredListing>>();
         var tasks = userIds.Select(async userId =>
         {
@@ -158,8 +174,7 @@ public static class CollaborativeFilteringEngineExtensions
     /// <param name="cancellationToken">A cancellation token.</param>
     /// <returns>A dictionary mapping listing IDs to their respective similar listing lists.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="engine"/> or <paramref name="listingIds"/> is <see langword="null"/></exception>
-    public static async Task<IReadOnlyDictionary<Guid, IReadOnlyList<ScoredListing>>>
-        ComputeSimilarForListingsAsync(
+    public static async Task<IReadOnlyDictionary<Guid, IReadOnlyList<ScoredListing>>> ComputeSimilarForListingsAsync(
         this CollaborativeFilteringEngine engine,
         IEnumerable<Guid> listingIds,
         int count,
@@ -167,7 +182,16 @@ public static class CollaborativeFilteringEngineExtensions
     {
         ArgumentNullException.ThrowIfNull(engine);
         ArgumentNullException.ThrowIfNull(listingIds);
+        ArgumentOutOfRangeException.ThrowIfLessThan(count, 1);
+        return await ComputeSimilarForListingsCoreAsync(engine, listingIds, count, cancellationToken);
+    }
 
+    private static async Task<IReadOnlyDictionary<Guid, IReadOnlyList<ScoredListing>>> ComputeSimilarForListingsCoreAsync(
+        CollaborativeFilteringEngine engine,
+        IEnumerable<Guid> listingIds,
+        int count,
+        CancellationToken cancellationToken)
+    {
         var results = new Dictionary<Guid, IReadOnlyList<ScoredListing>>();
         var tasks = listingIds.Select(async listingId =>
         {
@@ -183,12 +207,12 @@ public static class CollaborativeFilteringEngineExtensions
     /// Computes trending listings with a specified time window expressed as hours.
     /// </summary>
     /// <param name="engine">The recommendation engine instance.</param>
-    /// <param name="hours">Number of hours to look back for trending signals.</param>
-    /// <param name="count">Maximum number of trending listings to return.</param>
+    /// <param name="hours">Number of hours to look back for trending signals (must be greater than 0).</param>
+    /// <param name="count">Maximum number of trending listings to return (must be greater than 0).</param>
     /// <param name="cancellationToken">A cancellation token.</param>
     /// <returns>A list of trending listings within the specified time window.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="engine"/> is <see langword="null"/></exception>
-    /// <exception cref="ArgumentOutOfRangeException"><paramref name="hours"/> is less than 1.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="hours"/> is less than 1 or <paramref name="count"/> is less than 1.</exception>
     public static async Task<IReadOnlyList<ScoredListing>> ComputeTrendingAsync(
         this CollaborativeFilteringEngine engine,
         int hours,
@@ -197,11 +221,7 @@ public static class CollaborativeFilteringEngineExtensions
     {
         ArgumentNullException.ThrowIfNull(engine);
         ArgumentOutOfRangeException.ThrowIfLessThan(hours, 1);
-
-        // Note: The engine uses RecommendationOptions.TrendingWindowHours internally,
-        // but we provide this convenience method for external control over the window.
-        // The actual implementation will use the configured window, so this is
-        // primarily for documentation and future-proofing.
+        ArgumentOutOfRangeException.ThrowIfLessThan(count, 1);
         return await engine.ComputeTrendingAsync(count, cancellationToken);
     }
 
