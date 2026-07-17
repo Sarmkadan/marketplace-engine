@@ -52,7 +52,7 @@ public static class UserExtensions
     {
         ArgumentNullException.ThrowIfNull(user);
         return user.LastActiveAt.HasValue
-            ? (int)(DateTime.UtcNow - user.LastActiveAt.Value).TotalDays
+            ? (int)Math.Floor((DateTime.UtcNow - user.LastActiveAt.Value).TotalDays)
             : null;
     }
 
