@@ -2225,3 +2225,56 @@ var report = new ModerationReport { Id = Guid.NewGuid(), Reason = "Spam" };
 var reportDto = MappingUtility.ToDto(report);
 ```
 ```
+
+## PaginationUtility
+
+The `PaginationUtility` class provides standardized pagination calculation utilities used throughout the Marketplace Engine. It handles offset calculation, page parameter validation, total page calculation, and navigation between pages. This utility ensures consistent pagination behavior across all API endpoints and repository methods.
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.Utilities;
+using System;
+
+// Calculate offset for database queries
+var offset = PaginationUtility.CalculateOffset(page: 2, pageSize: 25);
+Console.WriteLine($"Database offset for page 2: {offset}");
+
+// Validate and normalize page parameters
+int page = 0; // Invalid page
+int pageSize = 200; // Too large
+PaginationUtility.ValidatePageParameters(ref page, ref pageSize);
+Console.WriteLine($"Normalized page: {page}, pageSize: {pageSize}");
+
+// Calculate total pages for pagination metadata
+var totalItems = 125;
+var totalPages = PaginationUtility.CalculateTotalPages(totalItems, pageSize: 25);
+Console.WriteLine($"Total pages for {totalItems} items with 25 per page: {totalPages}");
+
+// Check if navigation links should be shown
+var currentPage = 3;
+var hasNext = PaginationUtility.HasNextPage(currentPage, pageSize: 25, totalItems: 125);
+var hasPrevious = PaginationUtility.HasPreviousPage(currentPage);
+Console.WriteLine($"Has next page: {hasNext}, has previous page: {hasPrevious}");
+
+// Get next/previous page numbers
+var nextPage = PaginationUtility.GetNextPage(currentPage, pageSize: 25, totalItems: 125);
+var prevPage = PaginationUtility.GetPreviousPage(currentPage);
+Console.WriteLine($"Next page: {nextPage}, previous page: {prevPage}");
+
+// Get default and maximum page sizes
+var defaultSize = PaginationUtility.GetDefaultPageSize();
+var maxSize = PaginationUtility.GetMaxPageSize();
+Console.WriteLine($"Default page size: {defaultSize}, maximum page size: {maxSize}");
+
+// Use with PaginationInfo for complete pagination metadata
+var paginationInfo = new PaginationInfo
+{
+    CurrentPage = 2,
+    PageSize = 25,
+    TotalItems = 125
+};
+
+Console.WriteLine($"Page {paginationInfo.CurrentPage} of {paginationInfo.TotalPages}");
+Console.WriteLine($"Items: {paginationInfo.TotalItems}, Has next: {paginationInfo.HasNextPage}, Has previous: {paginationInfo.HasPreviousPage}");
+```
