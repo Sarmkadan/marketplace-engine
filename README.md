@@ -3331,4 +3331,91 @@ else
 {
     Console.WriteLine("One or more validations failed!");
 }
+
+## MessagingServiceTests
+
+The `MessagingServiceTests` class provides comprehensive unit tests for the `MessagingService` class, covering all public API methods including message sending, retrieval, marking as read/unread, deletion, flagging, and reply functionality. It validates both success and error paths, ensuring proper exception handling for edge cases like non-existent senders, recipients, or messages.
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.Services;
+using MarketplaceEngine.Domain.Entities;
+using MarketplaceEngine.Exceptions;
+using System;
+using System.Threading.Tasks;
+
+// Initialize messaging service (typically via dependency injection)
+var messagingService = new MessagingService(messageRepository, userRepository);
+
+// Test sending a message between valid users
+var senderId = Guid.Parse("11111111-1111-1111-1111-111111111111");
+var recipientId = Guid.Parse("22222222-2222-2222-2222-222222222222");
+
+var message = await messagingService.SendMessageAsync(senderId, recipientId, 
+    "Interested in your premium wireless headphones", 
+    "Hello! I'm interested in your listing. Could you provide more details about condition and shipping?");
+
+Console.WriteLine($"Message sent: {message.Id} - {message.Subject}");
+
+// Test retrieving received messages for a user
+var receivedMessages = await messagingService.GetReceivedMessagesAsync(recipientId);
+Console.WriteLine($"User has {receivedMessages.Count} received messages");
+
+// Test marking a message as read
+var markedMessage = await messagingService.MarkAsReadAsync(message.Id);
+Console.WriteLine($"Message marked as read: {markedMessage.IsRead}");
+
+// Test marking a message as unread
+var unmarkedMessage = await messagingService.MarkAsUnreadAsync(message.Id);
+Console.WriteLine($"Message marked as unread: {unmarkedMessage.IsRead}");
+
+// Test flagging a message
+var flaggedMessage = await messagingService.FlagMessageAsync(message.Id, recipientId);
+Console.WriteLine($"Message flagged: {flaggedMessage.IsFlagged}");
+
+// Test adding a reply to a message
+var reply = await messagingService.AddReplyAsync(message.Id, senderId, 
+    "Thank you for your interest! The headphones are in excellent condition and ready to ship.");
+Console.WriteLine($"Reply added: {reply.Subject} (prefixed with Re:)");
+
+// Test deleting a message (when requester is the sender)
+await messagingService.DeleteMessageAsync(message.Id, senderId);
+Console.WriteLine("Message deleted successfully");
+
+// Test error scenarios
+try
+{
+    // This should throw ResourceNotFoundException
+    await messagingService.SendMessageAsync(Guid.NewGuid(), recipientId, "Test", "Test content");
+}
+catch (ResourceNotFoundException ex)
+{
+    Console.WriteLine($"Expected exception caught: {ex.Message}");
+}
+
+try
+{
+    // This should throw ArgumentException (sender equals recipient)
+    await messagingService.SendMessageAsync(senderId, senderId, "Test", "Test content");
+}
+catch (ArgumentException ex)
+{
+    Console.WriteLine($"Expected exception caught: {ex.Message}");
+}
+
+try
+{
+    // This should throw UnauthorizedException (requester is unrelated)
+    await messagingService.DeleteMessageAsync(message.Id, Guid.NewGuid());
+}
+catch (UnauthorizedException ex)
+{
+    Console.WriteLine($"Expected exception caught: {ex.Message}");
+}
+
+// Test getting conversation between two users
+var conversation = await messagingService.GetConversationAsync(senderId, recipientId);
+Console.WriteLine($"Conversation contains {conversation.Count} messages");
+```
 ```
