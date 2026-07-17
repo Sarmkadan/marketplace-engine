@@ -27,11 +27,16 @@ public static class UserActivityTrackerExtensions
     /// <param name="userId">The ID of the user.</param>
     /// <param name="window">The time window.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
-    /// <returns>An read-only list of user activity signals.</returns>
+    /// <returns>A read-only list of user activity signals.</returns>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="tracker"/> is null.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown if <paramref name="window"/> is negative.</exception>
     public static async Task<IReadOnlyList<UserActivitySignal>> GetUserActivityHistoryInWindowAsync(this UserActivityTracker tracker, Guid userId, TimeSpan window, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(tracker);
+        if (window < TimeSpan.Zero)
+        {
+            throw new ArgumentOutOfRangeException(nameof(window), window, "Time window cannot be negative.");
+        }
 
         var history = await tracker.GetUserHistoryAsync(userId, window, cancellationToken).ConfigureAwait(false);
         return history;
@@ -43,7 +48,7 @@ public static class UserActivityTrackerExtensions
     /// <param name="tracker">The <see cref="UserActivityTracker"/> instance.</param>
     /// <param name="listingId">The ID of the listing.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
-    /// <returns>An read-only list of user IDs.</returns>
+    /// <returns>A read-only list of user IDs.</returns>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="tracker"/> is null.</exception>
     public static async Task<IReadOnlyList<Guid>> GetListingAudienceAsync(this UserActivityTracker tracker, Guid listingId, CancellationToken cancellationToken = default)
     {
