@@ -13,6 +13,9 @@ namespace MarketplaceEngine.DTOs;
 /// <summary>
 /// Provides System.Text.Json serialization helpers for <see cref="RecommendationDto"/>.
 /// </summary>
+/// <remarks>
+/// All methods are thread-safe and use shared <see cref="JsonSerializerOptions"/> configured for camelCase naming.
+/// </remarks>
 public static class RecommendationDtoJsonExtensions
 {
     private static readonly JsonSerializerOptions _options = new(JsonSerializerDefaults.Web)
@@ -22,6 +25,14 @@ public static class RecommendationDtoJsonExtensions
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
         TypeInfoResolver = new DefaultJsonTypeInfoResolver()
     };
+
+    /// <summary>
+    /// Gets the default JSON serialization options used by all extension methods.
+    /// </summary>
+    /// <remarks>
+    /// Configured with camelCase naming policy, ignores null values, and uses default type resolver.
+    /// </remarks>
+    public static JsonSerializerOptions DefaultOptions => _options;
 
     /// <summary>
     /// Serializes the <see cref="RecommendationDto"/> instance to a JSON string.
@@ -46,6 +57,7 @@ public static class RecommendationDtoJsonExtensions
     /// </summary>
     /// <param name="json">The JSON string to deserialize.</param>
     /// <returns>The deserialized DTO instance, or <see langword="null"/> if the JSON is empty.</returns>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="json"/> is <see langword="null"/>, empty, or whitespace.</exception>
     /// <exception cref="JsonException">Thrown when the JSON is invalid or cannot be deserialized.</exception>
     public static RecommendationDto? FromJson(string json)
     {
@@ -60,6 +72,7 @@ public static class RecommendationDtoJsonExtensions
     /// <param name="json">The JSON string to deserialize.</param>
     /// <param name="value">Receives the deserialized DTO instance if successful; otherwise, <see langword="null"/>.</param>
     /// <returns><see langword="true"/> if deserialization succeeded; otherwise, <see langword="false"/>.</returns>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="json"/> is <see langword="null"/>, empty, or whitespace.</exception>
     public static bool TryFromJson(string json, out RecommendationDto? value)
     {
         ArgumentException.ThrowIfNullOrEmpty(json);
