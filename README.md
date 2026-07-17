@@ -1054,6 +1054,118 @@ var featuredErrors = ListingServiceValidation.ValidateForFeaturedChange(
 Console.WriteLine($"Featured change valid: {featuredErrors.Count == 0}");
 ```
 
+## UserServiceValidation
+
+The `UserServiceValidation` class provides comprehensive validation helpers for user account operations in the Marketplace Engine. It offers methods to validate user registration, profile updates, email verification, premium account promotion, account status changes, sale recording, rating updates, user access permissions, and pagination parameters. The validation ensures data integrity by checking for valid email formats, proper name lengths, required fields, and business rule compliance before operations are performed.
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.Services;
+using MarketplaceEngine.Domain.ValueObjects;
+using System;
+
+// Validate user registration parameters
+var registrationErrors = UserServiceValidation.ValidateForRegistration(
+  email: "new.user@example.com",
+  fullName: "John Doe",
+  phone: "+1234567890"
+);
+
+if (registrationErrors.Count > 0)
+{
+  Console.WriteLine("User registration validation failed:");
+  foreach (var error in registrationErrors)
+  {
+    Console.WriteLine($"- {error}");
+  }
+}
+else
+{
+  Console.WriteLine("User registration parameters are valid!");
+}
+
+// Validate user profile update parameters
+var profileErrors = UserServiceValidation.ValidateForProfileUpdate(
+  fullName: "John Smith",
+  phone: "+1987654321",
+  bio: "Experienced software developer specializing in C# and .NET",
+  location: new Location("New York", "NY", "US", 40.7128, -74.0060)
+);
+
+if (profileErrors.Count > 0)
+{
+  Console.WriteLine("Profile update validation failed:");
+  foreach (var error in profileErrors)
+  {
+    Console.WriteLine($"- {error}");
+  }
+}
+
+// Validate email verification parameters
+var emailErrors = UserServiceValidation.ValidateForEmailVerification(
+  userId: Guid.Parse("11111111-1111-1111-1111-111111111111"),
+  verificationToken: "abc123-verify-token-xyz789"
+);
+
+Console.WriteLine($"Email verification valid: {emailErrors.Count == 0}");
+
+// Validate premium promotion parameters
+var premiumErrors = UserServiceValidation.ValidateForPremiumPromotion(
+  totalSales: 10,
+  rating: new Rating(5, 25)
+);
+
+Console.WriteLine($"Premium promotion valid: {premiumErrors.Count == 0}");
+
+// Validate account status change parameters
+var statusErrors = UserServiceValidation.ValidateForAccountStatusChange(
+  userId: Guid.Parse("11111111-1111-1111-1111-111111111111"),
+  isActive: true
+);
+
+Console.WriteLine($"Account status change valid: {statusErrors.Count == 0}");
+
+// Validate sale recording parameters
+var saleErrors = UserServiceValidation.ValidateForSaleRecording(
+  userId: Guid.Parse("11111111-1111-1111-1111-111111111111")
+);
+
+Console.WriteLine($"Sale recording valid: {saleErrors.Count == 0}");
+
+// Validate rating update parameters
+var ratingErrors = UserServiceValidation.ValidateForRatingUpdate(
+  userId: Guid.Parse("11111111-1111-1111-1111-111111111111"),
+  rating: new Rating(5, 10)
+);
+
+Console.WriteLine($"Rating update valid: {ratingErrors.Count == 0}");
+
+// Validate user access permissions
+var accessErrors = UserServiceValidation.ValidateUserAccess(
+  userId: Guid.Parse("11111111-1111-1111-1111-111111111111"),
+  isActive: true,
+  isVerified: true
+);
+
+Console.WriteLine($"User access valid: {accessErrors.Count == 0}");
+
+// Validate pagination parameters
+var paginationErrors = UserServiceValidation.ValidatePaginationParameters(
+  pageNumber: 1,
+  pageSize: 25
+);
+
+Console.WriteLine($"Pagination valid: {paginationErrors.Count == 0}");
+
+// Validate public profile display parameters
+var profileDisplayErrors = UserServiceValidation.ValidateForPublicProfile(
+  userId: Guid.Parse("11111111-1111-1111-1111-111111111111")
+);
+
+Console.WriteLine($"Public profile valid: {profileDisplayErrors.Count == 0}");
+```
+
 ## ReviewService
 
 The `ReviewService` class provides essential functionality for managing user and listing reviews within the marketplace. It enables users to submit, retrieve, flag, and remove reviews, while also offering analytical insights like average scores and review distribution for sellers. This service acts as the central hub for all review-related operations in the application layer.
