@@ -1718,6 +1718,136 @@ var updatedCategory = await updateResponse.Content.ReadFromJsonAsync<CategoryDto
 Console.WriteLine($"Updated category: {updatedCategory.Name}");
 ```
 
+## CategoriesController
+
+The `CategoriesController` class provides RESTful API endpoints for managing product categories in the marketplace. It handles CRUD operations for categories, category hierarchy management, and retrieval of category statistics. The controller supports retrieving individual categories, category trees, listing counts, and category-specific statistics including average prices and view metrics.
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.Controllers;
+using MarketplaceEngine.DTOs;
+using Microsoft.AspNetCore.Mvc;
+using System;
+using System.Net.Http;
+using System.Net.Http.Json;
+using System.Threading.Tasks;
+
+// Initialize HTTP client for API calls
+var client = new HttpClient { BaseAddress = new Uri("https://api.marketplace.example.com") };
+
+// Get all categories with hierarchy
+var categoriesResponse = await client.GetAsync("/api/v1/categories/tree");
+var categories = await categoriesResponse.Content.ReadFromJsonAsync<List<CategoryDto>>();
+Console.WriteLine($"Found {categories.Count} root categories");
+
+// Get a specific category by ID
+var categoryId = Guid.Parse("3fa85f64-5717-4562-b3fc-2c963f66afa6");
+var categoryResponse = await client.GetAsync($"/api/v1/categories/{categoryId}");
+var category = await categoryResponse.Content.ReadFromJsonAsync<CategoryDto>();
+Console.WriteLine($"Retrieved category: {category.Name} ({category.Description})");
+Console.WriteLine($"Listing count: {category.ListingCount}");
+Console.WriteLine($"Subcategories: {category.SubCategories?.Count ?? 0}");
+
+// Get category statistics
+var statsResponse = await client.GetAsync($"/api/v1/categories/{categoryId}/statistics");
+var statistics = await statsResponse.Content.ReadFromJsonAsync<CategoryStatisticsDto>();
+Console.WriteLine($"Category statistics:");
+Console.WriteLine($"- Total listings: {statistics.TotalListings}");
+Console.WriteLine($"- Average price: {statistics.AveragePrice:C}");
+Console.WriteLine($"- Total views: {statistics.TotalViews}");
+Console.WriteLine($"- Average views: {statistics.AverageViews:F1}");
+
+// Get category listings
+var listingsResponse = await client.GetAsync($"/api/v1/categories/{categoryId}/listings");
+var listings = await listingsResponse.Content.ReadFromJsonAsync<List<ListingDto>>();
+Console.WriteLine($"Found {listings.Count} listings in category");
+
+// Create a new category (admin only)
+var newCategory = new CreateCategoryRequest
+{
+    Name = "Smart Home Devices",
+    Description = "Smart home automation devices and accessories",
+    ParentCategoryId = categoryId
+};
+
+var createResponse = await client.PostAsJsonAsync("/api/v1/categories", newCategory);
+var createdCategory = await createResponse.Content.ReadFromJsonAsync<CategoryDto>();
+Console.WriteLine($"Created category: {createdCategory.Id} - {createdCategory.Name}");
+
+// Update an existing category (admin only)
+var updateRequest = new UpdateCategoryRequest
+{
+    Name = "Smart Home & IoT Devices",
+    Description = "Smart home devices, IoT gadgets, and home automation equipment"
+};
+
+var updateResponse = await client.PutAsJsonAsync($"/api/v1/categories/{createdCategory.Id}", updateRequest);
+var updatedCategory = await updateResponse.Content.ReadFromJsonAsync<CategoryDto>();
+Console.WriteLine($"Updated category: {updatedCategory.Name}");
+```
+
+## UsersController
+
+The `UsersController` class provides RESTful API endpoints for managing user profiles, authentication, and seller reputation. It handles user profile retrieval, seller metrics, top seller rankings, profile updates, and email verification. The controller integrates with the `UserService` for business logic and uses caching to improve performance for infrequently changing user data.
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.Controllers;
+using MarketplaceEngine.DTOs;
+using Microsoft.AspNetCore.Mvc;
+using System;
+using System.Net.Http;
+using System.Net.Http.Json;
+using System.Threading.Tasks;
+
+// Initialize HTTP client for API calls
+var client = new HttpClient { BaseAddress = new Uri("https://api.marketplace.example.com") };
+
+// Get user profile (cached for 15 minutes)
+var userId = Guid.Parse("11111111-1111-1111-1111-111111111111");
+var profileResponse = await client.GetAsync($"/api/v1/users/{userId}");
+var profile = await profileResponse.Content.ReadFromJsonAsync<UserDto>();
+Console.WriteLine($"User Profile: {profile.DisplayName}");
+Console.WriteLine($"Email: {profile.Email}");
+Console.WriteLine($"Rating: {profile.AverageRating:F1}/5 ({profile.TotalReviews} reviews)");
+Console.WriteLine($"Member since: {profile.CreatedAt:yyyy-MM-dd}");
+
+// Get seller metrics (cached for 10 minutes)
+var metricsResponse = await client.GetAsync($"/api/v1/users/{userId}/seller-metrics");
+var metrics = await metricsResponse.Content.ReadFromJsonAsync<SellerMetricsDto>();
+Console.WriteLine($"\nSeller Metrics:");
+Console.WriteLine($"- Average Rating: {metrics.AverageRating:F1}/5");
+Console.WriteLine($"- Total Reviews: {metrics.TotalReviews}");
+Console.WriteLine($"- Total Sales: {metrics.TotalSales}");
+Console.WriteLine($"- Response Time: {metrics.ResponseTime}");
+
+// Get top sellers (cached for 30 minutes)
+var topSellersResponse = await client.GetAsync("/api/v1/users/top-sellers?limit=10");
+var topSellers = await topSellersResponse.Content.ReadFromJsonAsync<List<SellerRankingDto>>();
+Console.WriteLine($"\nTop {topSellers.Count} Sellers:");
+foreach (var seller in topSellers.Take(5))
+{
+    Console.WriteLine($"- Rank #{seller.Rank}: {seller.DisplayName} ({seller.AverageRating:F1}/5)");
+}
+
+// Update user profile
+var updateRequest = new UpdateUserRequest
+{
+    DisplayName = "TechEnthusiast Pro",
+    Bio = "Technology enthusiast and gadget collector"
+};
+
+var updateResponse = await client.PutAsJsonAsync($"/api/v1/users/{userId}", updateRequest);
+var updatedProfile = await updateResponse.Content.ReadFromJsonAsync<UserDto>();
+Console.WriteLine($"\nProfile updated: {updatedProfile.DisplayName}");
+
+// Verify user email
+var verifyResponse = await client.PostAsync($"/api/v1/users/{userId}/verify-email", null);
+Console.WriteLine("Email verification initiated");
+```
+
 ## ReviewsController
 
 The `ReviewsController` class provides RESTful API endpoints for managing buyer reviews, seller replies, review retrieval, moderation actions, and aggregated rating statistics. It handles review submissions, retrieval of seller and listing reviews, seller reply functionality, review flagging for moderation, and review removal by moderators. The controller integrates with the `ReviewService` to provide comprehensive review management capabilities.
