@@ -932,6 +932,77 @@ string commentSummary = recentReview.GetCommentSummary();
 Console.WriteLine($"Comment summary: {commentSummary}"); // Comment summary: Excellent seller! Fast shipping and great...
 ```
 
+## CategoriesControllerExtensions
+
+The `CategoriesControllerExtensions` class provides extension methods for the `CategoriesController` that enhance category management functionality with statistics and hierarchical operations. It simplifies working with category structures by offering methods to retrieve child categories, root categories, full hierarchies, and comprehensive statistics for all categories in a single batch operation.
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.Controllers;
+using MarketplaceEngine.DTOs;
+using Microsoft.AspNetCore.Mvc;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+
+// Initialize controller (typically via dependency injection)
+var controller = new CategoriesController();
+
+// Get root categories (categories with no parent)
+var rootCategoriesResult = await controller.GetRootCategories(depth: 2);
+if (rootCategoriesResult is OkObjectResult okResult && okResult.Value is List<CategoryDto> rootCategories)
+{
+    Console.WriteLine($"Found {rootCategories.Count} root categories:");
+    foreach (var category in rootCategories)
+    {
+        Console.WriteLine($"- {category.Name} (ID: {category.Id})");
+    }
+}
+
+// Get child categories for a specific parent category
+var parentCategoryId = Guid.Parse("3fa85f64-5717-4562-b3fc-2c963f66afa6");
+var childCategoriesResult = await controller.GetChildCategories(parentCategoryId, depth: 3);
+if (childCategoriesResult is OkObjectResult childOkResult && childOkResult.Value is List<CategoryDto> childCategories)
+{
+    Console.WriteLine($"\nFound {childCategories.Count} child categories for parent {parentCategoryId}:");
+    foreach (var category in childCategories)
+    {
+        Console.WriteLine($"- {category.Name} (ID: {category.Id})");
+    }
+}
+
+// Get full category hierarchy as a flat list
+var hierarchyResult = await controller.GetCategoryHierarchy();
+if (hierarchyResult is OkObjectResult hierarchyOkResult && hierarchyOkResult.Value is List<CategoryDto> allCategories)
+{
+    Console.WriteLine($"\nTotal categories in hierarchy: {allCategories.Count}");
+    Console.WriteLine("Sample categories:");
+    foreach (var category in allCategories.Take(5))
+    {
+        Console.WriteLine($"- {category.Name} (Parent: {category.ParentCategoryId?.ToString() ?? "None"})");
+    }
+}
+
+// Get statistics for all categories in a single batch
+var statsResult = await controller.GetAllCategoriesStatistics();
+if (statsResult is OkObjectResult statsOkResult && statsOkResult.Value is Dictionary<Guid, CategoryStatisticsDto> statsDictionary)
+{
+    Console.WriteLine($"\nCategory Statistics:");
+    foreach (var kvp in statsDictionary.Take(3))
+    {
+        var stats = kvp.Value;
+        Console.WriteLine($"Category {kvp.Key}:");
+        Console.WriteLine($"  - Total listings: {stats.TotalListings}");
+        Console.WriteLine($"  - Active listings: {stats.ActiveListings}");
+        Console.WriteLine($"  - Average price: {stats.AveragePrice:C}");
+        Console.WriteLine($"  - Total sales: {stats.TotalSales}");
+        Console.WriteLine($"  - Average rating: {stats.AverageRating:F1}/5");
+        break; // Just show first few for brevity
+    }
+}
+```
+
 ## MoneyExtensions
 
 The `MoneyExtensions` class provides extension methods for the `Money` value object, offering common monetary operations such as rounding, comparison, percentage calculations, absolute value, negation, and formatted string output with currency symbols. These utilities simplify financial calculations and comparisons throughout the application.
