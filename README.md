@@ -50,6 +50,35 @@ message.AttachmentUrls = new List<string>(new[] { "url1", "url2", "url3", "url4"
 Assert.Throws<ArgumentException>(() => message.ValidateBeforeSending());
 ```
 
+## ListingServiceExtendedTestsExtensions
+
+The `ListingServiceExtendedTestsExtensions` class provides a set of extension methods to simplify unit testing of `ListingService`. It facilitates the creation of `Mock<IListingRepository>` setups for various operations and provides helper methods to generate valid `User` and `Listing` instances for test scenarios.
+
+### Usage Example
+
+```csharp
+using Moq;
+using MarketplaceEngine.Domain.Models;
+using MarketplaceEngine.Repositories;
+using MarketplaceEngine.Tests;
+using Xunit;
+
+// Setup a mock repository
+var mockRepo = new Mock<IListingRepository>();
+var sellerId = Guid.NewGuid();
+
+// Use extension methods to setup mock behaviors
+mockRepo.SetupCreateListingAsync(sellerId)
+        .SetupIncrementViewCountAsync(Guid.NewGuid(), 0);
+
+// Use extension methods to create test data
+var seller = default(User).CreateActiveSeller();
+var listing = default(Listing).CreateActiveListing(sellerId: seller.Id);
+
+Assert.True(seller.IsActive);
+Assert.Equal("Valid Listing Title", listing.Title);
+```
+
 ## ModerationControllerValidation
 
 The `ModerationControllerValidation` class provides validation methods for moderation-related data, including report IDs, pagination parameters, action notes, rejection reasons, and bulk moderation operations. It ensures that moderation data meets expected formats and constraints before processing.
