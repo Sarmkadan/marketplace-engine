@@ -598,6 +598,91 @@ Console.WriteLine($"Pending: {pendingCount}");
 Console.WriteLine($"In review: {inReviewCount}");
 ```
 
+## ListingDto
+
+The `ListingDto` class represents a product listing in the marketplace. It contains all essential information about a listing including the title, description, price, seller details, category, status, view count, and timestamps for creation and updates. This DTO is used throughout the application for displaying listings, creating new listings, and updating existing ones.
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.DTOs;
+using System;
+using System.Collections.Generic;
+
+// Create a new listing for a premium product
+var listing = new ListingDto
+{
+    Id = Guid.NewGuid(),
+    Title = "Premium Wireless Headphones",
+    Description = "Noise-cancelling wireless headphones with 30-hour battery life, Bluetooth 5.0, and premium sound quality. Includes carrying case and 2-year warranty.",
+    Price = 299.99m,
+    SellerId = Guid.Parse("11111111-1111-1111-1111-111111111111"),
+    SellerName = "AudioTech Solutions",
+    CategoryId = Guid.Parse("3fa85f64-5717-4562-b3fc-2c963f66afa6"),
+    Status = "Active",
+    ViewCount = 156,
+    CreatedAt = DateTime.UtcNow,
+    UpdatedAt = DateTime.UtcNow
+};
+
+// Display listing information
+Console.WriteLine($"Listing: {listing.Title}");
+Console.WriteLine($"Price: {listing.Price:C}");
+Console.WriteLine($"Seller: {listing.SellerName}");
+Console.WriteLine($"Category: {listing.CategoryId}");
+Console.WriteLine($"Status: {listing.Status}");
+Console.WriteLine($"Views: {listing.ViewCount}");
+Console.WriteLine($"Created: {listing.CreatedAt:yyyy-MM-dd}");
+Console.WriteLine($"Last updated: {listing.UpdatedAt?.ToString("yyyy-MM-dd") ?? "Never"}");
+
+// Create a collection of listings for a category page
+var categoryListings = new List<ListingDto>
+{
+    new ListingDto
+    {
+        Id = Guid.NewGuid(),
+        Title = "Wireless Bluetooth Speaker",
+        Description = "Portable wireless speaker with 20W output, IPX7 waterproof rating, 15-hour playtime.",
+        Price = 89.99m,
+        SellerId = Guid.Parse("22222222-2222-2222-2222-222222222222"),
+        SellerName = "SoundWave Audio",
+        CategoryId = Guid.Parse("3fa85f64-5717-4562-b3fc-2c963f66afa6"),
+        Status = "Active",
+        ViewCount = 234,
+        CreatedAt = DateTime.UtcNow.AddDays(-3),
+        UpdatedAt = DateTime.UtcNow.AddDays(-1)
+    },
+    new ListingDto
+    {
+        Id = Guid.NewGuid(),
+        Title = "Smart Watch with Heart Rate Monitor",
+        Description = "Fitness tracker with heart rate monitoring, GPS, water resistance up to 50m, and smartphone notifications.",
+        Price = 199.99m,
+        SellerId = Guid.Parse("33333333-3333-3333-3333-333333333333"),
+        SellerName = "FitTech Wearables",
+        CategoryId = Guid.Parse("3fa85f64-5717-4562-b3fc-2c963f66afa6"),
+        Status = "Active",
+        ViewCount = 412,
+        CreatedAt = DateTime.UtcNow.AddDays(-7),
+        UpdatedAt = DateTime.UtcNow.AddDays(-2)
+    }
+};
+
+// Display category listings
+Console.WriteLine($"\nFound {categoryListings.Count} listings in category:");
+foreach (var item in categoryListings.OrderBy(l => l.Price))
+{
+    Console.WriteLine($"- {item.Title}: {item.Price:C} ({item.ViewCount} views)");
+}
+
+// Update listing price
+var listingToUpdate = categoryListings[0];
+listingToUpdate.Price = 79.99m;
+listingToUpdate.UpdatedAt = DateTime.UtcNow;
+
+Console.WriteLine($"\nUpdated price for {listingToUpdate.Title}: {listingToUpdate.Price:C}");
+```
+
 ## MessageDto
 
 The `MessageDto` class is a data transfer object used for API responses when retrieving messages between users in the marketplace. It represents a simplified view of a message containing the message content, sender and recipient information, read status, and creation timestamp. This DTO is commonly used in messaging APIs to provide a clean, serialized format for message data.
