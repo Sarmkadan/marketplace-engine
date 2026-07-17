@@ -21,11 +21,11 @@ namespace MarketplaceEngine.Controllers;
 [Route("api/v1/messages")]
 public class MessagesController : ControllerBase
 {
-    private readonly MessagingService _messagingService;
-    private readonly CacheService _cacheService;
-    private readonly IMessageRepository _messageRepository;
-    private readonly IUserRepository _userRepository; // Hotfix: Injected for user details in conversations
-    private readonly ILogger<MessagesController> _logger;
+    internal readonly MessagingService _messagingService;
+    internal readonly CacheService _cacheService;
+    internal readonly IMessageRepository _messageRepository;
+    internal readonly IUserRepository _userRepository; // Hotfix: Injected for user details in conversations
+    internal readonly ILogger<MessagesController> _logger;
 
     public MessagesController(
         MessagingService messagingService,
