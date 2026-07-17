@@ -402,6 +402,128 @@ class JsonDemo
         Console.WriteLine($"\nCompletePaymentRequest is null: {completeRequest == null}");
     }
 }
+## SellerDashboardServiceTestsValidation
+
+The `SellerDashboardServiceTestsValidation` class provides validation helpers for test scenarios related to the `SellerDashboardService`. It offers extension methods to validate `User` (seller), `Listing`, and `Payment` entities, ensuring they meet expected state requirements for testing. This validation class helps maintain consistency in test data and prevents invalid entities from being used in test scenarios.
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.Domain.Models;
+using MarketplaceEngine.Domain.ValueObjects;
+using MarketplaceEngine.Tests;
+using System;
+using System.Linq;
+
+// Example 1: Validate a seller entity
+var seller = new User
+{
+    Id = Guid.NewGuid(),
+    FullName = "John Doe",
+    TotalSales = 1500.50m
+};
+
+var sellerProblems = seller.Validate();
+if (sellerProblems.Count == 0)
+{
+    Console.WriteLine("Seller is valid for testing");
+}
+else
+{
+    Console.WriteLine("Seller validation problems:");
+    foreach (var problem in sellerProblems)
+    {
+        Console.WriteLine($"- {problem}");
+    }
+}
+
+// Example 2: Validate a listing entity
+var listing = new Listing
+{
+    Id = Guid.NewGuid(),
+    SellerId = seller.Id,
+    Title = "Premium Widget",
+    Price = new Money(99.99m, "USD"),
+    ViewCount = 42
+};
+
+var listingProblems = listing.Validate();
+if (listingProblems.Count == 0)
+{
+    Console.WriteLine("Listing is valid for testing");
+}
+else
+{
+    Console.WriteLine("Listing validation problems:");
+    foreach (var problem in listingProblems)
+    {
+        Console.WriteLine($"- {problem}");
+    }
+}
+
+// Example 3: Validate a payment entity
+var payment = new Payment
+{
+    Id = Guid.NewGuid(),
+    SellerId = seller.Id,
+    Amount = new Money(99.99m, "USD"),
+    PlatformFee = new Money(5.00m, "USD"),
+    SellerPayout = new Money(94.99m, "USD"),
+    CompletedAt = DateTime.UtcNow
+};
+
+var paymentProblems = payment.Validate();
+if (paymentProblems.Count == 0)
+{
+    Console.WriteLine("Payment is valid for testing");
+}
+else
+{
+    Console.WriteLine("Payment validation problems:");
+    foreach (var problem in paymentProblems)
+    {
+        Console.WriteLine($"- {problem}");
+    }
+}
+
+// Example 4: Use IsValid extension methods
+if (seller.IsValid())
+{
+    Console.WriteLine("Seller is valid using IsValid extension");
+}
+
+if (listing.IsValid())
+{
+    Console.WriteLine("Listing is valid using IsValid extension");
+}
+
+if (payment.IsValid())
+{
+    Console.WriteLine("Payment is valid using IsValid extension");
+}
+
+// Example 5: Use EnsureValid extension methods (throws on invalid)
+try
+{
+    seller.EnsureValid();
+    Console.WriteLine("Seller passed EnsureValid check");
+}
+catch (ArgumentException ex)
+{
+    Console.WriteLine($"Seller failed EnsureValid: {ex.Message}");
+}
+
+try
+{
+    listing.EnsureValid();
+    Console.WriteLine("Listing passed EnsureValid check");
+}
+catch (ArgumentException ex)
+{
+    Console.WriteLine($"Listing failed EnsureValid: {ex.Message}");
+}
+```
+
 ## ValueObjectTestsExtensions
 
 The `ValueObjectTestsExtensions` class provides extension methods for creating and asserting value objects in unit tests. It simplifies the creation of test instances for domain value objects like `Money`, `Rating`, and `Location`, and provides fluent assertion methods to verify their properties. This extension class is particularly useful for testing domain logic that depends on these value objects.
