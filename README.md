@@ -937,6 +937,45 @@ Console.WriteLine($"Formatted price: {productPrice.ToStringWithSymbol()}"); // F
 Console.WriteLine($"Formatted tax: {taxRate.ToStringWithSymbol()}"); // Formatted tax: $8.25
 ```
 
+## ApiResponseExtensions
+
+The `ApiResponseExtensions` class provides extension methods for `ApiResponse<T>` and `ApiResponse` to enhance functionality with common operations like mapping, validation, and conversion. These utilities simplify working with API responses by providing fluent methods for transforming successful responses, converting to paged responses, adding correlation IDs, and creating validation error responses.
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.DTOs;
+using System;
+using System.Collections.Generic;
+
+// Initialize API responses
+var successResponse = ApiResponse.SuccessResponse("Operation completed successfully", "req-12345");
+var typedSuccessResponse = ApiResponse<string>.SuccessResponse("Hello World", "Operation successful", "req-67890");
+
+// Map data from one type to another
+var mappedResponse = typedSuccessResponse.Map(data => data.ToUpper());
+Console.WriteLine($"Mapped response: {mappedResponse.Data}"); // Mapped response: HELLO WORLD
+
+// Convert to paged response for unified handling
+var pagedResponse = typedSuccessResponse.ToPagedResponse();
+Console.WriteLine($"Paged response has {pagedResponse.Items.Count} item(s)"); // Paged response has 1 item(s)
+
+// Add or update request ID for correlation
+var responseWithRequestId = successResponse.WithRequestId("new-request-54321");
+Console.WriteLine($"Request ID: {responseWithRequestId.RequestId}"); // Request ID: new-request-54321
+
+// Create validation error responses
+var validationError = ApiResponse<int>.FieldValidationError("email", "Email address is required");
+Console.WriteLine($"Validation error: {validationError.Message}"); // Validation error: Validation failed
+
+var batchValidationError = ApiResponse<bool>.FieldValidationError(new Dictionary<string, string>
+{
+    { "username", "Username must be at least 3 characters" },
+    { "password", "Password must contain a number" }
+});
+Console.WriteLine($"Batch validation errors: {batchValidationError.Errors?.Count} field(s)"); // Batch validation errors: 2 field(s)
+```
+
 ## ReviewService
 
 The `ReviewService` class provides essential functionality for managing user and listing reviews within the marketplace. It enables users to submit, retrieve, flag, and remove reviews, while also offering analytical insights like average scores and review distribution for sellers. This service acts as the central hub for all review-related operations in the application layer.
