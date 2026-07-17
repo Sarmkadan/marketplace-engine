@@ -21,7 +21,7 @@ public static class UtilityTestsValidation
     /// </summary>
     /// <param name="value">The UtilityTests instance to validate.</param>
     /// <returns>A list of validation problems (empty if valid).</returns>
-    /// <exception cref="ArgumentNullException">Thrown if value is null.</exception>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="value"/> is null.</exception>
     public static IReadOnlyList<string> Validate(this UtilityTests value)
     {
         ArgumentNullException.ThrowIfNull(value);
@@ -123,25 +123,25 @@ public static class UtilityTestsValidation
     /// </summary>
     /// <param name="value">The UtilityTests instance to check.</param>
     /// <returns>True if valid; otherwise, false.</returns>
-    /// <exception cref="ArgumentNullException">Thrown if value is null.</exception>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="value"/> is null.</exception>
     public static bool IsValid(this UtilityTests value)
     {
-        return value.Validate().Count == 0;
+        return value.Validate().Count is 0;
     }
 
     /// <summary>
     /// Ensures that a UtilityTests instance is valid, throwing an exception if not.
     /// </summary>
     /// <param name="value">The UtilityTests instance to validate.</param>
-    /// <exception cref="ArgumentNullException">Thrown if value is null.</exception>
-    /// <exception cref="ArgumentException">Thrown if value contains validation problems.</exception>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="value"/> is null.</exception>
+    /// <exception cref="ArgumentException">Thrown if <paramref name="value"/> contains validation problems.</exception>
     public static void EnsureValid(this UtilityTests value)
     {
         ArgumentNullException.ThrowIfNull(value);
 
         var problems = value.Validate();
 
-        if (problems.Count > 0)
+        if (problems.Count is not 0)
         {
             throw new ArgumentException(
                 $"UtilityTests validation failed:{Environment.NewLine}- {
