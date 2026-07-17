@@ -796,29 +796,34 @@ Console.WriteLine($"Report ID: {moderationReport.Id}");
 Console.WriteLine($"Report Status: {moderationReport.Status}");
 ```
 
-## Location
+## ApiResponse
 
-The `Location` type represents a geographic point with city, state, country, and optional postal code information. It also includes latitude and longitude coordinates for mapping and distance calculations. The type provides methods for equality comparison, hashing, and string representation.
+The `ApiResponse` and `ApiResponse<T>` classes provide a consistent, structured wrapper for all API endpoint responses within the Marketplace Engine. They encapsulate the operation's success status, optional data, messages, and metadata (such as timestamps and request IDs) to ensure predictable and reliable communication between the API and its consumers.
 
-Example usage:
+### Usage Example
 
 ```csharp
-using MarketplaceEngine.Domain.ValueObjects;
+using MarketplaceEngine.DTOs;
+using System;
+using System.Collections.Generic;
 
-public Location location = new Location
-{
-    City = "New York",
-    State = "NY",
-    CountryCode = "US",
-    PostalCode = "10001",
-    Latitude = 40.7128,
-    Longitude = -74.0060
-};
+// 1. Using ApiResponse<T> for a successful response with data
+var productData = new { Id = 1, Name = "Premium Widget" };
+var successResponse = ApiResponse<object>.SuccessResponse(productData, "Product retrieved successfully");
 
-// Calculate distance to another location
-var otherLocation = new Location("Boston", "MA", "US", "02108", 42.3601, -71.0589);
-var distance = location.DistanceTo(otherLocation);
-Console.WriteLine($"Distance: {distance} miles");
+Console.WriteLine($"Success: {successResponse.Success}");
+Console.WriteLine($"Timestamp: {successResponse.Timestamp}");
+
+// 2. Using non-generic ApiResponse for operations without return data
+var actionResponse = ApiResponse.SuccessResponse("Operation completed successfully");
+
+Console.WriteLine($"Message: {actionResponse.Message}");
+
+// 3. Using ApiResponse<T> for a failure response with error details
+var errorResponse = ApiResponse<object>.ErrorResponse("NOT_FOUND", "Resource not found");
+
+Console.WriteLine($"Error Code: {errorResponse.ErrorCode}");
+Console.WriteLine($"Message: {errorResponse.Message}");
 ```
 
 ## Message
