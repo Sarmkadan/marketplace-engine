@@ -976,6 +976,84 @@ var batchValidationError = ApiResponse<bool>.FieldValidationError(new Dictionary
 Console.WriteLine($"Batch validation errors: {batchValidationError.Errors?.Count} field(s)"); // Batch validation errors: 2 field(s)
 ```
 
+## ListingServiceValidation
+
+The `ListingServiceValidation` class provides comprehensive validation helpers for listing operations in the Marketplace Engine. It offers methods to validate listing creation, updates, visibility changes, delisting, featured status changes, and pagination parameters. The validation ensures data integrity by checking for required fields, valid IDs, proper lengths, and appropriate values before operations are performed.
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.Services;
+using MarketplaceEngine.Domain.ValueObjects;
+using System;
+
+// Validate listing creation parameters
+var creationErrors = ListingServiceValidation.ValidateForCreation(
+    sellerId: Guid.Parse("11111111-1111-1111-1111-111111111111"),
+    title: "Premium Wireless Headphones",
+    description: "High-quality wireless headphones with noise cancellation and 30-hour battery life",
+    price: 299.99m,
+    currency: "USD",
+    categoryId: Guid.Parse("3fa85f64-5717-4562-b3fc-2c963f66afa6"),
+    imageUrls: new[] { "https://example.com/headphones1.jpg", "https://example.com/headphones2.jpg" }
+);
+
+if (creationErrors.Count > 0)
+{
+    Console.WriteLine("Listing creation validation failed:");
+    foreach (var error in creationErrors)
+    {
+        Console.WriteLine($"- {error}");
+    }
+}
+else
+{
+    Console.WriteLine("Listing creation parameters are valid!");
+}
+
+// Validate listing update parameters
+var updateErrors = ListingServiceValidation.ValidateForUpdate(
+    listingId: Guid.Parse("3fa85f64-5717-4562-b3fc-2c963f66afa6"),
+    requesterId: Guid.Parse("11111111-1111-1111-1111-111111111111"),
+    title: "Updated Premium Wireless Headphones",
+    price: new Money(279.99m, "USD")
+);
+
+if (updateErrors.Count > 0)
+{
+    Console.WriteLine("Listing update validation failed:");
+    foreach (var error in updateErrors)
+    {
+        Console.WriteLine($"- {error}");
+    }
+}
+
+// Validate visibility change
+var visibilityErrors = ListingServiceValidation.ValidateForVisibilityChange(
+    listingId: Guid.Parse("3fa85f64-5717-4562-b3fc-2c963f66afa6"),
+    requesterId: Guid.Parse("11111111-1111-1111-1111-111111111111"),
+    isVisible: true
+);
+
+Console.WriteLine($"Visibility change valid: {visibilityErrors.Count == 0}");
+
+// Validate pagination parameters
+var paginationErrors = ListingServiceValidation.ValidatePaginationParameters(
+    pageNumber: 1,
+    pageSize: 25
+);
+
+Console.WriteLine($"Pagination valid: {paginationErrors.Count == 0}");
+
+// Validate featured status change (admin only)
+var featuredErrors = ListingServiceValidation.ValidateForFeaturedChange(
+    listingId: Guid.Parse("3fa85f64-5717-4562-b3fc-2c963f66afa6"),
+    adminId: Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa")
+);
+
+Console.WriteLine($"Featured change valid: {featuredErrors.Count == 0}");
+```
+
 ## ReviewService
 
 The `ReviewService` class provides essential functionality for managing user and listing reviews within the marketplace. It enables users to submit, retrieve, flag, and remove reviews, while also offering analytical insights like average scores and review distribution for sellers. This service acts as the central hub for all review-related operations in the application layer.
