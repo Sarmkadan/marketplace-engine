@@ -7,6 +7,39 @@ project layout, the in-memory storage model, the DI/composition root, middleware
 pipeline, event bus, background jobs, extension points and known limitations.
 
 
+## MarketplaceDbContext
+
+The `MarketplaceDbContext` class serves as the in-memory database context, acting as the central storage for all marketplace entities such as users, categories, listings, messages, and payments. It implements the singleton pattern to ensure consistent data access throughout the application lifecycle and provides methods for data management, including clearing all entities or resetting to the default seeded state.
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.Data;
+using System;
+
+// Get the singleton instance of the database context
+var dbContext = MarketplaceDbContext.GetInstance();
+
+// Access entities
+var userCount = dbContext.Users.Count;
+var listingCount = dbContext.Listings.Count;
+
+Console.WriteLine($"Current user count: {userCount}");
+Console.WriteLine($"Current listing count: {listingCount}");
+
+// Get total count of all entities in the database
+var totalEntities = dbContext.GetTotalEntityCount();
+Console.WriteLine($"Total entity count: {totalEntities}");
+
+// Clear all data from the database
+dbContext.Clear();
+Console.WriteLine($"Entities cleared. New total: {dbContext.GetTotalEntityCount()}");
+
+// Reset the database to initial seeded data
+dbContext.Reset();
+Console.WriteLine($"Database reset. New total: {dbContext.GetTotalEntityCount()}");
+```
+
 ## Rating
 
 The `Rating` class is an immutable value object that represents a user or listing rating. It encapsulates the score and review count, providing methods to calculate a weighted average rating and add new reviews while maintaining data integrity.
