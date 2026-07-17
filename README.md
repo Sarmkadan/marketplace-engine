@@ -742,6 +742,76 @@ Console.WriteLine($"Performance: {sellerProfile.TotalSales} sales | Rank #{selle
 Console.WriteLine($"Response time: {sellerProfile.ResponseTime}");
 ```
 
+## ErrorHandlingMiddleware
+
+The `ErrorHandlingMiddleware` class provides centralized exception handling for the Marketplace Engine API. It catches all unhandled exceptions, logs them appropriately, and returns consistent error responses to clients without exposing sensitive error details in production. This middleware prevents the need for scattered exception handling logic across controllers and ensures a uniform error format throughout the application.
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.Middleware;
+using MarketplaceEngine.Exceptions;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+
+var builder = WebApplication.CreateBuilder(args);
+
+// Register the middleware with dependency injection
+builder.Services.AddScoped<ErrorHandlingMiddleware>();
+builder.Services.AddLogging();
+
+var app = builder.Build();
+
+// Add the error handling middleware to the pipeline
+// It should be placed early in the pipeline to catch all exceptions
+app.UseMiddleware<ErrorHandlingMiddleware>();
+
+// Other middleware components
+app.UseRouting();
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.MapGet("/api/listings/{id}", (Guid id) => 
+{
+    if (id == Guid.Empty)
+    {
+        throw new ResourceNotFoundException("Listing not found");
+    }
+    
+    return Results.Ok(new { Id = id, Name = "Sample Listing" });
+});
+
+app.Run();
+```
+
+### Error Response Format
+
+When an exception is caught, the middleware returns a standardized error response with the following structure:
+
+```json
+{
+  "code": "ERROR_TYPE",
+  "message": "Human-readable error message",
+  "details": {
+    "field1": "error details",
+    "field2": "additional context"
+  },
+  "timestamp": "2024-07-18T12:34:56.789Z"
+}
+```
+
+### Supported Exception Types
+
+- `ResourceNotFoundException` → HTTP 404 with code "RESOURCE_NOT_FOUND"
+- `UnauthorizedException` → HTTP 401 with code "UNAUTHORIZED"  
+- `ValidationException` → HTTP 400 with code "VALIDATION_ERROR" (includes validation details)
+- `DuplicateResourceException` → HTTP 409 with code "DUPLICATE_RESOURCE"
+- `MarketplaceException` → HTTP 400 with code "MARKETPLACE_ERROR"
+- All other exceptions → HTTP 500 with generic message (no stack traces exposed)
+
+
 ## MessageDto
 
 The `MessageDto` class is a data transfer object used for API responses when retrieving messages between users in the marketplace. It represents a simplified view of a message containing the message content, sender and recipient information, read status, and creation timestamp. This DTO is commonly used in messaging APIs to provide a clean, serialized format for message data.
