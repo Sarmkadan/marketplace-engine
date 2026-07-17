@@ -5,12 +5,14 @@
 // CTO & Software Architect
 // =============================================================================
 
-using System.Globalization;
+using System;
+using System.Collections.Generic;
 
 namespace MarketplaceEngine.Tests;
 
 /// <summary>
 /// Provides validation helpers for <see cref="SearchServiceTests"/> instances.
+/// This class contains test fixture validation logic to ensure test setup is correct.
 /// </summary>
 public static class SearchServiceTestsValidation
 {
@@ -24,8 +26,9 @@ public static class SearchServiceTestsValidation
     {
         ArgumentNullException.ThrowIfNull(value);
 
-        // SearchServiceTests is a test fixture class that should be properly initialized
-        // Validation ensures the instance itself is not null (the constructor initializes private fields)
+        // SearchServiceTests is a test fixture class that uses mock repositories.
+        // The constructor initializes all required dependencies, so no additional validation is needed.
+        // This method exists for API consistency with other test validation helpers.
         return Array.Empty<string>();
     }
 
@@ -34,10 +37,8 @@ public static class SearchServiceTestsValidation
     /// </summary>
     /// <param name="value">The instance to check.</param>
     /// <returns>True if valid; otherwise, false.</returns>
-    public static bool IsValid(this SearchServiceTests? value)
-    {
-        return value?.Validate().Count == 0;
-    }
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="value"/> is null.</exception>
+    public static bool IsValid(this SearchServiceTests? value) => value?.Validate().Count == 0;
 
     /// <summary>
     /// Ensures that the specified <see cref="SearchServiceTests"/> instance is valid.
@@ -53,7 +54,8 @@ public static class SearchServiceTestsValidation
         if (problems.Count > 0)
         {
             throw new ArgumentException(
-                $"SearchServiceTests instance is not valid:{Environment.NewLine}{string.Join(Environment.NewLine, problems)}");
+                $"SearchServiceTests instance is not valid:{Environment.NewLine}{string.Join(Environment.NewLine, problems)}",
+                nameof(value));
         }
     }
 }
