@@ -7,6 +7,59 @@ project layout, the in-memory storage model, the DI/composition root, middleware
 pipeline, event bus, background jobs, extension points and known limitations.
 
 
+## MappingUtilityJsonExtensions
+
+The `MappingUtilityJsonExtensions` class provides System.Text.Json serialization and deserialization extensions for various Marketplace Engine domain models and DTOs. It simplifies JSON conversion operations by offering strongly-typed methods that handle both serialization to JSON strings and deserialization from JSON strings for Listing, User, Message, ModerationReport, and their corresponding DTO types.
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.Utilities;
+using MarketplaceEngine.Domain.Models;
+using MarketplaceEngine.DTOs;
+using System;
+
+// Create a sample listing
+var listing = new Listing
+{
+    Id = Guid.Parse("3fa85f64-5717-4562-b3fc-2c963f66afa6"),
+    Title = "Premium Wireless Headphones",
+    Description = "Noise-cancelling wireless headphones with 30-hour battery life",
+    Price = new Money(299.99m, "USD"),
+    CategoryId = Guid.Parse("3fa85f64-5717-4562-b3fc-2c963f66afa6"),
+    Status = ListingStatus.Active,
+    CreatedAt = DateTime.UtcNow
+};
+
+// Serialize to JSON
+string json = listing.ToJson();
+Console.WriteLine("Serialized listing:");
+Console.WriteLine(json);
+
+// Deserialize back to object
+var deserializedListing = MappingUtilityJsonExtensions.FromJsonToListing(json);
+Console.WriteLine($"\nDeserialized listing: {deserializedListing?.Title}");
+
+// Use try pattern for safe deserialization
+if (MappingUtilityJsonExtensions.TryFromJsonToListing(json, out var safeListing))
+{
+    Console.WriteLine($"Safe deserialization successful: {safeListing?.Title}");
+}
+
+// Serialize a DTO
+var userDto = new UserDto
+{
+    Id = Guid.Parse("11111111-1111-1111-1111-111111111111"),
+    Email = "user@example.com",
+    FullName = "John Doe",
+    IsPremium = true
+};
+
+string userJson = userDto.ToJson(indented: true);
+Console.WriteLine("\nIndented user DTO:");
+Console.WriteLine(userJson);
+```
+
 ## MessageRepository
 
 The `MessageRepository` class provides data access operations for message entities in the marketplace system. It handles CRUD operations for messages, conversation management, and various query methods for retrieving messages by different criteria including sender/recipient, listing context, read status, and pagination with both offset and cursor-based approaches.
