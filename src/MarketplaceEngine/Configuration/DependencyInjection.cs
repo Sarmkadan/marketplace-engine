@@ -60,24 +60,29 @@ public static class DependencyInjection
         {
             var httpClient = provider.GetRequiredService<IHttpClientFactory>().CreateClient();
             var logger = provider.GetRequiredService<ILogger<DropshipProviderClient>>();
+            var config = provider.GetRequiredService<IConfiguration>();
             return new DropshipProviderClient(
                 new HttpClientService(httpClient, provider.GetRequiredService<ILogger<HttpClientService>>()),
                 logger,
-                "https://api.example.com", // Configuration
-                "api-key-here"); // Configuration
+                config["Marketplace:Dropship:BaseUrl"] ?? "https://api.example.com",
+                config["Marketplace:Dropship:ApiKey"] ?? "dev-placeholder-api-key");
         });
         services.AddSingleton<ExternalListingSyncService>();
         services.AddSingleton<WebhookService>(provider =>
         {
             var logger = provider.GetRequiredService<ILogger<WebhookService>>();
-            return new WebhookService(logger, "webhook-secret-key"); // Configuration
+            var config = provider.GetRequiredService<IConfiguration>();
+            return new WebhookService(logger,
+                config["Marketplace:Webhooks:Secret"] ?? "dev-placeholder-webhook-secret");
         });
 
         // Register security services
         services.AddSingleton<TokenService>(provider =>
         {
             var logger = provider.GetRequiredService<ILogger<TokenService>>();
-            return new TokenService(logger, "token-secret-key"); // Configuration
+            var config = provider.GetRequiredService<IConfiguration>();
+            return new TokenService(logger,
+                config["Marketplace:Security:TokenSecret"] ?? "dev-placeholder-token-secret");
         });
         services.AddSingleton<ApiKeyValidator>();
         services.AddSingleton<PermissionService>();
@@ -101,92 +106,43 @@ public static class DependencyInjection
         services.AddSingleton<IEventHandler<RatingSubmittedEvent>, RatingSubmittedEventHandler>();
     }
 
-    // Registers API endpoints
+    /// <summary>
+    /// Subscribes the DI-registered <see cref="IEventHandler{TEvent}"/> implementations
+    /// to the singleton <see cref="EventBus"/>. Must be called at startup; DI
+    /// registration alone does not wire handlers to the bus.
+    /// </summary>
+    public static void SubscribeMarketplaceEventHandlers(this WebApplication app)
+    {
+        var bus = app.Services.GetRequiredService<EventBus>();
+        SubscribeHandler<ListingCreatedEvent>(app.Services, bus);
+        SubscribeHandler<MessageSentEvent>(app.Services, bus);
+        SubscribeHandler<ReportCreatedEvent>(app.Services, bus);
+        SubscribeHandler<UserCreatedEvent>(app.Services, bus);
+        SubscribeHandler<UserEmailVerifiedEvent>(app.Services, bus);
+        SubscribeHandler<RatingSubmittedEvent>(app.Services, bus);
+    }
+
+    private static void SubscribeHandler<TEvent>(IServiceProvider provider, EventBus bus)
+        where TEvent : IEvent
+    {
+        var handler = provider.GetRequiredService<IEventHandler<TEvent>>();
+        bus.Subscribe<TEvent>(handler.HandleAsync);
+    }
+
+    // Registers minimal-API endpoints.
+    // NOTE: attribute-routed controllers already serve /api/v1/health, /listings,
+    // /users/{id} and /categories; mapping the same paths here again would make
+    // requests fail with AmbiguousMatchException at runtime, so only routes
+    // WITHOUT a controller equivalent are mapped.
     public static void MapMarketplaceEndpoints(this WebApplication app)
     {
         var api = app.MapGroup("/api/v1")
             .WithName("Marketplace API");
 
-        // Health check
-        api.MapGet("/health", HealthCheck)
-            .WithName("Health Check");
-
-        // Listing endpoints
-        var listings = api.MapGroup("/listings");
-        listings.MapGet("", GetListings)
-            .WithName("Get Listings");
-
-        listings.MapGet("/{id}", GetListing)
-            .WithName("Get Listing");
-
-        listings.MapGet("/search", SearchListings)
-            .WithName("Search Listings");
-
         // User endpoints
         var users = api.MapGroup("/users");
-        users.MapGet("/{id}", GetUser)
-            .WithName("Get User Profile");
-
         users.MapGet("/sellers/top", GetTopSellers)
-            .WithName("Get Top Sellers");
-
-        // Category endpoints
-        var categories = api.MapGroup("/categories");
-        categories.MapGet("", GetCategories)
-            .WithName("Get Categories");
-
-        categories.MapGet("/{id}/listings", GetCategoryListings)
-            .WithName("Get Category Listings");
-    }
-
-    // Health check endpoint
-    private static async Task<IResult> HealthCheck()
-    {
-        return Results.Ok(new
-        {
-            status = "healthy",
-            timestamp = DateTime.UtcNow,
-            version = "1.0.0"
-        });
-    }
-
-    // Get listings endpoint
-    private static async Task<IResult> GetListings(IListingRepository repository, int page = 1, int pageSize = 20)
-    {
-        var (items, total) = await repository.GetPagedAsync(page, pageSize);
-        return Results.Ok(new { items, total, page, pageSize });
-    }
-
-    // Get listing by ID endpoint
-    private static async Task<IResult> GetListing(Guid id, IListingRepository repository)
-    {
-        var listing = await repository.GetByIdAsync(id);
-        if (listing is null)
-            return Results.NotFound();
-
-        await repository.IncrementViewCountAsync(id);
-        return Results.Ok(listing);
-    }
-
-    // Search listings endpoint
-    private static async Task<IResult> SearchListings(string q, SearchService service)
-    {
-        var results = await service.SearchListingsAsync(q);
-        return Results.Ok(new { query = q, results, count = results.Count });
-    }
-
-    // Get user profile endpoint
-    private static async Task<IResult> GetUser(Guid id, UserService service)
-    {
-        try
-        {
-            var user = await service.GetUserAsync(id);
-            return Results.Ok(user);
-        }
-        catch
-        {
-            return Results.NotFound();
-        }
+            .WithName("Get Top Sellers (minimal API)");
     }
 
     // Get top sellers endpoint
@@ -196,22 +152,4 @@ public static class DependencyInjection
         return Results.Ok(sellers);
     }
 
-    // Get categories endpoint
-    private static async Task<IResult> GetCategories(IListingRepository repository)
-    {
-        var allListings = await repository.GetAllAsync();
-        var categories = allListings
-            .GroupBy(l => l.CategoryId)
-            .Select(g => new { categoryId = g.Key, count = g.Count() })
-            .ToList();
-
-        return Results.Ok(categories);
-    }
-
-    // Get category listings endpoint
-    private static async Task<IResult> GetCategoryListings(Guid id, IListingRepository repository)
-    {
-        var listings = await repository.GetByCategoryIdAsync(id);
-        return Results.Ok(new { categoryId = id, listings, count = listings.Count });
-    }
 }
