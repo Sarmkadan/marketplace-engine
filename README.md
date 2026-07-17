@@ -962,6 +962,123 @@ var delistedListing = await listingService.DelistListingAsync(newListing.Id);
 Console.WriteLine($"Listing delisted: {delistedListing.IsActive}");
 ```
 
+## UserService
+
+The `UserService` class provides core user management functionality for the Marketplace Engine, handling user registration, authentication, profile management, account status operations, and user statistics. It manages the complete user lifecycle from initial registration through account deactivation and reactivation, including email verification and premium account features.
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.Services;
+using MarketplaceEngine.Domain.Entities;
+using System;
+using System.Threading.Tasks;
+
+// Initialize user service (typically via dependency injection)
+var userService = new UserService(userRepository, emailService);
+
+// Register a new user
+var newUser = await userService.RegisterUserAsync(
+    email: "user@example.com",
+    password: "SecurePassword123!",
+    displayName: "TechEnthusiast",
+    role: UserRole.Buyer
+);
+
+Console.WriteLine($"User registered: {newUser.Id} - {newUser.Email}");
+
+// Get user by ID
+var user = await userService.GetUserAsync(newUser.Id);
+Console.WriteLine($"Retrieved user: {user.DisplayName} ({user.Email})");
+
+// Get user by email
+var userByEmail = await userService.GetUserByEmailAsync("user@example.com");
+Console.WriteLine($"Found user by email: {userByEmail.DisplayName}");
+
+// Update user profile
+var updatedUser = await userService.UpdateProfileAsync(
+    userId: newUser.Id,
+    displayName: "TechEnthusiast Pro",
+    bio: "Technology enthusiast and gadget collector",
+    avatarUrl: "https://example.com/avatars/tech-enthusiast.jpg"
+);
+Console.WriteLine($"Profile updated: {updatedUser.DisplayName}");
+
+// Verify email (after user clicks verification link)
+var verifiedUser = await userService.VerifyEmailAsync(
+    userId: newUser.Id,
+    token: "email-verification-token-from-email"
+);
+Console.WriteLine($"Email verified: {verifiedUser.EmailVerified}");
+
+// Resend verification token
+var resentToken = await userService.ResendVerificationTokenAsync(newUser.Id);
+Console.WriteLine($"Verification token resent to: {newUser.Email}");
+
+// Promote user to premium account
+var premiumUser = await userService.PromoteToPremiumAsync(
+    userId: newUser.Id,
+    premiumUntil: DateTime.UtcNow.AddYears(1)
+);
+Console.WriteLine($"Premium status: {premiumUser.IsPremium} until {premiumUser.PremiumUntil}");
+
+// Deactivate account (soft delete)
+var deactivatedUser = await userService.DeactivateAccountAsync(newUser.Id);
+Console.WriteLine($"Account deactivated: {deactivatedUser.IsActive}");
+
+// Reactivate account
+var reactivatedUser = await userService.ReactivateAccountAsync(newUser.Id);
+Console.WriteLine($"Account reactivated: {reactivatedUser.IsActive}");
+
+// Record a sale for user statistics
+var userWithSale = await userService.RecordSaleAsync(newUser.Id);
+Console.WriteLine($"Sale recorded. Total sales: {userWithSale.TotalSales}");
+
+// Update user rating
+var userWithRating = await userService.UpdateRatingAsync(
+    userId: newUser.Id,
+    newRating: 4.8,
+    newReviewCount: 15
+);
+Console.WriteLine($"Rating updated: {userWithRating.AverageRating}/5 ({userWithRating.TotalReviews} reviews)");
+
+// Get top sellers by rating
+var topSellers = await userService.GetTopSellersAsync(count: 10);
+Console.WriteLine($"Top {topSellers.Count} sellers:");
+foreach (var seller in topSellers.Take(3))
+{
+    Console.WriteLine($"- {seller.DisplayName}: {seller.AverageRating:F1}/5");
+}
+
+// Get paginated users with total count
+var (usersPage, totalCount) = await userService.GetPaginatedUsersAsync(
+    page: 1,
+    pageSize: 25,
+    role: UserRole.Seller
+);
+Console.WriteLine($"Page 1: {usersPage.Count} of {totalCount} sellers");
+
+// Update user's last activity timestamp
+await userService.UpdateLastActivityAsync(newUser.Id);
+Console.WriteLine("Last activity updated");
+
+// Get verified user count
+var verifiedCount = await userService.GetVerifiedUserCountAsync();
+Console.WriteLine($"Verified users: {verifiedCount}");
+
+// Get active user count
+var activeCount = await userService.GetActiveUserCountAsync();
+Console.WriteLine($"Active users: {activeCount}");
+
+// Validate user access (for authorization checks)
+await userService.ValidateUserAccessAsync(newUser.Id);
+Console.WriteLine("User access validated");
+
+// Get public profile (visible to other users)
+var publicProfile = await userService.GetPublicProfileAsync(newUser.Id);
+Console.WriteLine($"Public profile: {publicProfile.DisplayName} - {publicProfile.Bio}");
+```
+
 ## UserDto
 
 The `UserDto` class represents a user in the marketplace system. It contains essential user information including identification, profile details, seller metrics, and account status. This DTO is used throughout the application for user profiles, seller dashboards, and API responses.
