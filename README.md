@@ -267,6 +267,64 @@ Console.WriteLine($"Recommendation settings: MinOverlap={options.MinOverlapForNe
                 $"TrendingWindow={options.TrendingWindowHours}h");
 ```
 
+## RecommendationService
+
+The `RecommendationService` class is the primary application-layer service that orchestrates the recommendation engine to deliver personalised listing feeds, similar-item panels, trending galleries, and category-affinity feeds. It acts as the single entry point for all recommendation concerns in the API layer, handling input validation, existence checks, result hydration, diversity enforcement, and event publication.
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.Services;
+using MarketplaceEngine.DTOs;
+using MarketplaceEngine.Exceptions;
+using System;
+using System.Threading.Tasks;
+
+// Initialize recommendation service (typically via dependency injection)
+// var recommendationService = new RecommendationService(...);
+
+// Example: Get personalised recommendations for a user
+try
+{
+    var userId = Guid.Parse("11111111-1111-1111-1111-111111111111");
+    var recommendations = await recommendationService.GetRecommendationsForUserAsync(userId, count: 15);
+    
+    Console.WriteLine($"Generated {recommendations.Items.Count} recommendations");
+    Console.WriteLine($"Is personalised: {recommendations.IsPersonalised}");
+    Console.WriteLine($"Strategy used: {recommendations.Strategy}");
+    Console.WriteLine($"Generated at: {recommendations.GeneratedAt}");
+    
+    foreach (var item in recommendations.Items.Take(5))
+    {
+        Console.WriteLine($"- {item.Title}: {item.Price:C} (Score: {item.Score:P1})");
+    }
+}
+catch (ResourceNotFoundException ex)
+{
+    Console.WriteLine($"User not found: {ex.Message}");
+}
+
+// Example: Get trending listings (public feed)
+var trendingFeed = await recommendationService.GetTrendingListingsAsync(count: 20);
+Console.WriteLine($"\nTrending feed contains {trendingFeed.Items.Count} items");
+
+// Example: Get similar listings for a specific listing
+var listingId = Guid.Parse("33333333-3333-3333-3333-333333333333");
+var similarFeed = await recommendationService.GetSimilarListingsAsync(listingId, count: 8);
+Console.WriteLine($"Similar items panel contains {similarFeed.Items.Count} items");
+
+// Example: Get category-affinity recommendations
+var affinityFeed = await recommendationService.GetAffinityRecommendationsAsync(userId, count: 12);
+Console.WriteLine($"Category-affinity feed contains {affinityFeed.Items.Count} items");
+
+// Example: Track user activity to improve future recommendations
+await recommendationService.TrackUserActivityAsync(
+    userId: Guid.Parse("11111111-1111-1111-1111-111111111111"),
+    listingId: Guid.Parse("33333333-3333-3333-3333-333333333333"),
+    signalType: SignalType.View
+);
+```
+
 ## SellerDashboardDto
 
 The `SellerDashboardDto` class provides a comprehensive overview of a seller's performance and activity within the marketplace. It aggregates key metrics such as active listings, sales performance, revenue breakdown, customer feedback, and communication status to give sellers actionable insights into their business health and growth opportunities.
