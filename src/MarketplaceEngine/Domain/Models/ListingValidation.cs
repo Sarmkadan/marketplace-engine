@@ -3,9 +3,10 @@
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
-// =============================================================================
+// =====================================================================
 
-using System.Globalization;
+using System;
+using System.Collections.Generic;
 using MarketplaceEngine.Domain.Enums;
 using MarketplaceEngine.Domain.ValueObjects;
 
@@ -67,9 +68,9 @@ public static class ListingValidation
             problems.Add("Price must be greater than zero");
 
         // Validate ImageUrls
-        if (value.ImageUrls is null)
-            problems.Add("ImageUrls collection cannot be null");
-        else if (value.ImageUrls.Count == 0)
+        ArgumentNullException.ThrowIfNull(value.ImageUrls);
+
+        if (value.ImageUrls.Count == 0)
             problems.Add("At least one image is required");
         else if (value.ImageUrls.Count > 10)
             problems.Add("Cannot exceed 10 images per listing");
@@ -80,12 +81,19 @@ public static class ListingValidation
                 var imageUrl = value.ImageUrls[i];
                 if (string.IsNullOrWhiteSpace(imageUrl))
                     problems.Add($"ImageUrl at index {i} cannot be null or empty");
+                else if (!Uri.IsWellFormedUriString(imageUrl, UriKind.Absolute))
+                    problems.Add($"ImageUrl at index {i} must be a valid absolute URI");
             }
         }
 
         // Validate Tags
         if (value.Tags is not null)
         {
+            ArgumentNullException.ThrowIfNull(value.Tags);
+
+            if (value.Tags.Count > 20)
+                problems.Add("Cannot have more than 20 tags");
+
             for (var i = 0; i < value.Tags.Count; i++)
             {
                 var tag = value.Tags[i];
