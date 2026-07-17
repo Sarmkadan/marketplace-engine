@@ -1,3 +1,55 @@
+## MessageTests
+
+The `MessageTests` class provides comprehensive unit tests for the `Message` model's validation logic, specifically for the `ValidateBeforeSending` method. It ensures that messages adhere to business rules regarding sender/recipient identity, subject length, body length, and attachment limits by asserting that appropriate `ArgumentException`s are thrown when validation fails.
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.Domain.Models;
+using MarketplaceEngine.Tests;
+using System;
+using System.Collections.Generic;
+using Xunit;
+using FluentAssertions;
+
+// Create a valid base message
+var message = new Message
+{
+    SenderId = Guid.NewGuid(),
+    RecipientId = Guid.NewGuid(),
+    Subject = "Test Subject",
+    Body = "Test Body"
+};
+
+// Example: Testing validation constraints
+// 1. Validate when sender and recipient are the same
+message.RecipientId = message.SenderId;
+Assert.Throws<ArgumentException>(() => message.ValidateBeforeSending());
+
+// 2. Validate when subject is too short
+message.RecipientId = Guid.NewGuid();
+message.Subject = "Ab";
+Assert.Throws<ArgumentException>(() => message.ValidateBeforeSending());
+
+// 3. Validate when subject is too long
+message.Subject = new string('a', 101);
+Assert.Throws<ArgumentException>(() => message.ValidateBeforeSending());
+
+// 4. Validate when body is too short
+message.Subject = "Test Subject";
+message.Body = "Ab";
+Assert.Throws<ArgumentException>(() => message.ValidateBeforeSending());
+
+// 5. Validate when body is too long
+message.Body = new string('a', 5001);
+Assert.Throws<ArgumentException>(() => message.ValidateBeforeSending());
+
+// 6. Validate when too many attachments
+message.Body = "Test Body";
+message.AttachmentUrls = new List<string>(new[] { "url1", "url2", "url3", "url4", "url5", "url6" });
+Assert.Throws<ArgumentException>(() => message.ValidateBeforeSending());
+```
+
 ## ModerationControllerValidation
 
 The `ModerationControllerValidation` class provides validation methods for moderation-related data, including report IDs, pagination parameters, action notes, rejection reasons, and bulk moderation operations. It ensures that moderation data meets expected formats and constraints before processing.
