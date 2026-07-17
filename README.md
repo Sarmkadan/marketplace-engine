@@ -742,6 +742,91 @@ Console.WriteLine($"Performance: {sellerProfile.TotalSales} sales | Rank #{selle
 Console.WriteLine($"Response time: {sellerProfile.ResponseTime}");
 ```
 
+## PaymentService
+
+The `PaymentService` class handles all payment processing operations within the marketplace, including initiating payments, processing transactions, managing escrow funds, and handling refunds. It provides methods for both buyers and sellers to manage payment states throughout the transaction lifecycle, ensuring secure fund handling and transparent payment tracking.
+
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.Services;
+using MarketplaceEngine.Domain.Entities;
+using System;
+using System.Threading.Tasks;
+
+// Initialize payment service
+var paymentService = new PaymentService();
+
+// Initiate a new payment for a listing purchase
+var newPayment = await paymentService.InitiatePaymentAsync(
+    buyerId: Guid.Parse("11111111-1111-1111-1111-111111111111"),
+    sellerId: Guid.Parse("22222222-2222-2222-2222-222222222222"),
+    listingId: Guid.Parse("33333333-3333-3333-3333-333333333333"),
+    amount: 129.99m,
+    currency: "USD",
+    paymentMethod: "CreditCard"
+);
+
+Console.WriteLine($"Payment initiated: {newPayment.Id}");
+Console.WriteLine($"Amount: {newPayment.Amount:C} {newPayment.Currency}");
+Console.WriteLine($"Status: {newPayment.Status}");
+
+// Start processing the payment
+var processingPayment = await paymentService.StartProcessingAsync(newPayment.Id);
+Console.WriteLine($"Payment processing started: {processingPayment.Status}");
+
+// Complete the payment
+var completedPayment = await paymentService.CompletePaymentAsync(newPayment.Id);
+Console.WriteLine($"Payment completed: {completedPayment.Status}");
+
+// Move payment to escrow (funds held until delivery confirmed)
+var escrowPayment = await paymentService.MoveToEscrowAsync(newPayment.Id);
+Console.WriteLine($"Payment moved to escrow: {escrowPayment.Status}");
+
+// Release funds to seller after successful delivery
+var releasedPayment = await paymentService.ReleaseEscrowAsync(newPayment.Id);
+Console.WriteLine($"Funds released to seller: {releasedPayment.Status}");
+
+// Get payment details
+var paymentDetails = await paymentService.GetPaymentAsync(newPayment.Id);
+Console.WriteLine($"\nPayment Details:");
+Console.WriteLine($"- Buyer: {paymentDetails.BuyerId}");
+Console.WriteLine($"- Seller: {paymentDetails.SellerId}");
+Console.WriteLine($"- Amount: {paymentDetails.Amount:C}");
+Console.WriteLine($"- Status: {paymentDetails.Status}");
+
+// Get all payments for a buyer
+var buyerPayments = await paymentService.GetBuyerPaymentsAsync(
+    Guid.Parse("11111111-1111-1111-1111-111111111111")
+);
+Console.WriteLine($"\nBuyer has {buyerPayments.Count} payments");
+
+// Get all payments for a seller
+var sellerPayments = await paymentService.GetSellerPaymentsAsync(
+    Guid.Parse("22222222-2222-2222-2222-222222222222")
+);
+Console.WriteLine($"Seller has {sellerPayments.Count} payments");
+
+// Get seller revenue summary
+var sellerRevenue = await paymentService.GetSellerRevenueAsync(
+    Guid.Parse("22222222-2222-2222-2222-222222222222")
+);
+Console.WriteLine($"Seller total revenue: {sellerRevenue:C}");
+
+// Handle payment failure
+var failedPayment = await paymentService.FailPaymentAsync(newPayment.Id);
+Console.WriteLine($"Payment failed: {failedPayment.Status}");
+
+// Cancel a payment before processing
+var cancelledPayment = await paymentService.CancelPaymentAsync(newPayment.Id);
+Console.WriteLine($"Payment cancelled: {cancelledPayment.Status}");
+
+// Refund a completed payment
+var refundedPayment = await paymentService.RefundPaymentAsync(newPayment.Id);
+Console.WriteLine($"Payment refunded: {refundedPayment.Status}");
+```
+
 ## ErrorHandlingMiddleware
 
 The `ErrorHandlingMiddleware` class provides centralized exception handling for the Marketplace Engine API. It catches all unhandled exceptions, logs them appropriately, and returns consistent error responses to clients without exposing sensitive error details in production. This middleware prevents the need for scattered exception handling logic across controllers and ensures a uniform error format throughout the application.
