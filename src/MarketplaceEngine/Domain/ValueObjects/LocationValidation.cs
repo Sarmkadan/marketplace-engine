@@ -97,10 +97,11 @@ public static class LocationValidation
     /// <returns><see langword="true"/> if valid; otherwise, <see langword="false"/>.</returns>
     private static bool IsValidCountryCode(string countryCode)
     {
-        // Basic validation: must be 2 uppercase letters
+        // Validate length and format
         if (countryCode.Length != 2)
             return false;
 
-        return countryCode.All(c => c is >= 'A' and <= 'Z');
+        // Check for valid format: 2 uppercase letters using pattern matching
+        return countryCode is [>= 'A', >= 'A'] and [<= 'Z', <= 'Z'];
     }
 }
