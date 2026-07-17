@@ -11,8 +11,13 @@ namespace MarketplaceEngine.Tests;
 
 /// <summary>
 /// Provides System.Text.Json serialization and deserialization extensions for
-/// <see cref="ListingRepositoryConcurrencyTests"/>.
+/// <see cref="ListingRepositoryConcurrencyTests"/> instances.
 /// </summary>
+/// <remarks>
+/// This static utility class offers methods to serialize <see cref="ListingRepositoryConcurrencyTests"/>
+/// instances to JSON strings and deserialize them back, with support for both strict
+/// and forgiving parsing approaches.
+/// </remarks>
 public static class ListingRepositoryConcurrencyTestsJsonExtensions
 {
     private static readonly JsonSerializerOptions _jsonSerializerOptions = new(JsonSerializerDefaults.Web)
@@ -47,8 +52,9 @@ public static class ListingRepositoryConcurrencyTestsJsonExtensions
     /// <summary>
     /// Deserializes a JSON string to a <see cref="ListingRepositoryConcurrencyTests"/> instance.
     /// </summary>
-    /// <param name="json">The JSON string to deserialize.</param>
+    /// <param name="json">The JSON string to deserialize. Must not be null or empty.</param>
     /// <returns>The deserialized instance, or null if the JSON is empty or whitespace.</returns>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="json"/> is null or empty.</exception>
     /// <exception cref="JsonException">Thrown when the JSON is invalid or cannot be deserialized.</exception>
     public static ListingRepositoryConcurrencyTests? FromJson(string json)
     {
@@ -65,9 +71,10 @@ public static class ListingRepositoryConcurrencyTestsJsonExtensions
     /// <summary>
     /// Attempts to deserialize a JSON string to a <see cref="ListingRepositoryConcurrencyTests"/> instance.
     /// </summary>
-    /// <param name="json">The JSON string to deserialize.</param>
+    /// <param name="json">The JSON string to deserialize. Must not be null or empty.</param>
     /// <param name="value">Receives the deserialized instance if successful, otherwise null.</param>
     /// <returns>True if deserialization succeeded; otherwise, false.</returns>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="json"/> is null or empty.</exception>
     public static bool TryFromJson(string json, out ListingRepositoryConcurrencyTests? value)
     {
         ArgumentException.ThrowIfNullOrEmpty(json);
