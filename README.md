@@ -7,6 +7,133 @@ project layout, the in-memory storage model, the DI/composition root, middleware
 pipeline, event bus, background jobs, extension points and known limitations.
 
 
+## MessageRepository
+
+The `MessageRepository` class provides data access operations for message entities in the marketplace system. It handles CRUD operations for messages, conversation management, and various query methods for retrieving messages by different criteria including sender/recipient, listing context, read status, and pagination with both offset and cursor-based approaches.
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.Repositories;
+using MarketplaceEngine.Domain.Entities;
+using System;
+using System.Threading.Tasks;
+
+// Initialize message repository
+var messageRepository = new MessageRepository();
+
+// Add a new message to the system
+var newMessage = await messageRepository.AddAsync(new Message
+{
+    SenderId = Guid.Parse("11111111-1111-1111-1111-111111111111"),
+    RecipientId = Guid.Parse("22222222-2222-2222-2222-222222222222"),
+    Subject = "Interested in your listing",
+    Content = "Hello! I'm interested in your premium wireless headphones. Could you provide more details about the condition and shipping options?",
+    ListingId = Guid.Parse("33333333-3333-3333-3333-333333333333"),
+    IsRead = false,
+    Status = MessageStatus.Sent,
+    CreatedAt = DateTime.UtcNow
+});
+
+Console.WriteLine($"Message created: {newMessage.Id}");
+
+// Get a message by ID
+var retrievedMessage = await messageRepository.GetByIdAsync(newMessage.Id);
+Console.WriteLine($"Retrieved message: {retrievedMessage.Subject}");
+
+// Update a message status
+var updatedMessage = await messageRepository.UpdateAsync(new Message
+{
+    Id = newMessage.Id,
+    SenderId = newMessage.SenderId,
+    RecipientId = newMessage.RecipientId,
+    Subject = newMessage.Subject,
+    Content = newMessage.Content,
+    ListingId = newMessage.ListingId,
+    IsRead = true, // Mark as read
+    Status = MessageStatus.Delivered,
+    CreatedAt = newMessage.CreatedAt,
+    UpdatedAt = DateTime.UtcNow
+});
+Console.WriteLine($"Message marked as read: {updatedMessage.IsRead}");
+
+// Get all messages (with optional filtering)
+var allMessages = await messageRepository.GetAllAsync();
+Console.WriteLine($"Total messages in system: {allMessages.Count}");
+
+// Get received messages for a user
+var receivedMessages = await messageRepository.GetReceivedMessagesAsync(Guid.Parse("22222222-2222-2222-2222-222222222222"));
+Console.WriteLine($"User received {receivedMessages.Count} messages");
+
+// Get sent messages for a user
+var sentMessages = await messageRepository.GetSentMessagesAsync(Guid.Parse("11111111-1111-1111-1111-111111111111"));
+Console.WriteLine($"User sent {sentMessages.Count} messages");
+
+// Get unread messages for a user
+var unreadMessages = await messageRepository.GetUnreadMessagesAsync(Guid.Parse("22222222-2222-2222-2222-222222222222"));
+Console.WriteLine($"User has {unreadMessages.Count} unread messages");
+
+// Get conversation between two users
+var conversation = await messageRepository.GetConversationAsync(
+    Guid.Parse("11111111-1111-1111-1111-111111111111"),
+    Guid.Parse("22222222-2222-2222-2222-222222222222")
+);
+Console.WriteLine($"Conversation contains {conversation.Count} messages");
+
+// Get messages about a specific listing
+var listingMessages = await messageRepository.GetByListingIdAsync(Guid.Parse("33333333-3333-3333-3333-333333333333"));
+Console.WriteLine($"Listing has {listingMessages.Count} messages");
+
+// Get conversation about a specific listing between two users
+var listingConversation = await messageRepository.GetConversationAboutListingAsync(
+    Guid.Parse("11111111-1111-1111-1111-111111111111"),
+    Guid.Parse("22222222-2222-2222-2222-222222222222"),
+    Guid.Parse("33333333-3333-3333-3333-333333333333")
+);
+Console.WriteLine($"Listing conversation contains {listingConversation.Count} messages");
+
+// Check if a message exists
+var exists = await messageRepository.ExistsAsync(newMessage.Id);
+Console.WriteLine($"Message exists: {exists}");
+
+// Get total message count
+var messageCount = await messageRepository.CountAsync();
+Console.WriteLine($"Total messages: {messageCount}");
+
+// Get conversation count for a user
+var conversationCount = await messageRepository.GetConversationCountAsync(Guid.Parse("22222222-2222-2222-2222-222222222222"));
+Console.WriteLine($"User has {conversationCount} conversations");
+
+// Get flagged messages (inappropriate content)
+var flaggedMessages = await messageRepository.GetFlaggedMessagesAsync();
+Console.WriteLine($"System has {flaggedMessages.Count} flagged messages");
+
+// Mark a message as read
+await messageRepository.MarkAsReadAsync(newMessage.Id);
+Console.WriteLine("Message marked as read");
+
+// Get old messages for cleanup
+var oldMessages = await messageRepository.GetOldMessagesAsync(DateTime.UtcNow.AddMonths(-6));
+Console.WriteLine($"Found {oldMessages.Count} messages older than 6 months");
+
+// Get paginated messages with total count
+var (pagedMessages, totalCount) = await messageRepository.GetPagedAsync(
+    page: 1,
+    pageSize: 25
+);
+Console.WriteLine($"Page 1: {pagedMessages.Count} of {totalCount} total messages");
+
+// Get paginated messages with cursor
+var (cursorMessages, nextCursor) = await messageRepository.GetPagedByCursorAsync(
+    pageSize: 25
+);
+Console.WriteLine($"Retrieved {cursorMessages.Count} messages with cursor: {nextCursor}");
+
+// Delete a message
+await messageRepository.DeleteAsync(newMessage.Id);
+Console.WriteLine("Message deleted successfully");
+```
+
 ## MarketplaceDbContext
 
 The `MarketplaceDbContext` class serves as the in-memory database context, acting as the central storage for all marketplace entities such as users, categories, listings, messages, and payments. It implements the singleton pattern to ensure consistent data access throughout the application lifecycle and provides methods for data management, including clearing all entities or resetting to the default seeded state.
