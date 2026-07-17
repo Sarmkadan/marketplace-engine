@@ -826,6 +826,155 @@ Console.WriteLine($"Total reviews: {sellerReviews.Count}");
 
 The `ReviewService` class provides essential functionality for managing user and listing reviews within the marketplace. It enables users to submit, retrieve, flag, and remove reviews, while also offering analytical insights like average scores and review distribution for sellers. This service acts as the central hub for all review-related operations in the application layer.
 
+## ReviewServiceTests
+
+The `ReviewServiceTests` class provides unit tests for the `ReviewService` class, verifying that it correctly handles various business rules and authorization scenarios. It tests review submission with validation for reviewer existence and status, duplicate review prevention, seller reply functionality, seller statistics calculation, and moderation authorization.
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.Services;
+using MarketplaceEngine.Domain.Entities;
+using MarketplaceEngine.Domain.Enums;
+using MarketplaceEngine.Exceptions;
+using MarketplaceEngine.Repositories;
+using Moq;
+using System;
+using System.Threading.Tasks;
+using Xunit;
+
+// Initialize mock repositories
+var reviewRepoMock = new Mock<IReviewRepository>();
+var userRepoMock = new Mock<IUserRepository>();
+var listingRepoMock = new Mock<IListingRepository>();
+
+// Create the service under test
+var reviewService = new ReviewService(reviewRepoMock.Object, userRepoMock.Object, listingRepoMock.Object);
+
+// Test 1: SubmitReviewAsync throws ResourceNotFoundException when reviewer is not found
+var nonExistentReviewerId = Guid.NewGuid();
+userRepoMock.Setup(r => r.GetByIdAsync(nonExistentReviewerId))
+    .ReturnsAsync((User)null);
+
+var act1 = async () => await reviewService.SubmitReviewAsync(
+    reviewerId: nonExistentReviewerId,
+    sellerId: Guid.NewGuid(),
+    listingId: Guid.NewGuid(),
+    score: 5,
+    comment: "Great seller!"
+);
+
+await Assert.ThrowsAsync<ResourceNotFoundException>(act1);
+
+// Test 2: SubmitReviewAsync throws UnauthorizedException when reviewer is inactive
+var inactiveReviewerId = Guid.NewGuid();
+var inactiveReviewer = new User { Id = inactiveReviewerId, IsActive = false };
+userRepoMock.Setup(r => r.GetByIdAsync(inactiveReviewerId))
+    .ReturnsAsync(inactiveReviewer);
+
+var act2 = async () => await reviewService.SubmitReviewAsync(
+    reviewerId: inactiveReviewerId,
+    sellerId: Guid.NewGuid(),
+    listingId: Guid.NewGuid(),
+    score: 5,
+    comment: "Great seller!"
+);
+
+await Assert.ThrowsAsync<UnauthorizedException>(act2);
+
+// Test 3: SubmitReviewAsync throws MarketplaceException when reviewer is seller
+var sellerReviewerId = Guid.NewGuid();
+var sellerUser = new User { Id = sellerReviewerId, Role = UserRole.Seller };
+userRepoMock.Setup(r => r.GetByIdAsync(sellerReviewerId))
+    .ReturnsAsync(sellerUser);
+
+var act3 = async () => await reviewService.SubmitReviewAsync(
+    reviewerId: sellerReviewerId,
+    sellerId: Guid.NewGuid(),
+    listingId: Guid.NewGuid(),
+    score: 5,
+    comment: "Great seller!"
+);
+
+await Assert.ThrowsAsync<MarketplaceException>(act3);
+
+// Test 4: SubmitReviewAsync throws DuplicateResourceException when duplicate review exists
+var existingReviewerId = Guid.NewGuid();
+var existingSellerId = Guid.NewGuid();
+var existingListingId = Guid.NewGuid();
+var existingReview = new Review { ReviewerId = existingReviewerId, SellerId = existingSellerId, ListingId = existingListingId };
+
+reviewRepoMock.Setup(r => r.ExistsForTransactionAsync(existingReviewerId, existingSellerId, existingListingId))
+    .ReturnsAsync(true);
+
+var act4 = async () => await reviewService.SubmitReviewAsync(
+    reviewerId: existingReviewerId,
+    sellerId: existingSellerId,
+    listingId: existingListingId,
+    score: 5,
+    comment: "Great seller!"
+);
+
+await Assert.ThrowsAsync<DuplicateResourceException>(act4);
+
+// Test 5: SubmitReviewAsync with valid data creates review and updates seller rating
+var validReviewerId = Guid.NewGuid();
+var validSellerId = Guid.NewGuid();
+var validListingId = Guid.NewGuid();
+var newReview = new Review { Id = Guid.NewGuid(), ReviewerId = validReviewerId, SellerId = validSellerId, ListingId = validListingId, Score = 5 };
+
+reviewRepoMock.Setup(r => r.AddAsync(It.IsAny<Review>()))
+    .ReturnsAsync(newReview);
+reviewRepoMock.Setup(r => r.GetAverageScoreAsync(validSellerId))
+    .ReturnsAsync(4.8);
+
+var createdReview = await reviewService.SubmitReviewAsync(
+    reviewerId: validReviewerId,
+    sellerId: validSellerId,
+    listingId: validListingId,
+    score: 5,
+    comment: "Excellent transaction! Fast shipping and great communication."
+);
+
+Console.WriteLine($"Review created: {createdReview.Id}");
+
+// Test 6: AddSellerReplyAsync throws UnauthorizedException when caller is not seller
+var reviewOwnerId = Guid.NewGuid();
+var nonSellerRequesterId = Guid.NewGuid();
+var reviewWithSeller = new Review { Id = Guid.NewGuid(), SellerId = reviewOwnerId };
+
+reviewRepoMock.Setup(r => r.GetByIdAsync(It.IsAny<Guid>()))
+    .ReturnsAsync(reviewWithSeller);
+
+var act6 = async () => await reviewService.AddSellerReplyAsync(
+    reviewId: reviewWithSeller.Id,
+    replyText: "Thank you for your review!",
+    requesterId: nonSellerRequesterId
+);
+
+await Assert.ThrowsAsync<UnauthorizedException>(act6);
+
+// Test 7: GetSellerStatsAsync returns correct average and distribution
+var sellerStats = await reviewService.GetSellerStatsAsync(validSellerId);
+Console.WriteLine($"Seller average rating: {sellerStats.AverageScore:F1}");
+Console.WriteLine($"Total reviews: {sellerStats.TotalReviews}");
+Console.WriteLine($"Distribution: 5-star: {sellerStats.Distribution.FiveStar}, 4-star: {sellerStats.Distribution.FourStar}, etc.");
+
+// Test 8: RemoveReviewAsync throws UnauthorizedException when caller is not moderator
+var reviewToRemove = new Review { Id = Guid.NewGuid(), ReviewerId = Guid.NewGuid() };
+var regularUserId = Guid.NewGuid();
+
+reviewRepoMock.Setup(r => r.GetByIdAsync(reviewToRemove.Id))
+    .ReturnsAsync(reviewToRemove);
+
+var act8 = async () => await reviewService.RemoveReviewAsync(
+    reviewId: reviewToRemove.Id,
+    requesterId: regularUserId
+);
+
+await Assert.ThrowsAsync<UnauthorizedException>(act8);
+```
+
 ## RecommendationsController
 
 The `RecommendationsController` class provides RESTful API endpoints for the collaborative filtering recommendation engine. It exposes personalised feeds, similar-item panels, trending galleries, category-affinity recommendations, and activity tracking. The controller integrates with the `RecommendationService` to deliver personalised content based on user behavior and listing interactions.
