@@ -683,6 +683,65 @@ listingToUpdate.UpdatedAt = DateTime.UtcNow;
 Console.WriteLine($"\nUpdated price for {listingToUpdate.Title}: {listingToUpdate.Price:C}");
 ```
 
+## UserDto
+
+The `UserDto` class represents a user in the marketplace system. It contains essential user information including identification, profile details, seller metrics, and account status. This DTO is used throughout the application for user profiles, seller dashboards, and API responses.
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.DTOs;
+using System;
+
+// Create a user DTO for a new seller
+var userDto = new UserDto
+{
+    Id = Guid.Parse("11111111-1111-1111-1111-111111111111"),
+    Email = "seller@example.com",
+    DisplayName = "TechSeller Pro",
+    Bio = "Premium electronics seller with 5+ years of experience",
+    Role = "Seller",
+    AverageRating = 4.8,
+    ReviewCount = 125,
+    EmailVerified = true,
+    CreatedAt = DateTime.UtcNow.AddDays(-90),
+    UpdatedAt = DateTime.UtcNow
+};
+
+// Display user information
+Console.WriteLine($"User: {userDto.DisplayName}");
+Console.WriteLine($"Email: {userDto.Email}");
+Console.WriteLine($"Role: {userDto.Role}");
+Console.WriteLine($"Rating: {userDto.AverageRating:F1}/5 ({userDto.ReviewCount} reviews)");
+Console.WriteLine($"Email verified: {(userDto.EmailVerified ? "Yes" : "No")}");
+Console.WriteLine($"Member since: {userDto.CreatedAt:yyyy-MM-dd}");
+Console.WriteLine($"Last updated: {userDto.UpdatedAt?.ToString("yyyy-MM-dd") ?? "Never"}");
+
+// Create a seller profile with additional metrics
+var sellerProfile = new UserDto
+{
+    Id = Guid.Parse("22222222-2222-2222-2222-222222222222"),
+    DisplayName = "Premium Goods Store",
+    Bio = "Specializing in high-quality electronics and accessories",
+    Role = "Seller",
+    AverageRating = 4.9,
+    ReviewCount = 243,
+    EmailVerified = true,
+    CreatedAt = DateTime.UtcNow.AddDays(-180),
+    UpdatedAt = DateTime.UtcNow,
+    UserId = Guid.Parse("22222222-2222-2222-2222-222222222222"),
+    AverageRating = 4.9,
+    TotalReviews = 243,
+    TotalSales = 456,
+    ResponseTime = "Within 24 hours",
+    Rank = 15
+};
+
+Console.WriteLine($"\nSeller Profile: {sellerProfile.DisplayName}");
+Console.WriteLine($"Performance: {sellerProfile.TotalSales} sales | Rank #{sellerProfile.Rank}");
+Console.WriteLine($"Response time: {sellerProfile.ResponseTime}");
+```
+
 ## MessageDto
 
 The `MessageDto` class is a data transfer object used for API responses when retrieving messages between users in the marketplace. It represents a simplified view of a message containing the message content, sender and recipient information, read status, and creation timestamp. This DTO is commonly used in messaging APIs to provide a clean, serialized format for message data.
