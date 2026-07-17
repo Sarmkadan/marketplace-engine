@@ -2,7 +2,7 @@
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
-// =============================================================================
+// =====================================================================
 
 using System.Globalization;
 
@@ -13,6 +13,20 @@ namespace MarketplaceEngine.Domain.ValueObjects;
 /// </summary>
 public static class MoneyExtensions
 {
+    private static readonly Dictionary<string, string> _currencySymbols = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["USD"] = "$",
+        ["EUR"] = "€",
+        ["GBP"] = "£",
+        ["JPY"] = "¥",
+        ["CAD"] = "CA$",
+        ["AUD"] = "AU$",
+        ["CHF"] = "CHF",
+        ["CNY"] = "¥",
+        ["INR"] = "₹",
+        ["MXN"] = "$"
+    };
+
     /// <summary>
     /// Rounds the money amount to the specified number of decimal places.
     /// </summary>
@@ -20,6 +34,7 @@ public static class MoneyExtensions
     /// <param name="decimals">Number of decimal places to round to.</param>
     /// <returns>A new <see cref="Money"/> instance with the rounded amount.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="money"/> is null.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="decimals"/> is negative.</exception>
     public static Money Round(this Money money, int decimals)
     {
         ArgumentNullException.ThrowIfNull(money);
@@ -139,7 +154,6 @@ public static class MoneyExtensions
     {
         ArgumentNullException.ThrowIfNull(left);
         ArgumentNullException.ThrowIfNull(right);
-
         return left.CompareTo(right) > 0;
     }
 
@@ -154,7 +168,6 @@ public static class MoneyExtensions
     {
         ArgumentNullException.ThrowIfNull(left);
         ArgumentNullException.ThrowIfNull(right);
-
         return left.CompareTo(right) >= 0;
     }
 
@@ -169,7 +182,6 @@ public static class MoneyExtensions
     {
         ArgumentNullException.ThrowIfNull(left);
         ArgumentNullException.ThrowIfNull(right);
-
         return left.CompareTo(right) < 0;
     }
 
@@ -184,7 +196,6 @@ public static class MoneyExtensions
     {
         ArgumentNullException.ThrowIfNull(left);
         ArgumentNullException.ThrowIfNull(right);
-
         return left.CompareTo(right) <= 0;
     }
 
@@ -224,21 +235,11 @@ public static class MoneyExtensions
     {
         ArgumentNullException.ThrowIfNull(money);
 
-        var currencySymbol = money.CurrencyCode switch
+        if (_currencySymbols.TryGetValue(money.CurrencyCode, out var symbol))
         {
-            "USD" => "$",
-            "EUR" => "€",
-            "GBP" => "£",
-            "JPY" => "¥",
-            "CAD" => "CA$",
-            "AUD" => "AU$",
-            "CHF" => "CHF",
-            "CNY" => "¥",
-            "INR" => "₹",
-            "MXN" => "$",
-            _ => money.CurrencyCode
-        };
+            return $"{symbol}{money.Amount:F2}";
+        }
 
-        return $"{currencySymbol}{money.Amount:F2}";
+        return $"{money.CurrencyCode} {money.Amount:F2}";
     }
 }
