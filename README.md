@@ -858,6 +858,67 @@ var (averageScore, totalReviews, distribution) = await reviewService.GetSellerSt
 Console.WriteLine($"Average Score: {averageScore:F1}, Total Reviews: {totalReviews}");
 ```
 
+## ReviewRepository
+
+The `ReviewRepository` class provides data access operations for managing reviews within the marketplace system. It handles CRUD operations for review entities, including querying by reviewer, seller, or listing ID, checking for existing transactions, calculating average scores, and supporting paginated retrieval of reviews.
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.Repositories;
+using MarketplaceEngine.Domain.Models;
+using System;
+using System.Threading.Tasks;
+
+// Initialize review repository
+var reviewRepository = new ReviewRepository();
+
+// Add a new review
+var newReview = await reviewRepository.AddAsync(new Review
+{
+    ReviewerId = Guid.Parse("11111111-1111-1111-1111-111111111111"),
+    SellerId = Guid.Parse("22222222-2222-2222-2222-222222222222"),
+    ListingId = Guid.Parse("33333333-3333-3333-3333-333333333333"),
+    Score = 5,
+    Comment = "Excellent seller!"
+});
+
+Console.WriteLine($"Review added: {newReview.Id}");
+
+// Get review by ID
+var review = await reviewRepository.GetByIdAsync(newReview.Id);
+Console.WriteLine($"Retrieved review score: {review?.Score}");
+
+// Get average score for a seller
+var averageScore = await reviewRepository.GetAverageScoreAsync(Guid.Parse("22222222-2222-2222-2222-222222222222"));
+Console.WriteLine($"Seller average score: {averageScore:F1}");
+
+// Get paginated reviews for a seller
+var (reviews, total) = await reviewRepository.GetPagedBySellerAsync(
+    sellerId: Guid.Parse("22222222-2222-2222-2222-222222222222"),
+    pageNumber: 1,
+    pageSize: 10
+);
+Console.WriteLine($"Page 1 contains {reviews.Count} of {total} total reviews for the seller");
+
+// Check if a review exists for a transaction
+var exists = await reviewRepository.ExistsForTransactionAsync(
+    reviewerId: Guid.Parse("11111111-1111-1111-1111-111111111111"),
+    sellerId: Guid.Parse("22222222-2222-2222-2222-222222222222"),
+    listingId: Guid.Parse("33333333-3333-3333-3333-333333333333")
+);
+Console.WriteLine($"Review exists for transaction: {exists}");
+
+// Update a review
+newReview.Comment = "Updated comment: Excellent seller, fast shipping!";
+await reviewRepository.UpdateAsync(newReview);
+Console.WriteLine("Review updated successfully");
+
+// Delete a review
+await reviewRepository.DeleteAsync(newReview.Id);
+Console.WriteLine("Review deleted");
+```
+
 ## FullTextSearchRequest
 
 The `FullTextSearchRequest` class represents a full-text search request with optional filters and pagination. It supports searching listings by query text, category, price range, tags, condition, and featured status, with configurable pagination for efficient result browsing.
