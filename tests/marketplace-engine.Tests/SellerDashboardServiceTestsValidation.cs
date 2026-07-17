@@ -74,11 +74,8 @@ public static class SellerDashboardServiceTestsValidation
             problems.Add("Listing SellerId must be a non-empty GUID.");
         }
 
-        if (listing.Price is null)
-        {
-            problems.Add("Listing Price cannot be null.");
-        }
-        else if (listing.Price.Amount <= 0)
+        ArgumentNullException.ThrowIfNull(listing.Price);
+        if (listing.Price.Amount <= 0)
         {
             problems.Add("Listing Price.Amount must be positive.");
         }
@@ -113,29 +110,20 @@ public static class SellerDashboardServiceTestsValidation
             problems.Add("Payment SellerId must be a non-empty GUID.");
         }
 
-        if (payment.Amount is null)
-        {
-            problems.Add("Payment Amount cannot be null.");
-        }
-        else if (payment.Amount.Amount <= 0)
+        ArgumentNullException.ThrowIfNull(payment.Amount);
+        if (payment.Amount.Amount <= 0)
         {
             problems.Add("Payment Amount.Amount must be positive.");
         }
 
-        if (payment.PlatformFee is null)
-        {
-            problems.Add("Payment PlatformFee cannot be null.");
-        }
-        else if (payment.PlatformFee.Amount < 0)
+        ArgumentNullException.ThrowIfNull(payment.PlatformFee);
+        if (payment.PlatformFee.Amount < 0)
         {
             problems.Add("Payment PlatformFee.Amount cannot be negative.");
         }
 
-        if (payment.SellerPayout is null)
-        {
-            problems.Add("Payment SellerPayout cannot be null.");
-        }
-        else if (payment.SellerPayout.Amount < 0)
+        ArgumentNullException.ThrowIfNull(payment.SellerPayout);
+        if (payment.SellerPayout.Amount < 0)
         {
             problems.Add("Payment SellerPayout.Amount cannot be negative.");
         }
