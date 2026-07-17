@@ -24,7 +24,7 @@ public static class ReviewExtensions
     /// </summary>
     /// <param name="review">The review instance.</param>
     /// <returns>True if score is 4 or 5; otherwise false.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when review is null.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="review"/> is null.</exception>
     public static bool IsPositive(this Review review)
     {
         ArgumentNullException.ThrowIfNull(review);
@@ -36,7 +36,7 @@ public static class ReviewExtensions
     /// </summary>
     /// <param name="review">The review instance.</param>
     /// <returns>True if score is 1, 2, or 3; otherwise false.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when review is null.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="review"/> is null.</exception>
     public static bool IsNegative(this Review review)
     {
         ArgumentNullException.ThrowIfNull(review);
@@ -48,7 +48,7 @@ public static class ReviewExtensions
     /// </summary>
     /// <param name="review">The review instance.</param>
     /// <returns>The number of days since the review was created.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when review is null.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="review"/> is null.</exception>
     public static int GetAgeInDays(this Review review)
     {
         ArgumentNullException.ThrowIfNull(review);
@@ -61,7 +61,7 @@ public static class ReviewExtensions
     /// </summary>
     /// <param name="review">The review instance.</param>
     /// <returns>True if seller has replied; otherwise false.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when review is null.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="review"/> is null.</exception>
     public static bool HasSellerReply(this Review review)
     {
         ArgumentNullException.ThrowIfNull(review);
@@ -73,7 +73,7 @@ public static class ReviewExtensions
     /// </summary>
     /// <param name="review">The review instance.</param>
     /// <returns>A human-readable status string.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when review is null.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="review"/> is null.</exception>
     public static string GetStatusString(this Review review)
     {
         ArgumentNullException.ThrowIfNull(review);
@@ -91,7 +91,7 @@ public static class ReviewExtensions
     /// </summary>
     /// <param name="review">The review instance.</param>
     /// <returns>A formatted percentage string.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when review is null.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="review"/> is null.</exception>
     public static string GetScorePercentage(this Review review)
     {
         ArgumentNullException.ThrowIfNull(review);
@@ -102,10 +102,10 @@ public static class ReviewExtensions
     /// Determines whether the review is recent (created within the specified number of days).
     /// </summary>
     /// <param name="review">The review instance.</param>
-    /// <param name="days">Number of days to consider as recent.</param>
+    /// <param name="days">Number of days to consider as recent. Must be greater than 0.</param>
     /// <returns>True if review is recent; otherwise false.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when review is null.</exception>
-    /// <exception cref="ArgumentOutOfRangeException">Thrown when days is less than 1.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="review"/> is null.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="days"/> is less than or equal to 0.</exception>
     public static bool IsRecent(this Review review, int days)
     {
         ArgumentNullException.ThrowIfNull(review);
@@ -120,7 +120,7 @@ public static class ReviewExtensions
     /// </summary>
     /// <param name="review">The review instance.</param>
     /// <returns>A truncated comment summary.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when review is null.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="review"/> is null.</exception>
     public static string GetCommentSummary(this Review review)
     {
         ArgumentNullException.ThrowIfNull(review);
