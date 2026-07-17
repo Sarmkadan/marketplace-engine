@@ -52,8 +52,8 @@ public static class MarketplaceConfigurationExtensions
         ArgumentNullException.ThrowIfNull(configuration);
         ArgumentException.ThrowIfNullOrWhiteSpace(requestPath);
 
-        return configuration.RateLimit.ExemptPaths
-            .Contains(requestPath.Trim(), StringComparer.OrdinalIgnoreCase);
+        return (configuration.RateLimit.ExemptPaths ?? Array.Empty<string>()).Contains(
+            requestPath.Trim(), StringComparer.OrdinalIgnoreCase);
     }
 
     /// <summary>
@@ -71,14 +71,12 @@ public static class MarketplaceConfigurationExtensions
     {
         ArgumentNullException.ThrowIfNull(configuration);
 
-        var headers = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-
-        if (!string.IsNullOrWhiteSpace(configuration.Integration.DropshipApiKey))
-        {
-            headers["Authorization"] = $"Bearer {configuration.Integration.DropshipApiKey}";
-        }
-
-        return headers;
+        return string.IsNullOrWhiteSpace(configuration.Integration.DropshipApiKey)
+            ? new Dictionary<string, string>()
+            : new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["Authorization"] = $"Bearer {configuration.Integration.DropshipApiKey}"
+            };
     }
 
     /// <summary>
