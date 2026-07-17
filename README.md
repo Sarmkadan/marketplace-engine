@@ -267,6 +267,57 @@ Console.WriteLine($"Recommendation settings: MinOverlap={options.MinOverlapForNe
                 $"TrendingWindow={options.TrendingWindowHours}h");
 ```
 
+## SellerDashboardDto
+
+The `SellerDashboardDto` class provides a comprehensive overview of a seller's performance and activity within the marketplace. It aggregates key metrics such as active listings, sales performance, revenue breakdown, customer feedback, and communication status to give sellers actionable insights into their business health and growth opportunities.
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.DTOs;
+using System;
+using System.Collections.Generic;
+
+// Create a seller dashboard for a successful seller
+var dashboard = new SellerDashboardDto
+{
+    SellerId = Guid.Parse("11111111-1111-1111-1111-111111111111"),
+    SellerName = "Acme Corp",
+    ActiveListings = 42,
+    TotalListings = 87,
+    TotalSales = 156,
+    TotalRevenue = 12456.78m,
+    TotalGrossRevenue = 14567.89m,
+    TotalPlatformFees = 2111.11m,
+    TotalNetRevenue = 12456.78m,
+    PendingPayout = 892.34m,
+    AverageRating = 4.7,
+    TotalReviews = 234,
+    UnreadMessages = 3,
+    LastActivityAt = DateTime.UtcNow.AddHours(-2),
+    MonthlyBreakdown = new List<MonthlyRevenueDto>
+    {
+        new MonthlyRevenueDto { Year = 2024, Month = 6, GrossRevenue = 4500.00m },
+        new MonthlyRevenueDto { Year = 2024, Month = 5, GrossRevenue = 5200.50m },
+        new MonthlyRevenueDto { Year = 2024, Month = 4, GrossRevenue = 3800.75m }
+    }
+};
+
+Console.WriteLine($"Seller Dashboard for: {dashboard.SellerName}");
+Console.WriteLine($"Performance: {dashboard.ActiveListings} active listings | {dashboard.TotalSales} sales");
+Console.WriteLine($"Revenue: ${dashboard.TotalRevenue:N2} total | ${dashboard.PendingPayout:N2} pending");
+Console.WriteLine($"Rating: {dashboard.AverageRating:F1}/5 ({dashboard.TotalReviews} reviews)");
+Console.WriteLine($"Messages: {dashboard.UnreadMessages} unread");
+Console.WriteLine($"Last activity: {dashboard.LastActivityAt?.ToString("yyyy-MM-dd HH:mm")}");
+
+// Display monthly breakdown
+Console.WriteLine("\nMonthly Revenue Breakdown:");
+foreach (var month in dashboard.MonthlyBreakdown.OrderByDescending(m => m.Year).ThenByDescending(m => m.Month))
+{
+    Console.WriteLine($"  {new DateTime(month.Year, month.Month, 1):yyyy MMM}: ${month.GrossRevenue:N2}");
+}
+```
+
 ## RecommendationDto
 
 The `RecommendationDto` class represents a single recommendation item in the marketplace recommendation system. It encapsulates all essential information about a recommended listing including the listing details, recommendation score, reasoning, and metadata about the recommendation strategy and generation time. This DTO is used to serialize recommendation results for API responses and client consumption.
