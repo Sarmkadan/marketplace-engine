@@ -210,6 +210,80 @@ Console.WriteLine("\nMultiple listings (XML):");
 Console.WriteLine(xmlOutput);
 ```
 
+## SearchService
+
+The `SearchService` class provides comprehensive search functionality for the Marketplace Engine, enabling users to find listings, users, and categories through various search methods. It supports full-text search, tag-based search, category filtering, geospatial queries, and advanced search capabilities with pagination and sorting options. The service integrates with the recommendation system to provide personalized search results based on user preferences and behavior.
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.Services;
+using MarketplaceEngine.DTOs;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+
+// Initialize search service (typically via dependency injection)
+var searchService = new SearchService(listingRepository, userRepository, categoryRepository);
+
+// Basic search for listings by keyword
+var keywordResults = await searchService.SearchListingsAsync("wireless headphones");
+Console.WriteLine($"Found {keywordResults.Count} listings matching 'wireless headphones'");
+
+// Search listings by tags
+var tagResults = await searchService.SearchByTagsAsync(new List<string> { "electronics", "audio", "bluetooth" });
+Console.WriteLine($"Found {tagResults.Count} listings with specified tags");
+
+// Find nearby listings (requires geospatial data)
+var nearbyResults = await searchService.FindNearbyListingsAsync(
+    latitude: 40.7128,
+    longitude: -74.0060,
+    radiusKm: 5.0
+);
+Console.WriteLine($"Found {nearbyResults.Count} listings within 5km radius");
+
+// Search for users by name or email
+var userResults = await searchService.SearchUsersAsync("John Doe");
+Console.WriteLine($"Found {userResults.Count} users matching 'John Doe'");
+
+// Get top sellers by rating
+var topSellers = await searchService.GetTopSellersAsync(count: 10);
+Console.WriteLine($"Top {topSellers.Count} sellers by rating:");
+foreach (var seller in topSellers.Take(5))
+{
+    Console.WriteLine($"- {seller.DisplayName}: {seller.AverageRating:F1}/5 ({seller.ReviewCount} reviews)");
+}
+
+// Search listings by category with pagination
+var (categoryResults, totalCount) = await searchService.SearchByCategoryAsync(
+    categoryId: Guid.Parse("3fa85f64-5717-4562-b3fc-2c963f66afa6"),
+    page: 1,
+    pageSize: 25
+);
+Console.WriteLine($"Page 1: {categoryResults.Count} of {totalCount} listings in category");
+
+// Advanced search with multiple criteria
+var advancedResults = await searchService.AdvancedSearchAsync(new FullTextSearchRequest
+{
+    Query = "laptop",
+    MinPrice = 500,
+    MaxPrice = 2000,
+    CategoryId = Guid.Parse("3fa85f64-5717-4562-b3fc-2c963f66afa6"),
+    Tags = new List<string> { "electronics", "computers" },
+    Page = 1,
+    PageSize = 10
+});
+Console.WriteLine($"Advanced search found {advancedResults.items.Count} listings");
+
+// Get trending listings (based on recent activity)
+var trendingListings = await searchService.GetTrendingListingsAsync(count: 15);
+Console.WriteLine($"Found {trendingListings.Count} trending listings");
+
+// Get search suggestions based on popular queries
+var suggestions = await searchService.GetSearchSuggestionsAsync("wire");
+Console.WriteLine($"Search suggestions: {string.Join(", ", suggestions)}");
+```
+
 ## RecommendationOptions
 
 The `RecommendationOptions` class provides configuration settings for the collaborative filtering recommendation engine. It controls parameters for user similarity calculations, trending algorithms, caching behavior, activity tracking limits, and feature flags that determine how personalized and diverse recommendation feeds should be. All settings can be overridden via the `Marketplace:Recommendations` section of `appsettings.json`.
