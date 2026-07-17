@@ -186,10 +186,7 @@ public static class ReviewValidation
     /// <param name="value">The review to check.</param>
     /// <returns>True if the review is valid; otherwise, false.</returns>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="value"/> is null.</exception>
-    public static bool IsValid(this Review value)
-    {
-        return value.Validate().Count == 0;
-    }
+    public static bool IsValid(this Review value) => value.Validate().Count == 0;
 
     /// <summary>
     /// Ensures that a review is valid, throwing an exception with detailed error messages if not.
@@ -207,15 +204,16 @@ public static class ReviewValidation
         {
             throw new ArgumentException(
                 $"Review validation failed:{Environment.NewLine}- {
-                    string.Join($"{Environment.NewLine}- ", errors)}");
+                string.Join($"{Environment.NewLine}- ", errors)}");
         }
     }
 
     /// <summary>
     /// Validates that a DateTime is not default and is a reasonable timestamp.
     /// </summary>
-    private static bool IsValidTimestamp(this DateTime dateTime)
-    {
-        return dateTime != default && dateTime <= DateTime.UtcNow.AddMinutes(5);
-    }
+    /// <param name="dateTime">The DateTime to validate.</param>
+    /// <returns>True if the timestamp is valid; otherwise, false.</returns>
+    private static bool IsValidTimestamp(this DateTime dateTime) =>
+        dateTime != default &&
+        dateTime <= DateTime.UtcNow.AddMinutes(5);
 }
