@@ -480,6 +480,81 @@ Console.WriteLine($"\nAverage rating: {averageScore:F1}/5 stars");
 Console.WriteLine($"Total reviews: {sellerReviews.Count}");
 ```
 
+## ModerationReportDto
+
+The `ModerationReportDto` class is a basic data transfer object that represents a moderation report submitted by users to flag inappropriate content or user behavior. It contains essential information about the report including identifiers for the reported content/user, the reporter, the reason for reporting, and creation timestamp. This DTO is used in API responses to display moderation reports in lists and dashboards.
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.DTOs;
+using System;
+
+// Create a moderation report DTO for a flagged listing
+var reportDto = new ModerationReportDto
+{
+    Id = Guid.Parse("12345678-1234-1234-1234-123456789012"),
+    ListingId = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"),
+    UserId = Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"),
+    ReporterUserId = Guid.Parse("cccccccc-cccc-cccc-cccc-cccccccccccc"),
+    Reason = "This listing contains inappropriate content",
+    Status = "Pending",
+    CreatedAt = DateTime.UtcNow.AddHours(-2)
+};
+
+// Display report information
+Console.WriteLine($"Report ID: {reportDto.Id}");
+Console.WriteLine($"Reported Listing: {reportDto.ListingId}");
+Console.WriteLine($"Reported User: {reportDto.UserId}");
+Console.WriteLine($"Reported by: {reportDto.ReporterUserId}");
+Console.WriteLine($"Reason: {reportDto.Reason}");
+Console.WriteLine($"Status: {reportDto.Status}");
+Console.WriteLine($"Created: {reportDto.CreatedAt:yyyy-MM-dd HH:mm:ss}");
+
+// Create a collection of moderation reports for a dashboard
+var reports = new List<ModerationReportDto>
+{
+    new ModerationReportDto
+    {
+        Id = Guid.NewGuid(),
+        ListingId = Guid.NewGuid(),
+        UserId = Guid.NewGuid(),
+        ReporterUserId = Guid.NewGuid(),
+        Reason = "Spam content detected",
+        Status = "Pending",
+        CreatedAt = DateTime.UtcNow.AddMinutes(-30)
+    },
+    new ModerationReportDto
+    {
+        Id = Guid.NewGuid(),
+        ListingId = Guid.NewGuid(),
+        UserId = null,
+        ReporterUserId = Guid.NewGuid(),
+        Reason = "Seller not responding to messages",
+        Status = "InReview",
+        CreatedAt = DateTime.UtcNow.AddHours(-1)
+    },
+    new ModerationReportDto
+    {
+        Id = Guid.NewGuid(),
+        ListingId = null,
+        UserId = Guid.NewGuid(),
+        ReporterUserId = Guid.NewGuid(),
+        Reason = "User making inappropriate comments",
+        Status = "Approved",
+        CreatedAt = DateTime.UtcNow.AddDays(-1)
+    }
+};
+
+// Display dashboard statistics
+var pendingCount = reports.Count(r => r.Status == "Pending");
+var inReviewCount = reports.Count(r => r.Status == "InReview");
+Console.WriteLine($"\nModeration Dashboard:");
+Console.WriteLine($"Total reports: {reports.Count}");
+Console.WriteLine($"Pending: {pendingCount}");
+Console.WriteLine($"In review: {inReviewCount}");
+```
+
 ## MessageDto
 
 The `MessageDto` class is a data transfer object used for API responses when retrieving messages between users in the marketplace. It represents a simplified view of a message containing the message content, sender and recipient information, read status, and creation timestamp. This DTO is commonly used in messaging APIs to provide a clean, serialized format for message data.
