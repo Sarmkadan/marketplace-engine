@@ -13,17 +13,17 @@ using System.Globalization;
 namespace MarketplaceEngine.Tests;
 
 /// <summary>
-/// Validation helpers for PaymentService test data classes.
+/// Validation helpers for <see cref="PaymentServiceTestsData"/> test data classes.
 /// Provides comprehensive validation for test configurations and test data inputs.
 /// </summary>
 public static class PaymentServiceTestsValidation
 {
     /// <summary>
-    /// Validates a PaymentServiceTestsData instance and returns a list of human-readable problems.
+    /// Validates a <see cref="PaymentServiceTestsData"/> instance and returns a list of human-readable problems.
     /// </summary>
-    /// <param name="value">The PaymentServiceTestsData instance to validate.</param>
+    /// <param name="value">The <see cref="PaymentServiceTestsData"/> instance to validate.</param>
     /// <returns>A list of validation problems (empty if valid).</returns>
-    /// <exception cref="ArgumentNullException">Thrown if value is null.</exception>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="value"/> is null.</exception>
     public static IReadOnlyList<string> Validate(this PaymentServiceTestsData value)
     {
         ArgumentNullException.ThrowIfNull(value);
@@ -209,8 +209,10 @@ public static class PaymentServiceTestsValidation
     }
 
     /// <summary>
-    /// Validates a Listing instance and returns a list of human-readable problems.
+    /// Validates a <see cref="Listing"/> instance and returns a list of human-readable problems.
     /// </summary>
+    /// <param name="listing">The <see cref="Listing"/> instance to validate.</param>
+    /// <returns>A list of validation problems (empty if valid).</returns>
     private static IReadOnlyList<string> ValidateListing(Listing? listing)
     {
         var problems = new List<string>();
@@ -255,8 +257,10 @@ public static class PaymentServiceTestsValidation
     }
 
     /// <summary>
-    /// Validates a Payment instance and returns a list of human-readable problems.
+    /// Validates a <see cref="Payment"/> instance and returns a list of human-readable problems.
     /// </summary>
+    /// <param name="payment">The <see cref="Payment"/> instance to validate.</param>
+    /// <returns>A list of validation problems (empty if valid).</returns>
     private static IReadOnlyList<string> ValidatePayment(Payment? payment)
     {
         var problems = new List<string>();
@@ -323,8 +327,10 @@ public static class PaymentServiceTestsValidation
     }
 
     /// <summary>
-    /// Validates a Money instance and returns a list of human-readable problems.
+    /// Validates a <see cref="Money"/> instance and returns a list of human-readable problems.
     /// </summary>
+    /// <param name="money">The <see cref="Money"/> instance to validate.</param>
+    /// <returns>A list of validation problems (empty if valid).</returns>
     private static IReadOnlyList<string> ValidateMoney(Money? money)
     {
         var problems = new List<string>();
@@ -353,21 +359,18 @@ public static class PaymentServiceTestsValidation
     }
 
     /// <summary>
-    /// Determines whether a PaymentServiceTestsData instance is valid.
+    /// Determines whether a <see cref="PaymentServiceTestsData"/> instance is valid.
     /// </summary>
-    /// <param name="value">The PaymentServiceTestsData instance to check.</param>
+    /// <param name="value">The <see cref="PaymentServiceTestsData"/> instance to check.</param>
     /// <returns>True if valid; otherwise, false.</returns>
-    /// <exception cref="ArgumentNullException">Thrown if value is null.</exception>
-    public static bool IsValid(this PaymentServiceTestsData value)
-    {
-        return value.Validate().Count == 0;
-    }
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="value"/> is null.</exception>
+    public static bool IsValid(this PaymentServiceTestsData value) => value.Validate().Count == 0;
 
     /// <summary>
-    /// Ensures that a PaymentServiceTestsData instance is valid, throwing an exception if not.
+    /// Ensures that a <see cref="PaymentServiceTestsData"/> instance is valid, throwing an exception if not.
     /// </summary>
-    /// <param name="value">The PaymentServiceTestsData instance to validate.</param>
-    /// <exception cref="ArgumentNullException">Thrown if value is null.</exception>
+    /// <param name="value">The <see cref="PaymentServiceTestsData"/> instance to validate.</param>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="value"/> is null.</exception>
     /// <exception cref="ArgumentException">Thrown if value contains validation problems.</exception>
     public static void EnsureValid(this PaymentServiceTestsData value)
     {
@@ -379,7 +382,7 @@ public static class PaymentServiceTestsValidation
         {
             throw new ArgumentException(
                 $"PaymentServiceTestsData validation failed:{Environment.NewLine}- {
-                string.Join($"{Environment.NewLine}- ", problems)}");
+                    string.Join($"{Environment.NewLine}- ", problems)}");
         }
     }
 }
