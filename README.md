@@ -1128,6 +1128,63 @@ await messagingService.DeleteMessageAsync(
 Console.WriteLine("Message deleted successfully");
 ```
 
+## PricePoint
+
+The `PricePoint` record represents a single price point in the price history tracking system. It stores the price value along with the timestamp when the price was recorded, enabling the system to track historical price changes and calculate statistics about price movements over time. PricePoint is used by the `PriceHistoryTracker` service to maintain a complete history of listing prices.
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.Services;
+using System;
+using System.Linq;
+
+// Initialize price history tracker for a listing
+var tracker = new PriceHistoryTracker(listingId: Guid.Parse("11111111-1111-1111-1111-111111111111"));
+
+// Record initial price
+var pricePoint1 = tracker.RecordPrice(199.99m);
+Console.WriteLine($"Recorded price: {pricePoint1.Price:C} at {pricePoint1.Timestamp}");
+
+// Record price drop after a week
+var pricePoint2 = tracker.RecordPrice(179.99m);
+Console.WriteLine($"Recorded price: {pricePoint2.Price:C} at {pricePoint2.Timestamp}");
+
+// Record another price change
+var pricePoint3 = tracker.RecordPrice(159.99m);
+Console.WriteLine($"Recorded price: {pricePoint3.Price:C} at {pricePoint3.Timestamp}");
+
+// Get complete price history
+var history = tracker.GetHistory();
+Console.WriteLine($"\nPrice history contains {history.Count} entries:");
+foreach (var point in history.OrderBy(p => p.Timestamp))
+{
+    Console.WriteLine($"- {point.Timestamp:yyyy-MM-dd}: {point.Price:C}");
+}
+
+// Get price statistics
+var statistics = tracker.GetStatistics();
+if (statistics != null)
+{
+    Console.WriteLine($"\nPrice Statistics:");
+    Console.WriteLine($"- Average price: {statistics.AveragePrice:C}");
+    Console.WriteLine($"- Highest price: {statistics.HighestPrice:C}");
+    Console.WriteLine($"- Lowest price: {statistics.LowestPrice:C}");
+    Console.WriteLine($"- Price range: {statistics.HighestPrice - statistics.LowestPrice:C}");
+}
+
+// Check for price drops
+if (tracker.HasPriceDrop)
+{
+    Console.WriteLine($"\nPrice has dropped from initial price!");
+    Console.WriteLine($"Latest drop percentage: {tracker.GetLatestDropPercent():P1}");
+}
+
+// Prune old price points (keep only last 100 entries)
+var prunedCount = tracker.Prune(maxEntries: 100);
+Console.WriteLine($"\nPruned {prunedCount} old price points, keeping {tracker.GetHistory().Count} most recent");
+```
+
 ## ErrorHandlingMiddleware
 
 The `ErrorHandlingMiddleware` class provides centralized exception handling for the Marketplace Engine API. It catches all unhandled exceptions, logs them appropriately, and returns consistent error responses to clients without exposing sensitive error details in production. This middleware prevents the need for scattered exception handling logic across controllers and ensures a uniform error format throughout the application.
