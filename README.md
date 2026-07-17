@@ -879,6 +879,64 @@ string commentSummary = recentReview.GetCommentSummary();
 Console.WriteLine($"Comment summary: {commentSummary}"); // Comment summary: Excellent seller! Fast shipping and great...
 ```
 
+## MoneyExtensions
+
+The `MoneyExtensions` class provides extension methods for the `Money` value object, offering common monetary operations such as rounding, comparison, percentage calculations, absolute value, negation, and formatted string output with currency symbols. These utilities simplify financial calculations and comparisons throughout the application.
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.Domain.ValueObjects;
+using System;
+
+// Create money values for financial calculations
+var productPrice = new Money(99.99m, "USD");
+var taxRate = new Money(8.25m, "USD");
+var totalAmount = new Money(1000.00m, "USD");
+var discountPercentage = 15m;
+
+// Round money to specific decimal places
+var roundedPrice = productPrice.Round(2);
+Console.WriteLine($"Rounded price: {roundedPrice.ToStringWithSymbol()}"); // Rounded price: $99.99
+
+// Check if amounts are zero, positive, or negative
+Console.WriteLine($"Is price zero: {roundedPrice.IsZero()}"); // Is price zero: False
+Console.WriteLine($"Is price positive: {roundedPrice.IsPositive()}"); // Is price positive: True
+Console.WriteLine($"Is tax negative: {taxRate.IsNegative()}"); // Is tax negative: False
+
+// Calculate percentage of total
+var taxPercentage = taxRate.PercentageOf(totalAmount);
+Console.WriteLine($"Tax is {taxPercentage:F2}% of total"); // Tax is 0.82% of total
+
+// Calculate percentage value
+var discountAmount = productPrice.Percentage(discountPercentage);
+Console.WriteLine($"Discount amount: {discountAmount.ToStringWithSymbol()}"); // Discount amount: $15.00
+
+// Compare money values
+var cheaperItem = new Money(49.99m, "USD");
+var expensiveItem = new Money(199.99m, "USD");
+
+Console.WriteLine($"Is cheaper less than expensive: {cheaperItem.IsLessThan(expensiveItem)}"); // Is cheaper less than expensive: True
+Console.WriteLine($"Is cheaper less than or equal to product: {cheaperItem.IsLessThanOrEqual(productPrice)}"); // Is cheaper less than or equal to product: True
+Console.WriteLine($"Is product greater than or equal to cheaper: {productPrice.IsGreaterThanOrEqual(cheaperItem)}"); // Is product greater than or equal to cheaper: True
+
+// Get absolute value and negate
+var negativeAmount = new Money(-50.00m, "USD");
+var absoluteAmount = negativeAmount.Abs();
+var negatedAmount = absoluteAmount.Negate();
+
+Console.WriteLine($"Absolute value: {absoluteAmount.ToStringWithSymbol()}"); // Absolute value: $50.00
+Console.WriteLine($"Negated value: {negatedAmount.ToStringWithSymbol()}"); // Negated value: $-50.00
+
+// Compare two money values
+var comparisonResult = productPrice.CompareTo(cheaperItem);
+Console.WriteLine($"Price comparison result: {comparisonResult}"); // Price comparison result: 50 (positive = greater)
+
+// Format money with currency symbol
+Console.WriteLine($"Formatted price: {productPrice.ToStringWithSymbol()}"); // Formatted price: $99.99
+Console.WriteLine($"Formatted tax: {taxRate.ToStringWithSymbol()}"); // Formatted tax: $8.25
+```
+
 ## ReviewService
 
 The `ReviewService` class provides essential functionality for managing user and listing reviews within the marketplace. It enables users to submit, retrieve, flag, and remove reviews, while also offering analytical insights like average scores and review distribution for sellers. This service acts as the central hub for all review-related operations in the application layer.
