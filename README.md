@@ -397,6 +397,56 @@ Console.WriteLine($"Generated {recommendations.Count} recommendations");
 Console.WriteLine($"Total estimated value: {recommendations.Sum(r => r.Price):C}");
 ```
 
+## SavedSearchCriteria
+
+The `SavedSearchCriteria` class represents a user's saved search subscription that monitors new listings matching specific criteria. It stores search parameters like keywords, category, price limits, and tags to automatically match against new listings and notify users when matching items are added. Saved searches are persisted in memory and can be executed against the current active listings.
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.Services;
+using MarketplaceEngine.Domain.Models;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+
+// Create a saved search for electronics under $500 with "wireless" in title/description
+var searchCriteria = new SavedSearchCriteria
+{
+    UserId = Guid.Parse("11111111-1111-1111-1111-111111111111"),
+    Keywords = "wireless",
+    CategoryId = Guid.Parse("3fa85f64-5717-4562-b3fc-2c963f66afa6"), // Electronics
+    MaxPrice = 500,
+    Tags = new List<string> { "electronics", "audio", "bluetooth" },
+    CreatedAt = DateTime.UtcNow
+};
+
+// Save the search subscription
+var savedSearchAlertService = new SavedSearchAlertService(listingRepository);
+var savedCriteria = savedSearchAlertService.Save(searchCriteria);
+
+Console.WriteLine($"Saved search created: {savedCriteria.Id}");
+Console.WriteLine($"User: {savedCriteria.UserId}");
+Console.WriteLine($"Keywords: {savedCriteria.Keywords}");
+Console.WriteLine($"Category: {savedCriteria.CategoryId}");
+Console.WriteLine($"Max Price: {savedCriteria.MaxPrice:C}");
+Console.WriteLine($"Tags: {string.Join(", ", savedCriteria.Tags)}");
+Console.WriteLine($"Created: {savedCriteria.CreatedAt:yyyy-MM-dd}");
+
+// Execute the search to find matching listings
+var matchingListings = await savedSearchAlertService.ExecuteAsync(savedCriteria.Id);
+Console.WriteLine($"\nFound {matchingListings.Count} matching listings");
+
+// Get all saved searches for a user
+var userSearches = savedSearchAlertService.GetForUser(Guid.Parse("11111111-1111-1111-1111-111111111111"));
+Console.WriteLine($"\nUser has {userSearches.Count} saved searches");
+
+// Remove a saved search
+var isRemoved = savedSearchAlertService.Remove(savedCriteria.Id, 
+    Guid.Parse("11111111-1111-1111-1111-111111111111"));
+Console.WriteLine($"\nSearch removed: {isRemoved}");
+```
+
 ## ReviewDto
 
 The `ReviewDto` class is a data transfer object that represents a review submitted by a user about a seller or listing. It contains all essential information about the review including the reviewer details, rating score, comment text, status, timestamps, and optional seller reply. This DTO is used in API responses to display review information to users and calculate seller ratings.
