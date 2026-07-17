@@ -188,3 +188,50 @@ if (filteredResult is OkObjectResult filteredOkResult && filteredOkResult.Value 
     }
 }
 ```
+
+## PaymentsControllerJsonExtensions
+
+`PaymentsControllerJsonExtensions` provides JSON (de)serialization helpers for payment‑related DTOs. The static methods let you convert a `PaymentDto` to a JSON string, parse JSON back into the various request/response types, and safely attempt deserialization with `TryFromJson` overloads.
+
+### Usage Example
+
+```csharp
+using System;
+using MarketplaceEngine.Controllers;
+using MarketplaceEngine.DTOs;
+
+class JsonDemo
+{
+    static void Main()
+    {
+        // Create a sample PaymentDto (properties omitted for brevity)
+        var payment = new PaymentDto
+        {
+            Id = Guid.NewGuid(),
+            Amount = new Money(49.99m, "USD"),
+            Status = "Pending"
+        };
+
+        // Serialize to JSON (indented for readability)
+        string json = payment.ToJson(indented: true);
+        Console.WriteLine("Serialized JSON:");
+        Console.WriteLine(json);
+
+        // Deserialize back to a PaymentDto
+        var deserialized = PaymentsControllerJsonExtensions.FromJsonToPaymentDto(json);
+        Console.WriteLine($"\nDeserialized Payment ID: {deserialized?.Id}");
+
+        // Attempt to deserialize an InitiatePaymentRequest safely
+        bool ok = PaymentsControllerJsonExtensions.TryFromJson(json, out InitiatePaymentRequest? request);
+        Console.WriteLine($"\nTryFromJson for InitiatePaymentRequest succeeded: {ok}");
+        if (ok && request != null)
+        {
+            Console.WriteLine($"Request ListingId: {request.ListingId}");
+        }
+
+        // Directly deserialize a CompletePaymentRequest
+        var completeRequest = PaymentsControllerJsonExtensions.FromJsonToCompletePaymentRequest(json);
+        Console.WriteLine($"\nCompletePaymentRequest is null: {completeRequest == null}");
+    }
+}
+```
