@@ -189,6 +189,93 @@ if (filteredResult is OkObjectResult filteredOkResult && filteredOkResult.Value 
 }
 ```
 
+## ReviewsControllerExtensions
+
+The `ReviewsControllerExtensions` class provides extension methods for the `ReviewsController` that simplify common review operations including filtering by score, batch processing for multiple sellers, and retrieving summary statistics. It enhances the controller with convenience methods for handling reviews across multiple sellers in a single request and filtering reviews by score ranges.
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.Controllers;
+using MarketplaceEngine.DTOs;
+using Microsoft.AspNetCore.Mvc;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+
+// Initialize controller (typically via dependency injection)
+var controller = new ReviewsController();
+
+// Example 1: Get seller reviews filtered by minimum score
+var sellerId = Guid.Parse("3fa85f64-5717-4562-b3fc-2c963f66afa6");
+var minScore = 4;
+var page = 1;
+var pageSize = 25;
+
+var filteredReviewsResult = await controller.GetSellerReviewsByMinScore(
+    sellerId, minScore, page, pageSize);
+
+if (filteredReviewsResult is OkObjectResult okResult && okResult.Value is PaginatedResponse<ReviewDto> paginatedResponse)
+{
+    Console.WriteLine($"Found {paginatedResponse.Total} reviews with score >= {minScore}:");
+    foreach (var review in paginatedResponse.Items.Take(5))
+    {
+        Console.WriteLine($"- Review {review.Id}: Score {review.Score} - {review.Comment}");
+    }
+}
+
+// Example 2: Get reviews for multiple sellers in a single batch
+var sellerIds = new List<Guid>
+{
+    Guid.Parse("3fa85f64-5717-4562-b3fc-2c963f66afa6"),
+    Guid.Parse("4fa85f64-5717-4562-b3fc-2c963f66afa6")
+};
+
+var batchReviewsResult = await controller.GetMultipleSellersReviews(sellerIds, page, pageSize);
+
+if (batchReviewsResult is OkObjectResult batchOkResult && batchOkResult.Value is Dictionary<Guid, PaginatedResponse<ReviewDto>> batchResponse)
+{
+    Console.WriteLine($"\nBatch reviews for {batchResponse.Count} sellers:");
+    foreach (var sellerReviews in batchResponse)
+    {
+        Console.WriteLine($"- Seller {sellerReviews.Key}: {sellerReviews.Value.Total} reviews");
+    }
+}
+
+// Example 3: Get listing reviews filtered by score range
+var listingId = Guid.Parse("5fa85f64-5717-4562-b3fc-2c963f66afa6");
+var minReviewScore = 3;
+var maxReviewScore = 5;
+
+var scoreRangeResult = await controller.GetListingReviewsByScoreRange(
+    listingId, minReviewScore, maxReviewScore);
+
+if (scoreRangeResult is OkObjectResult rangeOkResult && rangeOkResult.Value is List<ReviewDto> rangeReviews)
+{
+    Console.WriteLine($"\nFound {rangeReviews.Count} reviews for listing with score between {minReviewScore} and {maxReviewScore}:");
+    foreach (var review in rangeReviews.Take(5))
+    {
+        Console.WriteLine($"- Review {review.Id}: Score {review.Score}");
+    }
+}
+
+// Example 4: Get summary statistics for multiple sellers
+var summariesResult = await controller.GetMultipleSellersSummaries(sellerIds);
+
+if (summariesResult is OkObjectResult summariesOkResult && summariesResult.Value is Dictionary<Guid, ReviewSummaryDto> summaries)
+{
+    Console.WriteLine($"\nSummary statistics for {summaries.Count} sellers:");
+    foreach (var summary in summaries)
+    {
+        Console.WriteLine($"- Seller {summary.Key}:");
+        Console.WriteLine($"  Average Score: {summary.Value.AverageScore:F2}");
+        Console.WriteLine($"  Total Reviews: {summary.Value.TotalReviews}");
+        Console.WriteLine($"  Score Distribution: [{string.Join(", ", summary.Value.ScoreDistribution.OrderBy(kv => kv.Key).Select(kv => $"{kv.Key}:{kv.Value}"))}]");
+    }
+}
+```
+
 ## PaymentsControllerJsonExtensions
 
 `PaymentsControllerJsonExtensions` provides JSON (de)serialization helpers for payment‑related DTOs. The static methods let you convert a `PaymentDto` to a JSON string, parse JSON back into the various request/response types, and safely attempt deserialization with `TryFromJson` overloads.
