@@ -1144,6 +1144,91 @@ catch (ArgumentException ex)
 }
 ```
 
+## SellerDashboardServiceTests
+
+The `SellerDashboardServiceTests` class provides unit tests for the `SellerDashboardService` class, validating its dashboard functionality for sellers. It tests various scenarios including dashboard retrieval for valid and invalid sellers, revenue calculation with completed payments, and listing statistics with view count tracking.
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.Services;
+using MarketplaceEngine.Domain.Entities;
+using MarketplaceEngine.Domain.Enums;
+using MarketplaceEngine.Domain.ValueObjects;
+using MarketplaceEngine.Exceptions;
+using MarketplaceEngine.Repositories;
+using Moq;
+using System;
+using System.Threading.Tasks;
+using Xunit;
+
+// Initialize mock repositories
+var userRepoMock = new Mock<IUserRepository>();
+var listingRepoMock = new Mock<IListingRepository>();
+var paymentRepoMock = new Mock<IPaymentRepository>();
+var reviewRepoMock = new Mock<IReviewRepository>();
+var messageRepoMock = new Mock<IMessageRepository>();
+
+// Create the service under test
+var sellerDashboardService = new SellerDashboardService(
+    userRepoMock.Object,
+    listingRepoMock.Object,
+    paymentRepoMock.Object,
+    reviewRepoMock.Object,
+    messageRepoMock.Object
+);
+
+// Test 1: GetDashboardAsync throws ResourceNotFoundException when seller is not found
+var nonExistentSellerId = Guid.NewGuid();
+userRepoMock.Setup(r => r.GetByIdAsync(nonExistentSellerId))
+    .ReturnsAsync((User)null);
+
+var act1 = async () => await sellerDashboardService.GetDashboardAsync(nonExistentSellerId);
+await Assert.ThrowsAsync<ResourceNotFoundException>(act1);
+
+// Test 2: GetDashboardAsync returns correct metrics for valid seller
+var sellerId = Guid.NewGuid();
+var seller = new User { Id = sellerId, FullName = "Jane Seller", IsActive = true, TotalSales = 3 };
+var listings = new List<Listing>
+{
+    new Listing { Id = Guid.NewGuid(), SellerId = sellerId, Status = ListingStatus.Active, Price = new Money(100m) },
+    new Listing { Id = Guid.NewGuid(), SellerId = sellerId, Status = ListingStatus.Active, Price = new Money(200m) },
+    new Listing { Id = Guid.NewGuid(), SellerId = sellerId, Status = ListingStatus.Inactive, Price = new Money(50m) }
+};
+var completedPayment = new Payment
+{
+    Id = Guid.NewGuid(),
+    SellerId = sellerId,
+    Status = PaymentStatus.Completed,
+    Amount = new Money(100m),
+    PlatformFee = new Money(5m),
+    SellerPayout = new Money(95m)
+};
+
+userRepoMock.Setup(r => r.GetByIdAsync(sellerId)).ReturnsAsync(seller);
+listingRepoMock.Setup(r => r.GetBySellerIdAsync(sellerId)).ReturnsAsync(listings);
+paymentRepoMock.Setup(r => r.GetBySellerIdAsync(sellerId)).ReturnsAsync(new[] { completedPayment });
+reviewRepoMock.Setup(r => r.GetBySellerIdAsync(sellerId)).ReturnsAsync(new List<Review>());
+messageRepoMock.Setup(r => r.GetUnreadMessagesAsync(sellerId)).ReturnsAsync(new List<Message>());
+
+var dashboard = await sellerDashboardService.GetDashboardAsync(sellerId);
+Console.WriteLine($"Seller Dashboard for: {dashboard.SellerName}");
+Console.WriteLine($"Performance: {dashboard.ActiveListings} active listings | {dashboard.TotalSales} sales");
+Console.WriteLine($"Revenue: ${dashboard.TotalRevenue:N2} total");
+
+// Test 3: GetRevenueAsync returns monthly breakdown for completed payments
+var revenue = await sellerDashboardService.GetRevenueAsync(sellerId);
+Console.WriteLine($"\nRevenue breakdown: ${revenue.TotalGrossRevenue:N2} gross | ${revenue.TotalNetRevenue:N2} net");
+
+// Test 4: GetListingStatsAsync returns top listings by view count
+var stats = await sellerDashboardService.GetListingStatsAsync(sellerId);
+Console.WriteLine($"Listing stats: {stats.ActiveListings} active listings | {stats.TotalViews} total views");
+foreach (var listing in stats.TopListings)
+{
+    Console.WriteLine($"- {listing.Title}: {listing.ViewCount} views");
+}
+```
+
 ## UserServiceTests
 
 The `UserServiceTests` class contains unit tests for the `UserService` class, verifying that it correctly handles user registration, email verification, account management, profile updates, and premium account features. It tests various business rules including email uniqueness validation, name length requirements, email verification token validation, premium account eligibility criteria, and account status validation.
