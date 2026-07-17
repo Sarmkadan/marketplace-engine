@@ -1732,6 +1732,120 @@ var (averageScore, totalReviews, distribution) = await reviewService.GetSellerSt
 Console.WriteLine($"Average Score: {averageScore:F1}, Total Reviews: {totalReviews}");
 ```
 
+## MarketplaceWorkflowTests
+
+The `MarketplaceWorkflowTests` class provides integration tests that exercise complete multi-service workflows using real in-memory repositories and a shared database context. It validates end-to-end scenarios including listing lifecycle management, messaging workflows, user promotion paths, search functionality, concurrent operations, email verification, pagination correctness, and user deactivation behavior.
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.Tests;
+using System;
+using System.Threading.Tasks;
+
+// Initialize the test suite (resets database automatically)
+var workflowTests = new MarketplaceWorkflowTests();
+
+// Test 1: Full listing lifecycle - create, search, delist
+try
+{
+    await workflowTests.FullListingLifecycle_CreateSearchDelistAndVerify();
+    Console.WriteLine("✓ Full listing lifecycle test passed");
+}
+finally
+{
+    workflowTests.Dispose();
+}
+
+// Test 2: Complete messaging workflow - send, read, reply, delete
+try
+{
+    await workflowTests.FullMessagingWorkflow_SendReadReplyAndDelete();
+    Console.WriteLine("✓ Messaging workflow test passed");
+}
+finally
+{
+    workflowTests.Dispose();
+}
+
+// Test 3: User registration to premium promotion
+try
+{
+    await workflowTests.UserRegistrationToPremiumPromotion_WhenEligible_Succeeds();
+    Console.WriteLine("✓ Premium promotion test passed");
+}
+finally
+{
+    workflowTests.Dispose();
+}
+
+// Test 4: Advanced search with filters
+try
+{
+    await workflowTests.AdvancedSearch_WithPriceAndCategoryFilters_ReturnsCorrectListings();
+    Console.WriteLine("✓ Advanced search test passed");
+}
+finally
+{
+    workflowTests.Dispose();
+}
+
+// Test 5: Concurrent operations safety
+try
+{
+    await workflowTests.ConcurrentListingCreation_AllListingsPersistedWithoutDataCorruption();
+    Console.WriteLine("✓ Concurrent operations test passed");
+}
+finally
+{
+    workflowTests.Dispose();
+}
+
+// Test 6: Email verification workflow
+try
+{
+    await workflowTests.EmailVerification_WithCorrectToken_VerifiesUser();
+    Console.WriteLine("✓ Email verification test passed");
+}
+finally
+{
+    workflowTests.Dispose();
+}
+
+// Test 7: Pagination correctness
+try
+{
+    await workflowTests.PaginatedListings_SecondPage_ReturnsDistinctItemsFromFirstPage();
+    Console.WriteLine("✓ Pagination test passed");
+}
+finally
+{
+    workflowTests.Dispose();
+}
+
+// Test 8: Category search with pagination
+try
+{
+    await workflowTests.SearchByCategory_TotalMatchesBothPages();
+    Console.WriteLine("✓ Category search test passed");
+}
+finally
+{
+    workflowTests.Dispose();
+}
+
+// Test 9: User deactivation blocks actions
+try
+{
+    await workflowTests.DeactivatedUser_CannotCreateNewListings();
+    Console.WriteLine("✓ Deactivation test passed");
+}
+finally
+{
+    workflowTests.Dispose();
+}
+```
+
 ## ReviewRepository
 
 The `ReviewRepository` class provides data access operations for managing reviews within the marketplace system. It handles CRUD operations for review entities, including querying by reviewer, seller, or listing ID, checking for existing transactions, calculating average scores, and supporting paginated retrieval of reviews.
