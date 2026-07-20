@@ -27,5 +27,8 @@ public enum ListingStatus
     Delisted = 5,
 
     /// <summary>Listing is archived after being completed.</summary>
-    Archived = 6
+    Archived = 6,
+
+    /// <summary>Listing is saved as a draft and not yet published.</summary>
+    Draft = 7
 }

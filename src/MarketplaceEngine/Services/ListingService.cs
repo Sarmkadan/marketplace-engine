@@ -72,6 +72,48 @@ public sealed class ListingService
     }
 
     /// <summary>
+    /// Creates a new listing as a draft.
+    /// </summary>
+    /// <param name="sellerId">The ID of the user creating the listing.</param>
+    /// <param name="title">Listing title.</param>
+    /// <param name="description">Listing description.</param>
+    /// <param name="price">Listing price.</param>
+    /// <param name="currency">Listing currency code.</param>
+    /// <param name="categoryId">The category ID for the listing.</param>
+    /// <param name="imageUrls">List of image URLs.</param>
+    /// <returns>The newly created draft listing.</returns>
+    /// <exception cref="ResourceNotFoundException">Thrown if seller does not exist.</exception>
+    /// <exception cref="UnauthorizedException">Thrown if seller is not active.</exception>
+    public async Task<Listing> CreateDraftListingAsync(Guid sellerId, string title, string description, decimal price, string currency, Guid categoryId, List<string> imageUrls)
+    {
+        var seller = await _userRepository.GetByIdAsync(sellerId);
+        if (seller is null)
+            throw new ResourceNotFoundException("User", sellerId);
+
+        if (!seller.IsActive)
+            throw new UnauthorizedException(sellerId, "create listings");
+
+        var listing = new Listing
+        {
+            SellerId = sellerId,
+            CategoryId = categoryId,
+            Title = title,
+            Description = description,
+            Price = new Money(price, currency),
+            ImageUrls = imageUrls,
+            Status = ListingStatus.Draft
+        };
+
+        listing.SaveAsDraft();
+
+        var created = await _listingRepository.AddAsync(listing);
+        seller.TotalListings++;
+        await _userRepository.UpdateAsync(seller);
+
+        return created;
+    }
+
+    /// <summary>
     /// Updates an existing listing.
     /// </summary>
     /// <param name="listingId">The unique identifier of the listing.</param>
@@ -134,6 +176,32 @@ public sealed class ListingService
             listing.Publish();
         else
             listing.Unpublish();
+
+        return await _listingRepository.UpdateAsync(listing);
+    }
+
+    /// <summary>
+    /// Publishes a draft listing to the marketplace.
+    /// </summary>
+    /// <param name="listingId">The unique identifier of the listing.</param>
+    /// <param name="requesterId">The ID of the user requesting to publish.</param>
+    /// <returns>The updated listing.</returns>
+    /// <exception cref="ResourceNotFoundException">Thrown if listing does not exist.</exception>
+    /// <exception cref="UnauthorizedException">Thrown if user is not the owner.</exception>
+    /// <exception cref="InvalidOperationException">Thrown if listing is not a draft.</exception>
+    public async Task<Listing> PublishDraftAsync(Guid listingId, Guid requesterId)
+    {
+        var listing = await _listingRepository.GetByIdAsync(listingId);
+        if (listing is null)
+            throw new ResourceNotFoundException("Listing", listingId);
+
+        if (listing.SellerId != requesterId)
+            throw new UnauthorizedException(requesterId, "publish this listing");
+
+        if (listing.Status != ListingStatus.Draft)
+            throw new InvalidOperationException("Only draft listings can be published");
+
+        listing.PublishDraft();
 
         return await _listingRepository.UpdateAsync(listing);
     }

@@ -64,9 +64,28 @@ public class Listing
             throw new ArgumentException("Cannot exceed 10 images per listing", nameof(ImageUrls));
     }
 
+    // Saves the listing as a draft
+    public void SaveAsDraft()
+    {
+        Status = ListingStatus.Draft;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
     // Publishes the listing to the marketplace
     public void Publish()
     {
+        ValidateForPublishing();
+        Status = ListingStatus.Active;
+        PublishedAt = DateTime.UtcNow;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    // Publishes a draft listing to the marketplace
+    public void PublishDraft()
+    {
+        if (Status != ListingStatus.Draft)
+            throw new InvalidOperationException("Only draft listings can be published");
+
         ValidateForPublishing();
         Status = ListingStatus.Active;
         PublishedAt = DateTime.UtcNow;
