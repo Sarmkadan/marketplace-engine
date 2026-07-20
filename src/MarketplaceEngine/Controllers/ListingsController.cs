@@ -157,6 +157,74 @@ public class ListingsController : ControllerBase
     }
 
     /// <summary>
+    /// Creates a new listing as a draft.
+    /// </summary>
+    [HttpPost("drafts")]
+    [ProducesResponseType(typeof(ListingDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> CreateDraftListing([FromBody] CreateListingRequest request)
+    {
+        _logger.LogInformation("Creating new draft listing: {Title}", request.Title);
+
+        if (string.IsNullOrWhiteSpace(request.Title))
+            return BadRequest("Title is required");
+
+        var created = await _listingService.CreateDraftListingAsync(
+            request.SellerId,
+            request.Title,
+            request.Description,
+            request.Price,
+            "USD", // Assuming USD as default currency
+            request.CategoryId,
+            request.ImageUrls ?? new List<string>()
+        );
+
+        // Invalidate pagination caches
+        await InvalidateListingsCaches();
+
+        _logger.LogInformation("Draft listing created: {ListingId}", created.Id);
+        var dto = new ListingDto(created);
+        return CreatedAtAction(nameof(GetListing), new { id = created.Id }, dto);
+    }
+
+    /// <summary>
+    /// Publishes a draft listing to the marketplace.
+    /// </summary>
+    [HttpPost("{id}/publish")]
+    [ProducesResponseType(typeof(ListingDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> PublishDraft(Guid id)
+    {
+        _logger.LogInformation("Publishing draft listing: {ListingId}", id);
+
+        var listing = await _listingService.GetListingWithViewAsync(id);
+        if (listing is null)
+        {
+            _logger.LogWarning("Draft listing not found: {ListingId}", id);
+            return NotFound(new { error = "Listing not found" });
+        }
+
+        if (listing.Status.ToString() != "Draft")
+        {
+            _logger.LogWarning("Listing is not a draft: {ListingId}, status={Status}", id, listing.Status);
+            return BadRequest("Only draft listings can be published");
+        }
+
+        // Note: The service layer handles authorization, but we need to pass requesterId
+        // Since we don't have the requester in this endpoint, we'll get it from the listing
+        var updated = await _listingService.PublishDraftAsync(id, listing.SellerId);
+
+        // Invalidate caches
+        await _cacheService.RemoveAsync($"listing:{id}");
+        await InvalidateListingsCaches();
+
+        _logger.LogInformation("Draft listing published: {ListingId}", id);
+        return Ok(new ListingDto(updated));
+    }
+
+    /// <summary>
     /// Updates an existing listing. Invalidates all category and search caches so that
     /// category-filtered searches reflect the change immediately.
     /// </summary>

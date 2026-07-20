@@ -26,6 +26,7 @@ public class ListingDto
     public int ViewCount { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
+    public DateTime? PublishedAt { get; set; }
 
     public ListingDto() { }
 
@@ -42,6 +43,7 @@ public class ListingDto
         ViewCount = listing.ViewCount;
         CreatedAt = listing.CreatedAt;
         UpdatedAt = listing.UpdatedAt;
+        PublishedAt = listing.PublishedAt;
     }
 }
 
