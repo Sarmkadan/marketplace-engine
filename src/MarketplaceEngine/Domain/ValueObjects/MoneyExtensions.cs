@@ -242,4 +242,46 @@ public static class MoneyExtensions
 
         return $"{money.CurrencyCode} {money.Amount:F2}";
     }
+
+    /// <summary>
+    /// Applies a discount to the money amount.
+    /// </summary>
+    /// <param name="money">The original money value.</param>
+    /// <param name="percent">Discount percentage (0‑100).</param>
+    /// <returns>A new <see cref="Money"/> instance with the discounted amount.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="money"/> is null.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="percent"/> is not between 0 and 100.</exception>
+    public static Money ApplyDiscount(this Money money, decimal percent)
+    {
+        ArgumentNullException.ThrowIfNull(money);
+
+        if (percent < 0m || percent > 100m)
+            throw new ArgumentOutOfRangeException(nameof(percent), "Discount percent must be between 0 and 100");
+
+        var discountAmount = money.Amount * (percent / 100m);
+        var newAmount = money.Amount - discountAmount;
+        return new Money(newAmount, money.CurrencyCode);
+    }
+
+    /// <summary>
+    /// Returns a culture‑aware display string for the money value.
+    /// </summary>
+    /// <param name="money">The money value.</param>
+    /// <param name="culture">The culture to use for formatting. If <c>null</c>, the current culture is used.</param>
+    /// <returns>A formatted string that includes the currency symbol (if known) and the amount formatted for the specified culture.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="money"/> is null.</exception>
+    public static string ToDisplayString(this Money money, CultureInfo? culture = null)
+    {
+        ArgumentNullException.ThrowIfNull(money);
+
+        var ci = culture ?? CultureInfo.CurrentCulture;
+
+        // Use known symbol if available, otherwise fall back to the currency code.
+        var symbol = _currencySymbols.TryGetValue(money.CurrencyCode, out var knownSymbol)
+            ? knownSymbol
+            : money.CurrencyCode;
+
+        var formattedAmount = money.Amount.ToString("N2", ci);
+        return $"{symbol}{formattedAmount}";
+    }
 }
