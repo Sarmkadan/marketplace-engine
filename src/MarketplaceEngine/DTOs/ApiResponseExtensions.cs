@@ -5,6 +5,7 @@
 // =============================================================================
 
 using System.Globalization;
+using MarketplaceEngine.Exceptions;
 
 namespace MarketplaceEngine.DTOs;
 
@@ -162,6 +163,26 @@ public static class ApiResponseExtensions
         result.Timestamp = response.Timestamp;
 
         return result;
+    }
+
+    /// <summary>
+    /// Ensures the response is successful; otherwise, throws a <see cref="MarketplaceException"/>.
+    /// </summary>
+    /// <typeparam name="T">The data type.</typeparam>
+    /// <param name="response">The API response to validate.</param>
+    /// <returns>The original response if successful.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="response"/> is null.</exception>
+    /// <exception cref="MarketplaceException">Thrown when <paramref name="response"/> is not successful.</exception>
+    public static ApiResponse<T> EnsureSuccess<T>(this ApiResponse<T> response)
+    {
+        ArgumentNullException.ThrowIfNull(response);
+
+        if (!response.Success)
+        {
+            throw new MarketplaceException(response.Message ?? "Operation failed", response.ErrorCode);
+        }
+
+        return response;
     }
 
     /// <summary>
