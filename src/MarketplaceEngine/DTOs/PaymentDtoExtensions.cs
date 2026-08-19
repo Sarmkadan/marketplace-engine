@@ -197,4 +197,68 @@ public static class PaymentDtoExtensions
 
         return MarketplaceEngine.Domain.Enums.PaymentStatus.Processing;
     }
+
+    /// <summary>
+    /// Checks if the payment is refundable within a given time window.
+    /// </summary>
+    /// <param name="payment">The payment DTO.</param>
+    /// <param name="window">The time window.</param>
+    /// <returns>True if refundable; otherwise false.</returns>
+    public static bool IsRefundable(this PaymentDto payment, TimeSpan window)
+    {
+        ArgumentNullException.ThrowIfNull(payment);
+        return payment.Status.Equals("Completed", StringComparison.OrdinalIgnoreCase) && 
+               payment.CompletedAt.HasValue &&
+               (DateTime.UtcNow - payment.CompletedAt.Value) <= window;
+    }
+
+    /// <summary>
+    /// Calculates the net amount after deducting the fee rate.
+    /// </summary>
+    /// <param name="payment">The payment DTO.</param>
+    /// <param name="feeRate">The fee rate as a decimal (e.g., 0.05 for 5%).</param>
+    /// <returns>The net amount.</returns>
+    public static decimal NetAmount(this PaymentDto payment, decimal feeRate)
+    {
+        ArgumentNullException.ThrowIfNull(payment);
+        return payment.Amount * (1 - feeRate);
+    }
+
+    /// <summary>
+    /// Validates if a status transition is allowed.
+    /// </summary>
+    /// <param name="payment">The payment DTO.</param>
+    /// <param name="newStatus">The target status.</param>
+    /// <returns>True if transition is allowed; otherwise false.</returns>
+    public static bool CanTransitionTo(this PaymentDto payment, MarketplaceEngine.Domain.Enums.PaymentStatus newStatus)
+    {
+        ArgumentNullException.ThrowIfNull(payment);
+        var currentStatus = payment.GetPaymentStatus();
+
+        if (currentStatus == newStatus) return false;
+
+        return currentStatus switch
+        {
+            MarketplaceEngine.Domain.Enums.PaymentStatus.Pending => 
+                newStatus == MarketplaceEngine.Domain.Enums.PaymentStatus.Processing || 
+                newStatus == MarketplaceEngine.Domain.Enums.PaymentStatus.Failed || 
+                newStatus == MarketplaceEngine.Domain.Enums.PaymentStatus.Cancelled,
+            
+            MarketplaceEngine.Domain.Enums.PaymentStatus.Processing => 
+                newStatus == MarketplaceEngine.Domain.Enums.PaymentStatus.Completed || 
+                newStatus == MarketplaceEngine.Domain.Enums.PaymentStatus.Failed || 
+                newStatus == MarketplaceEngine.Domain.Enums.PaymentStatus.InEscrow || 
+                newStatus == MarketplaceEngine.Domain.Enums.PaymentStatus.Cancelled,
+
+            MarketplaceEngine.Domain.Enums.PaymentStatus.InEscrow => 
+                newStatus == MarketplaceEngine.Domain.Enums.PaymentStatus.Completed || 
+                newStatus == MarketplaceEngine.Domain.Enums.PaymentStatus.Failed || 
+                newStatus == MarketplaceEngine.Domain.Enums.PaymentStatus.Refunded,
+
+            MarketplaceEngine.Domain.Enums.PaymentStatus.Completed => 
+                newStatus == MarketplaceEngine.Domain.Enums.PaymentStatus.Refunded,
+
+            _ => false
+        };
+    }
 }
