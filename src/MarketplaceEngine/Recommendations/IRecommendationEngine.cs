@@ -155,7 +155,7 @@ public sealed record UserActivitySignal
     public required SignalType SignalType { get; init; }
 
     /// <summary>
-    /// Explicit weight for this signal. Defaults to the numeric value of <see cref="SignalType"/>.
+    /// Explicit weight for this signal. Defaults to 1.0.
     /// Higher weights amplify the influence of this interaction on recommendations.
     /// </summary>
     public double Weight { get; init; } = 1.0;

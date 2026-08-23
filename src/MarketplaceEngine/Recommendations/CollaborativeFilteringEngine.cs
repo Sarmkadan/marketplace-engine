@@ -36,6 +36,11 @@ public sealed class CollaborativeFilteringEngine : IRecommendationEngine
     /// <summary>
     /// Initialises a new instance of <see cref="CollaborativeFilteringEngine"/>.
     /// </summary>
+    /// <param name="activityTracker">Source of user behavioural signals consumed by all recommendation strategies.</param>
+    /// <param name="listingRepository">Repository used for cold-start trending fallbacks and affinity candidate sourcing.</param>
+    /// <param name="cache">Cache service used to memoise computed recommendation feeds.</param>
+    /// <param name="options">Tuning options controlling thresholds, weights, time windows, and cache TTLs.</param>
+    /// <param name="logger">Logger for diagnostic and operational messages.</param>
     public CollaborativeFilteringEngine(
         IUserActivityTracker activityTracker,
         IListingRepository listingRepository,
