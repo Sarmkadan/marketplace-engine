@@ -13,20 +13,70 @@ namespace MarketplaceEngine.DTOs;
 /// </summary>
 public class ReviewDto
 {
+    /// <summary>
+    /// Unique identifier for the review.
+    /// </summary>
     public Guid Id { get; set; }
+
+    /// <summary>
+    /// Identifier of the reviewer who wrote the review.
+    /// </summary>
     public Guid ReviewerId { get; set; }
+
+    /// <summary>
+    /// Name of the reviewer.
+    /// </summary>
     public string ReviewerName { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Identifier of the seller who received the review.
+    /// </summary>
     public Guid SellerId { get; set; }
+
+    /// <summary>
+    /// Identifier of the listing that was reviewed (nullable).
+    /// </summary>
     public Guid? ListingId { get; set; }
+
+    /// <summary>
+    /// Score given by the reviewer (1-5).
+    /// </summary>
     public int Score { get; set; }
+
+    /// <summary>
+    /// Comment left by the reviewer.
+    /// </summary>
     public string Comment { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Current status of the review (e.g., Pending, Approved, Rejected).
+    /// </summary>
     public string Status { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Reply left by the seller (nullable).
+    /// </summary>
     public string? SellerReply { get; set; }
+
+    /// <summary>
+    /// Date and time when the review was created.
+    /// </summary>
     public DateTime CreatedAt { get; set; }
+
+    /// <summary>
+    /// Date and time when the review was last updated (nullable).
+    /// </summary>
     public DateTime? UpdatedAt { get; set; }
 
+    /// <summary>
+    /// Initializes a new instance of the ReviewDto class.
+    /// </summary>
     public ReviewDto() { }
 
+    /// <summary>
+    /// Initializes a new instance of the ReviewDto class from a Review domain model.
+    /// </summary>
+    /// <param name="review">The Review domain model to convert from.</param>
     public ReviewDto(Review review)
     {
         Id = review.Id;
