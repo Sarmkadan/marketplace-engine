@@ -15,21 +15,75 @@ namespace MarketplaceEngine.DTOs;
 /// </summary>
 public class ListingDto
 {
+    /// <summary>
+    /// Unique identifier for the listing.
+    /// </summary>
     public Guid Id { get; set; }
+
+    /// <summary>
+    /// Title of the listing.
+    /// </summary>
     public string Title { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Detailed description of the listing.
+    /// </summary>
     public string Description { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Price of the listing item.
+    /// </summary>
     public decimal Price { get; set; }
+
+    /// <summary>
+    /// Identifier of the seller who owns the listing.
+    /// </>
     public Guid SellerId { get; set; }
+
+    /// <summary>
+    /// Name of the seller.
+    /// </summary>
     public string SellerName { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Identifier of the category this listing belongs to.
+    /// </summary>
     public Guid CategoryId { get; set; }
+
+    /// <summary>
+    /// Current status of the listing (e.g., Active, Inactive, Sold).
+    /// </summary>
     public string Status { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Number of times the listing has been viewed.
+    /// </summary>
     public int ViewCount { get; set; }
+
+    /// <summary>
+    /// Date and time when the listing was created.
+    /// </summary>
     public DateTime CreatedAt { get; set; }
+
+    /// <summary>
+    /// Date and time when the listing was last updated (nullable).
+    /// </summary>
     public DateTime? UpdatedAt { get; set; }
+
+    /// <summary>
+    /// Date and time when the listing was published (nullable).
+    /// </summary>
     public DateTime? PublishedAt { get; set; }
 
+    /// <summary>
+    /// Initializes a new instance of the ListingDto class.
+    /// </summary>
     public ListingDto() { }
 
+    /// <summary>
+    /// Initializes a new instance of the ListingDto class from a Listing domain model.
+    /// </summary>
+    /// <param name="listing">The Listing domain model to convert from.</param>
     public ListingDto(Listing listing)
     {
         Id = listing.Id;
