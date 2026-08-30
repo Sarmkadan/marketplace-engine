@@ -77,6 +77,40 @@ public sealed class WatchlistService
         return Task.FromResult(false);
     }
 
+    /// <summary>Toggles listing in user's watchlist. Returns true when added and false when removed.</summary>
+    public async Task<bool> ToggleAsync(Guid userId, Guid listingId, CancellationToken cancellationToken = default)
+    {
+        var userWatchlist = _watchlists.GetOrAdd(userId, _ => new HashSet<Guid>());
+        bool isWatching;
+
+        lock (userWatchlist)
+        {
+            isWatching = userWatchlist.Contains(listingId);
+        }
+
+        if (isWatching)
+        {
+            await RemoveAsync(userId, listingId);
+            return false;
+        }
+
+        return await AddAsync(userId, listingId, cancellationToken);
+    }
+
+    /// <summary>How many listings the user currently watches.</summary>
+    public int GetWatchCount(Guid userId)
+    {
+        if (_watchlists.TryGetValue(userId, out var userWatchlist))
+        {
+            lock (userWatchlist)
+            {
+                return userWatchlist.Count;
+            }
+        }
+
+        return 0;
+    }
+
     /// <summary>True if the user watches the listing.</summary>
     public bool IsWatching(Guid userId, Guid listingId)
     {
