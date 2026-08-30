@@ -11,6 +11,7 @@ public sealed class WatchlistService
     private readonly IListingRepository _listingRepository;
     private readonly IRecommendationEngine _recommendationEngine;
     private readonly ConcurrentDictionary<Guid, HashSet<Guid>> _watchlists = new();
+    private readonly ConcurrentDictionary<Guid, int> _watcherCounts = new();
 
     public WatchlistService(IListingRepository listingRepository, IRecommendationEngine recommendationEngine)
     {
@@ -34,6 +35,8 @@ public sealed class WatchlistService
             {
                 return false;
             }
+
+            _watcherCounts.AddOrUpdate(listingId, 1, static (_, count) => count + 1);
         }
 
         await _listingRepository.IncrementInterestCountAsync(listingId);
@@ -57,7 +60,17 @@ public sealed class WatchlistService
         {
             lock (userWatchlist)
             {
-                return Task.FromResult(userWatchlist.Remove(listingId));
+                if (!userWatchlist.Remove(listingId))
+                {
+                    return Task.FromResult(false);
+                }
+
+                _watcherCounts.AddOrUpdate(
+                    listingId,
+                    0,
+                    static (_, count) => count > 0 ? count - 1 : 0);
+
+                return Task.FromResult(true);
             }
         }
 
@@ -104,22 +117,13 @@ public sealed class WatchlistService
         return result.AsReadOnly();
     }
 
-    /// <summary>How many users currently watch the listing.</summary>
+    /// <summary>
+    /// How many users currently watch the listing. Zero-count entries are retained to avoid
+    /// racing a removal against a concurrent addition for the same listing.
+    /// </summary>
     public int GetWatcherCount(Guid listingId)
     {
-        int count = 0;
-        foreach (var userWatchlist in _watchlists.Values)
-        {
-            lock (userWatchlist)
-            {
-                if (userWatchlist.Contains(listingId))
-                {
-                    count++;
-                }
-            }
-        }
-
-        return count;
+        return _watcherCounts.TryGetValue(listingId, out var count) ? count : 0;
     }
 
     /// <summary>Ids of all users watching the listing (for notifications).</summary>
