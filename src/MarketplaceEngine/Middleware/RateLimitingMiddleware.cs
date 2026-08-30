@@ -27,6 +27,11 @@ public class RateLimitingMiddleware
 
     internal const int MaxRequestsPerMinute = 100;
     private const int WindowSizeMinutes = 1;
+    private const int RetryAfterSeconds = WindowSizeMinutes * 60;
+    private const int CleanupIntervalMinutes = 5;
+    private const int BucketExpiryMinutes = 2;
+    private const string HealthCheckPathPrefix = "/api/v1/health";
+    private const string UnknownIpAddress = "unknown";
 
     public RateLimitingMiddleware(RequestDelegate next, ILogger<RateLimitingMiddleware> logger)
     {
@@ -44,7 +49,7 @@ public class RateLimitingMiddleware
         var clientIp = GetClientIp(context);
 
         // Skip rate limiting for health check endpoint
-        if (context.Request.Path.StartsWithSegments("/api/v1/health"))
+        if (context.Request.Path.StartsWithSegments(HealthCheckPathPrefix))
         {
             await _next(context);
             return;
@@ -54,11 +59,11 @@ public class RateLimitingMiddleware
         {
             _logger.LogWarning("Rate limit exceeded for IP: {ClientIp}", clientIp);
             context.Response.StatusCode = (int)HttpStatusCode.TooManyRequests;
-            context.Response.Headers.Add("Retry-After", "60");
+            context.Response.Headers.Add("Retry-After", RetryAfterSeconds.ToString());
             await context.Response.WriteAsJsonAsync(new
             {
                 error = "Rate limit exceeded",
-                retryAfter = 60
+                retryAfter = RetryAfterSeconds
             });
             return;
         }
@@ -80,7 +85,7 @@ public class RateLimitingMiddleware
             }
         }
 
-        return context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+        return context.Connection.RemoteIpAddress?.ToString() ?? UnknownIpAddress;
     }
 
     private static bool IsRateLimitAllowed(string clientIp)
@@ -114,10 +119,11 @@ public class RateLimitingMiddleware
         // Clean up old rate limit buckets every 5 minutes
         while (true)
         {
-            await Task.Delay(TimeSpan.FromMinutes(5));
+            await Task.Delay(TimeSpan.FromMinutes(CleanupIntervalMinutes));
 
             var expiredKeys = RateLimitBuckets
-                .Where(kvp => kvp.Value.WindowStart < DateTime.UtcNow.AddMinutes(-2))
+                .Where(kvp =>
+                    kvp.Value.WindowStart < DateTime.UtcNow.AddMinutes(-BucketExpiryMinutes))
                 .Select(kvp => kvp.Key)
                 .ToList();
 
