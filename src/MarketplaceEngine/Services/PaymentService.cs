@@ -57,6 +57,9 @@ public class PaymentService
         string paymentMethod,
         string currency = "USD")
     {
+        if (string.IsNullOrWhiteSpace(paymentMethod))
+            throw new Exceptions.ValidationException("PaymentMethod", "Payment method is required.");
+
         var listing = await _listingRepository.GetByIdAsync(listingId);
         if (listing is null)
             throw new ResourceNotFoundException("Listing", listingId);
@@ -66,6 +69,13 @@ public class PaymentService
 
         if (listing.Price is null)
             throw new MarketplaceException("Listing has no price set.");
+
+        if (!string.IsNullOrEmpty(currency) &&
+            !currency.Equals(listing.Price.CurrencyCode, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new MarketplaceException(
+                $"Payment currency '{currency}' does not match listing currency '{listing.Price.CurrencyCode}'.");
+        }
 
         var buyer = await _userRepository.GetByIdAsync(buyerId);
         if (buyer is null)
@@ -77,10 +87,7 @@ public class PaymentService
         if (listing.SellerId == buyerId)
             throw new MarketplaceException("A seller cannot purchase their own listing.");
 
-        if (string.IsNullOrWhiteSpace(paymentMethod))
-            throw new Exceptions.ValidationException("PaymentMethod", "Payment method is required.");
-
-        var amount = new Money(listing.Price.Amount, currency);
+        var amount = new Money(listing.Price.Amount, listing.Price.CurrencyCode);
         var payment = new Payment
         {
             ListingId = listingId,
