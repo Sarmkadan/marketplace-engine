@@ -9,6 +9,8 @@ using MarketplaceEngine.Domain.Models;
 using MarketplaceEngine.Domain.ValueObjects;
 using MarketplaceEngine.Exceptions;
 using MarketplaceEngine.Repositories;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace MarketplaceEngine.Services;
 
@@ -23,15 +25,26 @@ public class PaymentService
     private readonly IPaymentRepository _paymentRepository;
     private readonly IListingRepository _listingRepository;
     private readonly IUserRepository _userRepository;
+    private readonly ILogger<PaymentService> _logger;
 
     public PaymentService(
         IPaymentRepository paymentRepository,
         IListingRepository listingRepository,
         IUserRepository userRepository)
+        : this(paymentRepository, listingRepository, userRepository, NullLogger<PaymentService>.Instance)
+    {
+    }
+
+    public PaymentService(
+        IPaymentRepository paymentRepository,
+        IListingRepository listingRepository,
+        IUserRepository userRepository,
+        ILogger<PaymentService> logger)
     {
         _paymentRepository = paymentRepository ?? throw new ArgumentNullException(nameof(paymentRepository));
         _listingRepository = listingRepository ?? throw new ArgumentNullException(nameof(listingRepository));
         _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     /// <summary>
@@ -78,7 +91,15 @@ public class PaymentService
             Status = PaymentStatus.Pending
         };
 
-        return await _paymentRepository.AddAsync(payment);
+        var createdPayment = await _paymentRepository.AddAsync(payment);
+        _logger.LogInformation(
+            "Payment initiated: {PaymentId}, listing {ListingId}, buyer {BuyerId}, amount {Amount} {Currency}",
+            createdPayment.Id,
+            createdPayment.ListingId,
+            createdPayment.BuyerId,
+            createdPayment.Amount.Amount,
+            createdPayment.Amount.CurrencyCode);
+        return createdPayment;
     }
 
     /// <summary>
@@ -119,6 +140,10 @@ public class PaymentService
             await _userRepository.UpdateAsync(seller);
         }
 
+        _logger.LogInformation(
+            "Payment completed: {PaymentId}, external transaction {ExternalTransactionId}",
+            payment.Id,
+            externalTransactionId);
         return payment;
     }
 
@@ -129,7 +154,9 @@ public class PaymentService
     {
         var payment = await GetPaymentOrThrowAsync(paymentId);
         payment.MoveToEscrow();
-        return await _paymentRepository.UpdateAsync(payment);
+        var updatedPayment = await _paymentRepository.UpdateAsync(payment);
+        _logger.LogInformation("Payment moved to escrow: {PaymentId}", updatedPayment.Id);
+        return updatedPayment;
     }
 
     /// <summary>
@@ -147,7 +174,9 @@ public class PaymentService
             await _userRepository.UpdateAsync(seller);
         }
 
-        return await _paymentRepository.UpdateAsync(payment);
+        var updatedPayment = await _paymentRepository.UpdateAsync(payment);
+        _logger.LogInformation("Payment escrow released: {PaymentId}", updatedPayment.Id);
+        return updatedPayment;
     }
 
     /// <summary>
@@ -157,7 +186,9 @@ public class PaymentService
     {
         var payment = await GetPaymentOrThrowAsync(paymentId);
         payment.Fail(reason);
-        return await _paymentRepository.UpdateAsync(payment);
+        var updatedPayment = await _paymentRepository.UpdateAsync(payment);
+        _logger.LogWarning("Payment failed: {PaymentId}, reason {Reason}", updatedPayment.Id, reason);
+        return updatedPayment;
     }
 
     /// <summary>
@@ -168,7 +199,9 @@ public class PaymentService
         var payment = await GetPaymentOrThrowAsync(paymentId);
         EnsureIsBuyer(payment, requesterId);
         payment.Cancel();
-        return await _paymentRepository.UpdateAsync(payment);
+        var updatedPayment = await _paymentRepository.UpdateAsync(payment);
+        _logger.LogInformation("Payment cancelled: {PaymentId}", updatedPayment.Id);
+        return updatedPayment;
     }
 
     /// <summary>
@@ -181,7 +214,9 @@ public class PaymentService
 
         var payment = await GetPaymentOrThrowAsync(paymentId);
         payment.Refund(reason);
-        return await _paymentRepository.UpdateAsync(payment);
+        var updatedPayment = await _paymentRepository.UpdateAsync(payment);
+        _logger.LogInformation("Payment refunded: {PaymentId}", updatedPayment.Id);
+        return updatedPayment;
     }
 
     /// <summary>
