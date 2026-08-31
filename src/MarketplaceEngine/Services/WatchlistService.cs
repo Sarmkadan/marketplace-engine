@@ -1,3 +1,5 @@
+#nullable enable
+
 namespace MarketplaceEngine.Services;
 
 using System.Collections.Concurrent;
@@ -15,13 +17,23 @@ public sealed class WatchlistService
 
     public WatchlistService(IListingRepository listingRepository, IRecommendationEngine recommendationEngine)
     {
-        _listingRepository = listingRepository;
-        _recommendationEngine = recommendationEngine;
+        _listingRepository = listingRepository ?? throw new ArgumentNullException(nameof(listingRepository));
+        _recommendationEngine = recommendationEngine ?? throw new ArgumentNullException(nameof(recommendationEngine));
     }
 
     /// <summary>Adds listing to user's watchlist. Returns false if already watched. Verifies listing exists (throws KeyNotFoundException otherwise), increments interest count, and records a Save signal.</summary>
     public async Task<bool> AddAsync(Guid userId, Guid listingId, CancellationToken cancellationToken = default)
     {
+        if (userId == Guid.Empty)
+        {
+            throw new ArgumentException("User ID cannot be empty.", nameof(userId));
+        }
+
+        if (listingId == Guid.Empty)
+        {
+            throw new ArgumentException("Listing ID cannot be empty.", nameof(listingId));
+        }
+
         if (!await _listingRepository.ExistsAsync(listingId))
         {
             throw new KeyNotFoundException($"Listing with ID {listingId} not found.");
@@ -56,6 +68,16 @@ public sealed class WatchlistService
     /// <summary>Removes listing from user's watchlist; returns false if it was not watched.</summary>
     public Task<bool> RemoveAsync(Guid userId, Guid listingId)
     {
+        if (userId == Guid.Empty)
+        {
+            throw new ArgumentException("User ID cannot be empty.", nameof(userId));
+        }
+
+        if (listingId == Guid.Empty)
+        {
+            throw new ArgumentException("Listing ID cannot be empty.", nameof(listingId));
+        }
+
         if (_watchlists.TryGetValue(userId, out var userWatchlist))
         {
             lock (userWatchlist)
@@ -114,6 +136,16 @@ public sealed class WatchlistService
     /// <summary>True if the user watches the listing.</summary>
     public bool IsWatching(Guid userId, Guid listingId)
     {
+        if (userId == Guid.Empty)
+        {
+            throw new ArgumentException("User ID cannot be empty.", nameof(userId));
+        }
+
+        if (listingId == Guid.Empty)
+        {
+            throw new ArgumentException("Listing ID cannot be empty.", nameof(listingId));
+        }
+
         if (_watchlists.TryGetValue(userId, out var userWatchlist))
         {
             lock (userWatchlist)
@@ -128,6 +160,11 @@ public sealed class WatchlistService
     /// <summary>Resolves the user's watched listings via the repository, skipping ids that no longer exist.</summary>
     public async Task<IReadOnlyList<Listing>> GetWatchedListingsAsync(Guid userId, CancellationToken cancellationToken = default)
     {
+        if (userId == Guid.Empty)
+        {
+            throw new ArgumentException("User ID cannot be empty.", nameof(userId));
+        }
+
         var result = new List<Listing>();
 
         if (_watchlists.TryGetValue(userId, out var userWatchlist))
@@ -157,6 +194,11 @@ public sealed class WatchlistService
     /// </summary>
     public int GetWatcherCount(Guid listingId)
     {
+        if (listingId == Guid.Empty)
+        {
+            throw new ArgumentException("Listing ID cannot be empty.", nameof(listingId));
+        }
+
         return _watcherCounts.TryGetValue(listingId, out var count) ? count : 0;
     }
 
