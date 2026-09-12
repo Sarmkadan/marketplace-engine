@@ -596,3 +596,83 @@ class ValueObjectTestsDemo
     }
 }
 ```
+
+## PaymentService
+
+The `PaymentService` manages the full lifecycle of payment transactions in the marketplace. It integrates with external payment providers via an abstraction layer, allowing real provider implementations to be swapped in without changing business logic.
+
+### Purpose
+
+Handles payment processing workflows including:
+- Initiating payments for listing purchases
+- Processing payments through external providers
+- Managing escrow for buyer/seller protection
+- Handling payment failures, cancellations, and refunds
+- Tracking payment status and seller revenue
+
+### Public API
+
+| Method | Description |
+|--------|-------------|
+| `InitiatePaymentAsync(listingId, buyerId, paymentMethod, currency)` | Initiates a new payment for a listing purchase. Validates that the listing is active and the buyer is not the seller. |
+| `StartProcessingAsync(paymentId, requesterId)` | Transitions a pending payment to processing state (call before provider charge). |
+| `CompletePaymentAsync(paymentId, externalTransactionId)` | Completes a payment after the external provider confirms the charge. Marks the listing as delisted and increments the seller's sale count. |
+| `MoveToEscrowAsync(paymentId)` | Moves a processing payment into escrow until delivery is confirmed. |
+| `ReleaseEscrowAsync(paymentId, externalTransactionId)` | Releases escrowed funds to the seller after buyer delivery confirmation. |
+| `FailPaymentAsync(paymentId, reason)` | Marks a payment as failed with a descriptive reason. |
+| `CancelPaymentAsync(paymentId, requesterId)` | Cancels a pending or processing payment. |
+| `RefundPaymentAsync(paymentId, reason)` | Refunds a completed payment to the buyer. |
+| `GetPaymentAsync(paymentId)` | Retrieves a payment by ID. |
+| `GetBuyerPaymentsAsync(buyerId)` | Retrieves all payments made by a specific buyer. |
+| `GetSellerPaymentsAsync(sellerId)` | Retrieves all payments received by a specific seller. |
+| `GetSellerRevenueAsync(sellerId)` | Retrieves total net revenue earned by a seller. |
+
+### Dependencies
+
+- `IPaymentRepository` - Data access for payment entities
+- `IListingRepository` - Data access for listing entities (to verify listings and mark as sold)
+- `IUserRepository` - Data access for user entities (to verify buyers/sellers and record sales)
+- `ILogger<PaymentService>` - Logging for payment lifecycle events
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.Services;
+using MarketplaceEngine.Domain.ValueObjects;
+
+// Example: Initiating a payment for a listing purchase
+var paymentService = new PaymentService(
+    paymentRepository,
+    listingRepository,
+    userRepository,
+    logger
+);
+
+// Initiate payment
+var payment = await paymentService.InitiatePaymentAsync(
+    listingId: Guid.Parse("3fa85f64-5717-4562-b3fc-2c963f66afa6"),
+    buyerId: Guid.Parse("11111111-1111-1111-1111-111111111111"),
+    paymentMethod: "credit_card",
+    currency: "USD"
+);
+
+// Process payment through external provider (pseudo-code)
+var providerResult = await externalPaymentProvider.Charge(
+    amount: payment.Amount,
+    paymentMethod: payment.PaymentMethod
+);
+
+if (providerResult.Success)
+{
+    // Mark payment as processing
+    await paymentService.StartProcessingAsync(payment.Id, payment.BuyerId);
+    
+    // Complete payment after provider confirmation
+    await paymentService.CompletePaymentAsync(payment.Id, providerResult.TransactionId);
+}
+else
+{
+    // Handle payment failure
+    await paymentService.FailPaymentAsync(payment.Id, providerResult.ErrorMessage);
+}
+```
