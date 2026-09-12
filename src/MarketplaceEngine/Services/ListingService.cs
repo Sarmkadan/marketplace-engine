@@ -43,6 +43,11 @@ public sealed class ListingService
     public async Task<Listing> CreateListingAsync(Guid sellerId, string title, string description,
         decimal price, string currency, Guid categoryId, List<string> imageUrls)
     {
+        ArgumentNullException.ThrowIfNull(title);
+        ArgumentNullException.ThrowIfNull(description);
+        ArgumentNullException.ThrowIfNull(currency);
+        ArgumentNullException.ThrowIfNull(imageUrls);
+
         var seller = await _userRepository.GetByIdAsync(sellerId);
         if (seller is null)
             throw new ResourceNotFoundException("User", sellerId);
@@ -86,6 +91,11 @@ public sealed class ListingService
     /// <exception cref="UnauthorizedException">Thrown if seller is not active.</exception>
     public async Task<Listing> CreateDraftListingAsync(Guid sellerId, string title, string description, decimal price, string currency, Guid categoryId, List<string> imageUrls)
     {
+        ArgumentNullException.ThrowIfNull(title);
+        ArgumentNullException.ThrowIfNull(description);
+        ArgumentNullException.ThrowIfNull(currency);
+        ArgumentNullException.ThrowIfNull(imageUrls);
+
         var seller = await _userRepository.GetByIdAsync(sellerId);
         if (seller is null)
             throw new ResourceNotFoundException("User", sellerId);
