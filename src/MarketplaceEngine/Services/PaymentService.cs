@@ -127,6 +127,7 @@ public class PaymentService
     /// </summary>
     public async Task<Payment> CompletePaymentAsync(Guid paymentId, string externalTransactionId)
     {
+        ArgumentNullException.ThrowIfNull(externalTransactionId);
         var payment = await GetPaymentOrThrowAsync(paymentId);
         payment.Complete(externalTransactionId);
         await _paymentRepository.UpdateAsync(payment);
@@ -171,6 +172,7 @@ public class PaymentService
     /// </summary>
     public async Task<Payment> ReleaseEscrowAsync(Guid paymentId, string externalTransactionId)
     {
+        ArgumentNullException.ThrowIfNull(externalTransactionId);
         var payment = await GetPaymentOrThrowAsync(paymentId);
         payment.ReleaseEscrow(externalTransactionId);
 
@@ -191,6 +193,7 @@ public class PaymentService
     /// </summary>
     public async Task<Payment> FailPaymentAsync(Guid paymentId, string reason)
     {
+        ArgumentNullException.ThrowIfNull(reason);
         var payment = await GetPaymentOrThrowAsync(paymentId);
         payment.Fail(reason);
         var updatedPayment = await _paymentRepository.UpdateAsync(payment);
@@ -216,6 +219,7 @@ public class PaymentService
     /// </summary>
     public async Task<Payment> RefundPaymentAsync(Guid paymentId, string reason)
     {
+        ArgumentNullException.ThrowIfNull(reason);
         if (string.IsNullOrWhiteSpace(reason))
             throw new Exceptions.ValidationException("Reason", "Refund reason is required.");
 
