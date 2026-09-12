@@ -8,144 +8,272 @@ Service for managing marketplace listings, including creation, updates, visibili
 
 Initializes a new instance of the `ListingService` class with required dependencies for listing management.
 
-### `async Task<Listing> CreateListingAsync(CreateListingDto dto)`
+### `async Task<Listing> CreateListingAsync(Guid sellerId, string title, string description, decimal price, string currency, Guid categoryId, List<string> imageUrls)`
 
-Creates a new listing from the provided data transfer object. The listing is initially set to visible unless explicitly hidden.
+Creates and publishes a new listing.
 
 - **Parameters**
-  - `dto`: The data transfer object containing listing details such as title, description, category, price, and images.
+  - `sellerId`: The ID of the user creating the listing.
+  - `title`: Listing title.
+  - `description`: Listing description.
+  - `price`: Listing price.
+  - `currency`: Listing currency code.
+  - `categoryId`: The category ID for the listing.
+  - `imageUrls`: List of image URLs.
 - **Return value**
   - A `Task` resolving to the created `Listing` entity.
 - **Exceptions**
-  - Throws `ArgumentException` if required fields in `dto` are invalid or missing.
-  - Throws `InvalidOperationException` if the seller associated with the listing is not authorized.
+  - Throws `ResourceNotFoundException` if seller does not exist.
+  - Throws `UnauthorizedException` if seller is not active.
 
-### `async Task<(Listing listing, Guid previousCategoryId)> UpdateListingAsync(Guid listingId, UpdateListingDto dto)`
+### `async Task<Listing> CreateDraftListingAsync(Guid sellerId, string title, string description, decimal price, string currency, Guid categoryId, List<string> imageUrls)`
 
-Updates an existing listing with new data. Returns the updated listing along with the previous category ID.
+Creates a new listing as a draft.
 
 - **Parameters**
-  - `listingId`: The unique identifier of the listing to update.
-  - `dto`: The data transfer object containing updated listing fields.
+  - `sellerId`: The ID of the user creating the listing.
+  - `title`: Listing title.
+  - `description`: Listing description.
+  - `price`: Listing price.
+  - `currency`: Listing currency code.
+  - `categoryId`: The category ID for the listing.
+  - `imageUrls`: List of image URLs.
+- **Return value**
+  - A `Task` resolving to the created draft `Listing` entity.
+- **Exceptions**
+  - Throws `ResourceNotFoundException` if seller does not exist.
+  - Throws `UnauthorizedException` if seller is not active.
+
+### `async Task<(Listing listing, Guid previousCategoryId)> UpdateListingAsync(Guid listingId, Guid requesterId, string? title = null, string? description = null, Money? price = null, Guid? categoryId = null)`
+
+Updates an existing listing.
+
+- **Parameters**
+  - `listingId`: The unique identifier of the listing.
+  - `requesterId`: The ID of the user requesting the update.
+  - `title`: Optional new title.
+  - `description`: Optional new description.
+  - `price`: Optional new price.
+  - `categoryId`: Optional new category ID.
 - **Return value**
   - A `Task` resolving to a tuple containing the updated `Listing` and the previous category ID.
 - **Exceptions**
-  - Throws `KeyNotFoundException` if the listing with `listingId` does not exist.
-  - Throws `ArgumentException` if `dto` contains invalid or conflicting data.
-  - Throws `InvalidOperationException` if the current user lacks permission to update the listing.
+  - Throws `ResourceNotFoundException` if listing does not exist.
+  - Throws `UnauthorizedException` if user is not the owner.
 
-### `async Task<Listing> SetListingVisibilityAsync(Guid listingId, bool isVisible)`
+### `async Task<Listing> SetListingVisibilityAsync(Guid listingId, Guid requesterId, bool isVisible)`
 
-Sets the visibility state of a listing (publicly visible or hidden).
+Sets the visibility (published status) of a listing.
 
 - **Parameters**
   - `listingId`: The unique identifier of the listing.
-  - `isVisible`: Boolean indicating whether the listing should be visible.
+  - `requesterId`: The ID of the user requesting the change.
+  - `isVisible`: Whether the listing should be visible (published).
 - **Return value**
-  - A `Task` resolving to the updated `Listing` entity.
+  - A `Task` resolving to the updated `Listing`.
 - **Exceptions**
-  - Throws `KeyNotFoundException` if the listing does not exist.
-  - Throws `InvalidOperationException` if the current user lacks permission to modify visibility.
+  - Throws `ResourceNotFoundException` if listing does not exist.
+  - Throws `UnauthorizedException` if user is not the owner.
+
+### `async Task<Listing> PublishDraftAsync(Guid listingId, Guid requesterId)`
+
+Publishes a draft listing to the marketplace.
+
+- **Parameters**
+  - `listingId`: The unique identifier of the listing.
+  - `requesterId`: The ID of the user requesting to publish.
+- **Return value**
+  - A `Task` resolving to the updated `Listing`.
+- **Exceptions**
+  - Throws `ResourceNotFoundException` if listing does not exist.
+  - Throws `UnauthorizedException` if user is not the owner.
+  - Throws `InvalidOperationException` if listing is not a draft.
 
 ### `async Task<Listing> GetListingWithViewAsync(Guid listingId)`
 
-Retrieves a listing by ID and increments its view count atomically.
+Retrieves a listing and records the view.
 
 - **Parameters**
   - `listingId`: The unique identifier of the listing.
 - **Return value**
-  - A `Task` resolving to the `Listing` with updated view statistics.
+  - A `Task` resolving to the retrieved `Listing`.
 - **Exceptions**
-  - Throws `KeyNotFoundException` if the listing does not exist.
+  - Throws `ResourceNotFoundException` if listing does not exist.
 
 ### `async Task<Listing> RecordInterestAsync(Guid listingId)`
 
-Records a user's interest in a listing (e.g., favoriting or saving).
+Records user interest in a listing.
 
 - **Parameters**
   - `listingId`: The unique identifier of the listing.
 - **Return value**
   - A `Task` resolving to the updated `Listing`.
 - **Exceptions**
-  - Throws `KeyNotFoundException` if the listing does not exist.
-  - Throws `InvalidOperationException` if interest recording is not allowed (e.g., by configuration).
+  - Throws `ResourceNotFoundException` if listing does not exist.
 
-### `async Task<Listing> DelistListingAsync(Guid listingId)`
+### `async Task<Listing> DelistListingAsync(Guid listingId, Guid requesterId)`
 
-Removes a listing from active marketplace visibility (soft delete). The listing remains in the system for record-keeping.
+Marks a listing as sold or delisted.
 
 - **Parameters**
   - `listingId`: The unique identifier of the listing.
+  - `requesterId`: The ID of the user requesting the delist.
 - **Return value**
-  - A `Task` resolving to the delisted `Listing`.
+  - A `Task` resolving to the updated `Listing`.
 - **Exceptions**
-  - Throws `KeyNotFoundException` if the listing does not exist.
-  - Throws `InvalidOperationException` if the current user lacks permission to delist.
+  - Throws `ResourceNotFoundException` if listing does not exist.
+  - Throws `UnauthorizedException` if user is not the owner.
 
 ### `async Task<List<Listing>> GetSellerListingsAsync(Guid sellerId)`
 
-Retrieves all active listings belonging to a specific seller.
+Retrieves all listings belonging to a specific seller.
 
 - **Parameters**
   - `sellerId`: The unique identifier of the seller.
 - **Return value**
-  - A `Task` resolving to a list of `Listing` entities.
+  - A `Task` resolving to a list of the seller's listings.
 - **Exceptions**
-  - Throws `KeyNotFoundException` if the seller does not exist.
+  - Throws `ResourceNotFoundException` if seller does not exist.
 
-### `async Task<List<Listing>> GetFeaturedListingsAsync()`
+### `async Task<List<Listing>> GetFeaturedListingsAsync(int limit = AppConstants.DefaultFeaturedListingLimit)`
 
-Retrieves a curated list of featured listings, typically prioritized by relevance or promotion.
-
-- **Return value**
-  - A `Task` resolving to a list of `Listing` entities marked as featured.
-- **Exceptions**
-  - Returns an empty list if no featured listings are available.
-
-### `async Task<List<Listing>> GetRecentListingsAsync(int count)`
-
-Retrieves the most recently created listings, limited by `count`.
+Retrieves featured listings.
 
 - **Parameters**
-  - `count`: Maximum number of listings to return.
+  - `limit`: The maximum number of featured listings to return.
 - **Return value**
-  - A `Task` resolving to a list of `Listing` entities ordered by creation date.
-- **Exceptions**
-  - Throws `ArgumentOutOfRangeException` if `count` is less than 1.
+  - A `Task` resolving to a list of featured listings.
 
-### `async Task<(List<Listing> items, int total)> GetPaginatedListingsAsync(int pageNumber, int pageSize, string? categoryId = null, string? searchTerm = null)`
+### `async Task<List<Listing>> GetRecentListingsAsync(int days = AppConstants.RecentListingDays)`
 
-Retrieves a paginated subset of listings, optionally filtered by category or search term.
+Retrieves recent listings.
 
 - **Parameters**
-  - `pageNumber`: The 1-based page number to retrieve.
-  - `pageSize`: Number of items per page.
-  - `categoryId`: Optional category filter.
-  - `searchTerm`: Optional free-text search term.
+  - `days`: The number of days to look back for recent listings.
 - **Return value**
-  - A `Task` resolving to a tuple containing the list of `Listing` entities and the total count of matching listings.
-- **Exceptions**
-  - Throws `ArgumentOutOfRangeException` if `pageNumber` or `pageSize` is invalid.
-  - Throws `ArgumentException` if `categoryId` is invalid.
+  - A `Task` resolving to a list of recent listings.
 
-### `async Task<Listing> MarkAsFeaturedAsync(Guid listingId, bool isFeatured)`
+### `async Task<(List<Listing> items, int total)> GetPaginatedListingsAsync(int pageNumber, int pageSize)`
 
-Toggles the featured status of a listing.
+Gets a paginated list of listings.
+
+- **Parameters**
+  - `pageNumber`: The page number to retrieve.
+  - `pageSize`: The number of listings per page.
+- **Return value**
+  - A `Task` resolving to a tuple containing the list of listings and the total count.
+
+### `async Task<Listing> MarkAsFeaturedAsync(Guid listingId, Guid adminId)`
+
+Marks a listing as featured (Administrator only).
 
 - **Parameters**
   - `listingId`: The unique identifier of the listing.
-  - `isFeatured`: Boolean indicating whether the listing should be featured.
+  - `adminId`: The ID of the administrator.
 - **Return value**
   - A `Task` resolving to the updated `Listing`.
 - **Exceptions**
-  - Throws `KeyNotFoundException` if the listing does not exist.
-  - Throws `InvalidOperationException` if the current user lacks permission to modify featured status.
+  - Throws `UnauthorizedException` if requester is not an administrator.
+  - Throws `ResourceNotFoundException` if listing does not exist.
 
 ### `async Task<int> GetTotalListingCountAsync()`
 
-Returns the total number of active (non-delisted) listings in the system.
+Gets the total count of all listings.
 
 - **Return value**
-  - A `Task` resolving to the total count as an integer.
+  - A `Task` resolving to the total number of listings.
 
-## Usage
+## Usage Example
+
+```csharp
+using MarketplaceEngine.Services;
+using MarketplaceEngine.Domain.Models;
+using MarketplaceEngine.Domain.ValueObjects;
+using MarketplaceEngine.Repositories;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+
+// Example: Creating a new listing
+var listingService = new ListingService(listingRepository, userRepository);
+
+var newListing = await listingService.CreateListingAsync(
+    sellerId: Guid.NewGuid(),
+    title: "Vintage Watch Collection",
+    description: "Beautiful collection of vintage watches from the 1950s-1970s",
+    price: 1250.00m,
+    currency: "USD",
+    categoryId: Guid.NewGuid(),
+    imageUrls: new List<string> {
+        "https://example.com/images/watch1.jpg",
+        "https://example.com/images/watch2.jpg"
+    }
+);
+
+Console.WriteLine($"Created listing: {newListing.Title}");
+
+// Example: Creating a draft listing
+var draftListing = await listingService.CreateDraftListingAsync(
+    sellerId: Guid.NewGuid(),
+    title: "Draft Listing Title",
+    description: "This is a draft listing description",
+    price: 99.99m,
+    currency: "USD",
+    categoryId: Guid.NewGuid(),
+    imageUrls: new List<string> { "https://example.com/images/draft.jpg" }
+);
+
+Console.WriteLine($"Created draft listing with ID: {draftListing.Id}");
+
+// Example: Publishing a draft listing
+var publishedListing = await listingService.PublishDraftAsync(
+    listingId: draftListing.Id,
+    requesterId: draftListing.SellerId
+);
+
+Console.WriteLine($"Published listing: {publishedListing.Title}");
+
+// Example: Updating a listing
+var (updatedListing, previousCategoryId) = await listingService.UpdateListingAsync(
+    listingId: newListing.Id,
+    requesterId: newListing.SellerId,
+    title: "Updated Vintage Watch Collection",
+    price: new Money(1350.00m, "USD")
+);
+
+Console.WriteLine($"Updated listing title: {updatedListing.Title}");
+Console.WriteLine($"Previous category ID: {previousCategoryId}");
+
+// Example: Setting listing visibility
+var hiddenListing = await listingService.SetListingVisibilityAsync(
+    listingId: newListing.Id,
+    requesterId: newListing.SellerId,
+    isVisible: false
+);
+
+Console.WriteLine($"Listing visibility set to: {hiddenListing.Status}");
+
+// Example: Getting seller listings
+var sellerListings = await listingService.GetSellerListingsAsync(newListing.SellerId);
+Console.WriteLine($"Seller has {sellerListings.Count} listings");
+
+// Example: Getting featured listings
+var featuredListings = await listingService.GetFeaturedListingsAsync(limit: 5);
+Console.WriteLine($"Retrieved {featuredListings.Count} featured listings");
+
+// Example: Getting paginated listings
+var (paginatedListings, totalCount) = await listingService.GetPaginatedListingsAsync(
+    pageNumber: 1,
+    pageSize: 10
+);
+
+Console.WriteLine($"Page 1: {paginatedListings.Count} listings (total: {totalCount})");
+
+// Example: Marking as featured (admin only)
+var featuredListing = await listingService.MarkAsFeaturedAsync(
+    listingId: newListing.Id,
+    adminId: Guid.NewGuid() // admin user ID
+);
+
+Console.WriteLine($"Listing featured: {featuredListing.IsFeatured}");
+```
