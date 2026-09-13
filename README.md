@@ -711,3 +711,49 @@ The `ReviewService` manages buyer reviews for sellers and listings. It validates
 - `IListingRepository` - Verifies optional listing references and listing-specific review queries
 - `Review`, `ReviewStatus`, and `Rating` - Enforce review/reply state and validation rules and represent the seller's aggregate rating
 - `ResourceNotFoundException`, `UnauthorizedException`, `DuplicateResourceException`, and `MarketplaceException` - Report missing resources and rejected operations
+
+## UserService
+
+The `UserService` manages the user-account lifecycle and coordinates user persistence with the validation and state-transition rules defined by the `User` domain model. It covers registration and email verification, profile and account state changes, seller metrics and promotion, user queries, activity tracking, and access checks.
+
+### Purpose
+
+- Register active, unverified users with the default `User` role and a newly generated verification token
+- Retrieve users by ID or email and report missing users consistently
+- Validate and persist profile changes, email verification, account activation, sales, and ratings
+- Promote eligible users with at least five sales and a rating of 4 or higher to premium seller status
+- Provide top-seller, paginated-user, active-user, and verified-user queries
+- Track public-profile access and reject marketplace actions by inactive or unverified users
+
+### Public API
+
+| Member | Description |
+|--------|-------------|
+| `UserService(IUserRepository userRepository)` | Creates the service with its required repository; throws `ArgumentNullException` when the repository is `null`. |
+| `RegisterUserAsync(email, fullName, phone = null)` | Rejects a duplicate email, creates and validates an active, unverified regular user, generates a verification token, and persists the user. |
+| `GetUserAsync(userId)` | Retrieves a user by ID or throws `ResourceNotFoundException`. |
+| `GetUserByEmailAsync(email)` | Retrieves a user by email or throws `ResourceNotFoundException`. |
+| `UpdateProfileAsync(userId, fullName = null, phone = null, bio = null, location = null)` | Applies the supplied profile fields, converts blank phone and bio values to `null`, validates the resulting profile, and persists it. A `null` argument leaves that field unchanged. |
+| `VerifyEmailAsync(userId, verificationToken)` | Verifies and persists the user when the token is accepted; returns `false` without updating when the token is invalid or expired. An already verified user returns `true` and is persisted. |
+| `ResendVerificationTokenAsync(email)` | Generates and persists a new verification token for an unverified user; throws when the user is missing or already verified. |
+| `PromoteToPremiumAsync(userId)` | Promotes and persists an eligible regular user; requires at least five sales and a rating score of at least 4. |
+| `DeactivateAccountAsync(userId)` | Deactivates the user, updates the domain timestamps, and persists the change. |
+| `ReactivateAccountAsync(userId)` | Reactivates and persists an inactive user; returns an already active user without writing to the repository. |
+| `RecordSaleAsync(userId)` | Increments the user's total sales, updates the domain timestamp, and persists the change. |
+| `UpdateRatingAsync(userId, rating)` | Replaces the user's rating, updates the domain timestamp, and persists the change. |
+| `GetTopSellersAsync(limit = 10)` | Returns top sellers from the repository. Values outside 1 through 50 are replaced with the default limit of 10. |
+| `GetPaginatedUsersAsync(pageNumber, pageSize)` | Returns the requested users and the total user count as `(items, total)`; pagination values are passed through to the repository. |
+| `UpdateLastActivityAsync(userId)` | Delegates the last-activity timestamp update directly to the repository. |
+| `GetVerifiedUserCountAsync()` | Retrieves verified users and returns their count. |
+| `GetActiveUserCountAsync()` | Retrieves active users and returns their count. |
+| `ValidateUserAccessAsync(userId)` | Throws `UnauthorizedException` when the user is inactive or has not verified their email. |
+| `GetPublicProfileAsync(userId)` | Retrieves the user, updates their last-activity timestamp, and returns the profile. |
+
+All operations are asynchronous. Methods that first load a user by ID inherit `GetUserAsync`'s `ResourceNotFoundException` behavior. Profile validation and domain state transitions can also propagate `ArgumentException` or `InvalidOperationException` from the `User` model.
+
+### Dependencies
+
+- `IUserRepository` - The constructor-injected persistence boundary used to look up, add, update, page, and count users, retrieve top sellers, and update activity timestamps
+- `User` and `UserRole` - Represent the account and enforce profile, verification, promotion, activation, sale, and rating state transitions
+- `Location` and `Rating` - Value objects accepted by profile and rating updates
+- `DuplicateResourceException`, `ResourceNotFoundException`, and `UnauthorizedException` - Communicate duplicate registration, missing users, and denied access
