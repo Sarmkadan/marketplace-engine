@@ -7,6 +7,7 @@
 using System.Collections.Concurrent;
 using System.Net;
 using System.Threading;
+using MarketplaceEngine.Constants;
 
 namespace MarketplaceEngine.Middleware;
 
@@ -25,13 +26,13 @@ public class RateLimitingMiddleware
     internal static readonly ConcurrentDictionary<string, RateLimitBucket> RateLimitBuckets =
         new();
 
-    internal const int MaxRequestsPerMinute = 100;
-    private const int WindowSizeMinutes = 1;
-    private const int RetryAfterSeconds = WindowSizeMinutes * 60;
-    private const int CleanupIntervalMinutes = 5;
-    private const int BucketExpiryMinutes = 2;
-    private const string HealthCheckPathPrefix = "/api/v1/health";
-    private const string UnknownIpAddress = "unknown";
+    internal const int MaxRequestsPerMinute = AppConstants.RateLimitMaxRequestsPerMinute;
+    private const int WindowSizeMinutes = AppConstants.RateLimitWindowSizeMinutes;
+    private const int RetryAfterSeconds = AppConstants.RateLimitRetryAfterSeconds;
+    private const int CleanupIntervalMinutes = AppConstants.RateLimitCleanupIntervalMinutes;
+    private const int BucketExpiryMinutes = AppConstants.RateLimitBucketExpiryMinutes;
+    private const string HealthCheckPathPrefix = AppConstants.RateLimitHealthCheckPathPrefix;
+    private const string UnknownIpAddress = AppConstants.RateLimitUnknownIpAddress;
 
     public RateLimitingMiddleware(RequestDelegate next, ILogger<RateLimitingMiddleware> logger)
     {

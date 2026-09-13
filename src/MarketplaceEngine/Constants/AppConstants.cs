@@ -83,6 +83,15 @@ public static class AppConstants
     public const int SearchMinQueryLength = 2;
     public const int SearchMaxQueryLength = 200;
 
+    // Rate Limiting
+    public const int RateLimitMaxRequestsPerMinute = 100;
+    public const int RateLimitWindowSizeMinutes = 1;
+    public const int RateLimitRetryAfterSeconds = 60;
+    public const int RateLimitCleanupIntervalMinutes = 5;
+    public const int RateLimitBucketExpiryMinutes = 2;
+    public const string RateLimitHealthCheckPathPrefix = "/api/v1/health";
+    public const string RateLimitUnknownIpAddress = "unknown";
+
     // Rating
     public const int MinRating = 1;
     public const int MaxRating = 5;
