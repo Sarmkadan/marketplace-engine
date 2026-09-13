@@ -63,8 +63,7 @@ public class ListingRepository : IListingRepository
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="entity"/> is <c>null</c>.</exception>
     public async Task<Listing> AddAsync(Listing entity)
     {
-        if (entity is null)
-            throw new ArgumentNullException(nameof(entity));
+        ArgumentNullException.ThrowIfNull(entity);
 
         entity.Id = Guid.NewGuid();
         entity.CreatedAt = DateTime.UtcNow;
@@ -86,8 +85,7 @@ public class ListingRepository : IListingRepository
     /// <exception cref="ResourceNotFoundException">Thrown when no listing with the specified identifier exists.</exception>
     public async Task<Listing> UpdateAsync(Listing entity)
     {
-        if (entity is null)
-            throw new ArgumentNullException(nameof(entity));
+        ArgumentNullException.ThrowIfNull(entity);
 
         Listing? existing;
         lock (_lock)
