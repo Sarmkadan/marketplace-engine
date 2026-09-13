@@ -676,3 +676,38 @@ else
     await paymentService.FailPaymentAsync(payment.Id, providerResult.ErrorMessage);
 }
 ```
+
+## ReviewService
+
+The `ReviewService` manages buyer reviews for sellers and listings. It validates review submissions, prevents duplicate reviews for the same reviewer/seller/listing combination, supports seller replies and moderation, provides review queries and aggregate statistics, and keeps seller ratings synchronized after reviews are submitted or removed.
+
+### Purpose
+
+- Submit and validate reviews with scores from 1 to 5 and comments from 10 to 2,000 characters
+- Prevent inactive users and sellers reviewing themselves from submitting reviews
+- Prevent duplicate reviews for the same reviewer, seller, and optional listing
+- Allow a reviewed seller to add one reply of 5 to 1,000 characters
+- Retrieve reviews by ID, seller, or listing and calculate seller review statistics
+- Flag reviews for moderation and allow moderators or administrators to remove them
+- Recalculate and persist a seller's rounded aggregate rating after submission or removal
+
+### Public API
+
+| Method | Description |
+|--------|-------------|
+| `SubmitReviewAsync(reviewerId, sellerId, score, comment, listingId = null)` | Creates an active review after verifying the reviewer, seller, optional listing, and uniqueness of the reviewer/seller/listing combination. Updates the seller's aggregate rating. |
+| `AddSellerReplyAsync(reviewId, sellerId, reply)` | Adds a reply to a review when `sellerId` matches the reviewed seller. |
+| `GetReviewAsync(reviewId)` | Retrieves a review by ID or throws when it does not exist. |
+| `GetSellerReviewsAsync(sellerId, pageNumber = 1, pageSize = 20)` | Verifies the seller exists, then returns a page of seller reviews and the total count. |
+| `GetListingReviewsAsync(listingId)` | Verifies the listing exists, then returns all reviews for it. |
+| `GetSellerStatsAsync(sellerId)` | Returns the seller's average score rounded to two decimal places, total review count, and score distribution for ratings 1 through 5. |
+| `FlagReviewAsync(reviewId)` | Changes an active review to `UnderReview` and persists it. |
+| `RemoveReviewAsync(reviewId, moderatorId)` | Allows a moderator or administrator to mark a review as `Removed`, then recalculates the seller's rating. |
+
+### Dependencies
+
+- `IReviewRepository` - Creates, reads, and updates reviews; checks for duplicates; retrieves seller/listing reviews; and provides paginated results
+- `IUserRepository` - Verifies reviewers, sellers, and moderators and persists recalculated seller ratings
+- `IListingRepository` - Verifies optional listing references and listing-specific review queries
+- `Review`, `ReviewStatus`, and `Rating` - Enforce review/reply state and validation rules and represent the seller's aggregate rating
+- `ResourceNotFoundException`, `UnauthorizedException`, `DuplicateResourceException`, and `MarketplaceException` - Report missing resources and rejected operations
