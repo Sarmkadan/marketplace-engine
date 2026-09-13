@@ -15,10 +15,29 @@ namespace MarketplaceEngine.Infrastructure.Security;
 /// </summary>
 public class ApiToken
 {
+    /// <summary>
+    /// Gets or sets the token value.
+    /// </summary>
     public string Token { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the identifier of the user to whom the token was issued.
+    /// </summary>
     public Guid UserId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the UTC date and time when the token was issued.
+    /// </summary>
     public DateTime IssuedAt { get; set; }
+
+    /// <summary>
+    /// Gets or sets the UTC date and time when the token expires.
+    /// </summary>
     public DateTime ExpiresAt { get; set; }
+
+    /// <summary>
+    /// Gets or sets the scopes granted to the token.
+    /// </summary>
     public List<string> Scopes { get; set; } = new();
 }
 
@@ -34,6 +53,11 @@ public class TokenService
     private const int TokenLengthBytes = 32;
     private const int TokenExpirationDays = 30;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TokenService"/> class.
+    /// </summary>
+    /// <param name="logger">The logger used to record token operations.</param>
+    /// <param name="tokenSecret">The secret appended to token values before hashing.</param>
     public TokenService(ILogger<TokenService> logger, string tokenSecret)
     {
         _logger = logger;
@@ -44,6 +68,9 @@ public class TokenService
     /// Generates a new API token for a user.
     /// Tokens are stored as salted hashes in production.
     /// </summary>
+    /// <param name="userId">The identifier of the user for whom to generate the token.</param>
+    /// <param name="scopes">The optional scopes to grant to the token.</param>
+    /// <returns>The generated API token.</returns>
     public ApiToken GenerateToken(Guid userId, List<string>? scopes = null)
     {
         var token = new ApiToken
@@ -63,6 +90,9 @@ public class TokenService
     /// Validates an API token format, expiration, and revocation status.
     /// In production, verify signature against stored hash.
     /// </summary>
+    /// <param name="token">The API token to validate.</param>
+    /// <returns><see langword="true"/> if the token is nonempty, unexpired, and not revoked; otherwise, <see langword="false"/>.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="token"/> is <see langword="null"/>.</exception>
     public bool IsTokenValid(ApiToken token)
     {
         ArgumentNullException.ThrowIfNull(token);
@@ -92,6 +122,9 @@ public class TokenService
     /// Checks if a token has a specific scope.
     /// Scopes control what operations a token can perform.
     /// </summary>
+    /// <param name="token">The API token whose scopes to inspect.</param>
+    /// <param name="scope">The scope to locate.</param>
+    /// <returns><see langword="true"/> if the token contains the scope; otherwise, <see langword="false"/>.</returns>
     public bool HasScope(ApiToken token, string scope)
     {
         return token.Scopes.Contains(scope, StringComparer.OrdinalIgnoreCase);
@@ -101,6 +134,7 @@ public class TokenService
     /// Revokes a token, adding it to the in-memory blacklist checked by <see cref="IsTokenValid"/>.
     /// In production, store revoked token hashes in a distributed blacklist cache.
     /// </summary>
+    /// <param name="tokenValue">The token value to revoke.</param>
     /// <exception cref="ArgumentException"><paramref name="tokenValue"/> is null or whitespace.</exception>
     public void RevokeToken(string tokenValue)
     {
@@ -128,6 +162,8 @@ public class TokenService
     /// <summary>
     /// Hashes a token for secure storage in database.
     /// </summary>
+    /// <param name="token">The token value to hash.</param>
+    /// <returns>The Base64-encoded SHA-256 hash of the token and configured secret.</returns>
     public string HashToken(string token)
     {
         using var sha256 = SHA256.Create();
@@ -144,6 +180,10 @@ public class ApiKeyValidator
     private readonly ILogger<ApiKeyValidator> _logger;
     private readonly ConcurrentDictionary<string, Guid> _validApiKeys = new();
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ApiKeyValidator"/> class.
+    /// </summary>
+    /// <param name="logger">The logger used to record API key operations.</param>
     public ApiKeyValidator(ILogger<ApiKeyValidator> logger)
     {
         _logger = logger;
@@ -153,6 +193,8 @@ public class ApiKeyValidator
     /// Registers a valid API key for a user.
     /// In production, load from secure configuration or database.
     /// </summary>
+    /// <param name="apiKey">The API key to register.</param>
+    /// <param name="userId">The identifier of the user associated with the API key.</param>
     /// <exception cref="ArgumentException"><paramref name="apiKey"/> is null or whitespace.</exception>
     public void RegisterApiKey(string apiKey, Guid userId)
     {
@@ -165,6 +207,9 @@ public class ApiKeyValidator
     /// <summary>
     /// Validates an API key and returns associated user ID.
     /// </summary>
+    /// <param name="apiKey">The API key to validate.</param>
+    /// <param name="userId">When this method returns, contains the associated user identifier if validation succeeds; otherwise, <see cref="Guid.Empty"/>.</param>
+    /// <returns><see langword="true"/> if the API key is registered; otherwise, <see langword="false"/>.</returns>
     public bool TryValidateApiKey(string apiKey, out Guid userId)
     {
         userId = Guid.Empty;
@@ -187,6 +232,7 @@ public class ApiKeyValidator
     /// <summary>
     /// Revokes an API key.
     /// </summary>
+    /// <param name="apiKey">The API key to revoke.</param>
     public void RevokeApiKey(string apiKey)
     {
         _validApiKeys.TryRemove(apiKey, out _);
