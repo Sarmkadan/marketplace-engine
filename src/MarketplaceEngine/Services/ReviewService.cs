@@ -45,6 +45,8 @@ public class ReviewService
         string comment,
         Guid? listingId = null)
     {
+        ArgumentNullException.ThrowIfNull(comment);
+
         var reviewer = await _userRepository.GetByIdAsync(reviewerId);
         if (reviewer is null)
             throw new ResourceNotFoundException("User", reviewerId);
@@ -93,6 +95,8 @@ public class ReviewService
     /// </summary>
     public async Task<Review> AddSellerReplyAsync(Guid reviewId, Guid sellerId, string reply)
     {
+        ArgumentNullException.ThrowIfNull(reply);
+
         var review = await GetReviewOrThrowAsync(reviewId);
 
         if (review.SellerId != sellerId)
