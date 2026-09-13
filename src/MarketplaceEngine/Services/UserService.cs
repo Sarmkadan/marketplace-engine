@@ -27,6 +27,9 @@ public class UserService
     // Creates a new user account
     public async Task<User> RegisterUserAsync(string email, string fullName, string? phone = null)
     {
+        ArgumentNullException.ThrowIfNull(email);
+        ArgumentNullException.ThrowIfNull(fullName);
+
         var existingUser = await _userRepository.GetByEmailAsync(email);
         if (existingUser is not null)
             throw new DuplicateResourceException("User", "email", email);
@@ -60,6 +63,8 @@ public class UserService
     // Gets user by email
     public async Task<User> GetUserByEmailAsync(string email)
     {
+        ArgumentNullException.ThrowIfNull(email);
+
         var user = await _userRepository.GetByEmailAsync(email);
         if (user is null)
             throw new ResourceNotFoundException("User", email);
@@ -92,6 +97,8 @@ public class UserService
     // Verifies user email
     public async Task<bool> VerifyEmailAsync(Guid userId, string verificationToken)
     {
+        ArgumentNullException.ThrowIfNull(verificationToken);
+
         var user = await GetUserAsync(userId);
 
         if (user.VerifyEmail(verificationToken))
@@ -106,6 +113,8 @@ public class UserService
     // Resends verification email
     public async Task<User> ResendVerificationTokenAsync(string email)
     {
+        ArgumentNullException.ThrowIfNull(email);
+
         var user = await _userRepository.GetByEmailAsync(email);
         if (user is null)
             throw new ResourceNotFoundException("User", email);
@@ -166,6 +175,8 @@ public class UserService
     // Updates user rating
     public async Task<User> UpdateRatingAsync(Guid userId, Rating rating)
     {
+        ArgumentNullException.ThrowIfNull(rating);
+
         var user = await GetUserAsync(userId);
         user.UpdateRating(rating);
         return await _userRepository.UpdateAsync(user);
