@@ -127,6 +127,9 @@ public class TokenService
     /// <returns><see langword="true"/> if the token contains the scope; otherwise, <see langword="false"/>.</returns>
     public bool HasScope(ApiToken token, string scope)
     {
+        ArgumentNullException.ThrowIfNull(token);
+        ArgumentNullException.ThrowIfNull(scope);
+
         return token.Scopes.Contains(scope, StringComparer.OrdinalIgnoreCase);
     }
 
