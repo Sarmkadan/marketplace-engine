@@ -65,7 +65,7 @@ public sealed class Money : IEquatable<Money>
 
     public override int GetHashCode() => HashCode.Combine(Amount, CurrencyCode);
 
-    public override string ToString() => $"{CurrencyCode} {Amount:F2}";
+    public override string ToString() => $"{Amount:F2} {CurrencyCode}";
 
     public static bool operator ==(Money? left, Money? right) => Equals(left, right);
     public static bool operator !=(Money? left, Money? right) => !Equals(left, right);
