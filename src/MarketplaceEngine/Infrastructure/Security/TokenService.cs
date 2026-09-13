@@ -52,6 +52,11 @@ public class TokenService
     private readonly ConcurrentDictionary<string, byte> _revokedTokens = new();
     private const int TokenLengthBytes = 32;
     private const int TokenExpirationDays = 30;
+    private const byte RevokedTokenMarker = 0;
+    private const string Base64UrlPlus = "+";
+    private const string Base64UrlMinus = "-";
+    private const string Base64UrlSlash = "/";
+    private const string Base64UrlUnderscore = "_";
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TokenService"/> class.
@@ -143,7 +148,7 @@ public class TokenService
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(tokenValue);
 
-        _revokedTokens[tokenValue] = 0;
+        _revokedTokens[tokenValue] = RevokedTokenMarker;
         _logger.LogInformation("Token revoked");
     }
 
@@ -155,8 +160,8 @@ public class TokenService
 
         // Return URL-safe base64 encoded token
         var token = Convert.ToBase64String(tokenData)
-            .Replace("+", "-")
-            .Replace("/", "_")
+            .Replace(Base64UrlPlus, Base64UrlMinus)
+            .Replace(Base64UrlSlash, Base64UrlUnderscore)
             .TrimEnd('=');
 
         return token;
