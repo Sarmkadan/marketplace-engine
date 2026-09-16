@@ -138,6 +138,8 @@ public class UserRepository : IUserRepository
     /// <returns>The matching user, or <see langword="null"/> if the email is invalid or no user is found.</returns>
     public async Task<User?> GetByEmailAsync(string email)
     {
+        ArgumentNullException.ThrowIfNull(email);
+
         if (string.IsNullOrWhiteSpace(email))
             return null;
 
@@ -183,6 +185,8 @@ public class UserRepository : IUserRepository
     /// <returns>A list of matching users, or an empty list if the query is blank.</returns>
     public async Task<List<User>> SearchAsync(string query)
     {
+        ArgumentNullException.ThrowIfNull(query);
+
         if (string.IsNullOrWhiteSpace(query))
             return new List<User>();
 
@@ -218,6 +222,9 @@ public class UserRepository : IUserRepository
     /// <returns>A list of users in the specified location.</returns>
     public async Task<List<User>> GetByLocationAsync(string city, string countryCode)
     {
+        ArgumentNullException.ThrowIfNull(city);
+        ArgumentNullException.ThrowIfNull(countryCode);
+
         await Task.Delay(5);
         return _context.Users
             .Where(u => u.Location is not null &&
@@ -233,6 +240,8 @@ public class UserRepository : IUserRepository
     /// <returns><see langword="true"/> if the email address exists; otherwise, <see langword="false"/>.</returns>
     public async Task<bool> EmailExistsAsync(string email)
     {
+        ArgumentNullException.ThrowIfNull(email);
+
         if (string.IsNullOrWhiteSpace(email))
             return false;
 
@@ -247,6 +256,8 @@ public class UserRepository : IUserRepository
     /// <returns>The matching user, or <see langword="null"/> if the token is invalid, expired, or not found.</returns>
     public async Task<User?> GetByVerificationTokenAsync(string token)
     {
+        ArgumentNullException.ThrowIfNull(token);
+
         if (string.IsNullOrWhiteSpace(token))
             return null;
 
