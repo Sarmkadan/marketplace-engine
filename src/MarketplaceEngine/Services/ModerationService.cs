@@ -33,6 +33,7 @@ public class ModerationService
     public async Task<ModerationReport> ReportUserAsync(Guid reporterId, Guid targetUserId, string reason,
         string? details = null, int priority = 1)
     {
+        ArgumentNullException.ThrowIfNull(reason);
         await ValidateReporterAsync(reporterId);
 
         var targetUser = await _userRepository.GetByIdAsync(targetUserId);
@@ -63,6 +64,7 @@ public class ModerationService
     public async Task<ModerationReport> ReportListingAsync(Guid reporterId, Guid listingId, string reason,
         string? details = null, int priority = 1)
     {
+        ArgumentNullException.ThrowIfNull(reason);
         await ValidateReporterAsync(reporterId);
 
         var listing = await _listingRepository.GetByIdAsync(listingId);
@@ -92,6 +94,7 @@ public class ModerationService
     // Assigns report to moderator
     public async Task<ModerationReport> AssignReportAsync(ModerationReport report, Guid moderatorId)
     {
+        ArgumentNullException.ThrowIfNull(report);
         var moderator = await _userRepository.GetByIdAsync(moderatorId);
         if (moderator is null)
             throw new ResourceNotFoundException("User", moderatorId);
@@ -106,6 +109,7 @@ public class ModerationService
     // Approves a moderation report
     public async Task<ModerationReport> ApproveReportAsync(ModerationReport report, string reviewNotes = "")
     {
+        ArgumentNullException.ThrowIfNull(report);
         if (report.ReviewedBy == Guid.Empty)
             throw new InvalidOperationException("Report must be assigned to a moderator first");
 
@@ -116,6 +120,7 @@ public class ModerationService
     // Rejects a moderation report
     public async Task<ModerationReport> RejectReportAsync(ModerationReport report, string reviewNotes = "")
     {
+        ArgumentNullException.ThrowIfNull(report);
         if (report.ReviewedBy == Guid.Empty)
             throw new InvalidOperationException("Report must be assigned to a moderator first");
 
@@ -126,6 +131,7 @@ public class ModerationService
     // Removes flagged content
     public async Task<ModerationReport> RemoveContentAsync(ModerationReport report, string reviewNotes = "")
     {
+        ArgumentNullException.ThrowIfNull(report);
         if (report.TargetListingId.HasValue && report.TargetListingId != Guid.Empty)
         {
             var listing = await _listingRepository.GetByIdAsync(report.TargetListingId.Value);
@@ -143,6 +149,7 @@ public class ModerationService
     // Suspends a user
     public async Task<ModerationReport> SuspendUserAsync(ModerationReport report, string reviewNotes = "")
     {
+        ArgumentNullException.ThrowIfNull(report);
         if (report.TargetUserId.HasValue && report.TargetUserId != Guid.Empty)
         {
             var user = await _userRepository.GetByIdAsync(report.TargetUserId.Value);
@@ -160,6 +167,7 @@ public class ModerationService
     // Bans a user
     public async Task<ModerationReport> BanUserAsync(ModerationReport report, string reviewNotes = "")
     {
+        ArgumentNullException.ThrowIfNull(report);
         if (report.TargetUserId.HasValue && report.TargetUserId != Guid.Empty)
         {
             var user = await _userRepository.GetByIdAsync(report.TargetUserId.Value);
@@ -179,6 +187,7 @@ public class ModerationService
     // Escalates report priority
     public ModerationReport EscalateReportAsync(ModerationReport report)
     {
+        ArgumentNullException.ThrowIfNull(report);
         report.EscalatePriority();
         return report;
     }
@@ -186,6 +195,7 @@ public class ModerationService
     // Applies a moderation action to a single listing as part of a bulk operation
     public async Task ApplyBulkActionAsync(Guid listingId, string action)
     {
+        ArgumentNullException.ThrowIfNull(action);
         var listing = await _listingRepository.GetByIdAsync(listingId);
         if (listing is null)
             throw new ResourceNotFoundException("Listing", listingId);
