@@ -28,6 +28,10 @@ public class MessagingService
     public async Task<Message> SendMessageAsync(Guid senderId, Guid recipientId, string subject, string body,
         Guid? listingId = null, List<string>? attachments = null)
     {
+        ArgumentNullException.ThrowIfNull(subject);
+        ArgumentNullException.ThrowIfNull(body);
+        ArgumentNullException.ThrowIfNull(attachments);
+
         var sender = await _userRepository.GetByIdAsync(senderId);
         if (sender is null)
             throw new ResourceNotFoundException("User", senderId);
@@ -108,6 +112,8 @@ public class MessagingService
     // Marks multiple messages as read
     public async Task MarkMultipleAsReadAsync(List<Guid> messageIds)
     {
+        ArgumentNullException.ThrowIfNull(messageIds);
+
         await _messageRepository.MarkAsReadAsync(messageIds);
     }
 
@@ -152,6 +158,9 @@ public class MessagingService
     public async Task<Message> AddReplyAsync(Guid parentMessageId, Guid senderId, string body,
         List<string>? attachments = null)
     {
+        ArgumentNullException.ThrowIfNull(body);
+        ArgumentNullException.ThrowIfNull(attachments);
+
         var parentMessage = await _messageRepository.GetByIdAsync(parentMessageId);
         if (parentMessage is null)
             throw new ResourceNotFoundException("Message", parentMessageId);
