@@ -913,3 +913,80 @@ await moderationService.RemoveContentAsync(report, reviewNotes: "Confirmed viola
 var (pending, inReview, resolved) = await moderationService.GetReportStatsAsync();
 Console.WriteLine($"Pending: {pending}, In review: {inReview}, Resolved: {resolved}");
 ```
+
+## SearchService
+
+The `SearchService` provides search and discovery across marketplace listings and users. It supports keyword and tag-based listing search, geolocation-based nearby search, category browsing with pagination, multi-filter advanced search, trending and autocomplete suggestions, and user search with top-seller ranking.
+
+### Purpose
+
+- Search listings by keyword, validating query length against `AppConstants` limits
+- Search listings by one or more tags
+- Find listings near a given latitude/longitude within a configurable radius
+- Search users by name or email and retrieve top sellers by rating
+- Browse listings by category with offset-based pagination
+- Run advanced searches combining keyword, category, price range, and tag filters
+- Return trending listings and autocomplete title suggestions
+
+### Public API
+
+| Method | Description |
+|--------|-------------|
+| `SearchListingsAsync(query)` | Searches listings by keyword. Throws `ValidationException` when the query is empty or outside the configured length bounds. |
+| `SearchByTagsAsync(tags)` | Searches listings by tags. Throws `ValidationException` when no tags are supplied. |
+| `FindNearbyListingsAsync(latitude, longitude, radiusKm = 10)` | Finds listings near the given coordinates. Throws `ValidationException` when latitude, longitude, or radius are out of range. |
+| `SearchUsersAsync(query)` | Searches users by name or email. Throws `ValidationException` when the query is empty or outside the configured length bounds. |
+| `GetTopSellersAsync(limit = 10)` | Returns top sellers by rating. Limits outside 1 through 50 are replaced with the default of 10. |
+| `SearchByCategoryAsync(categoryId, pageNumber, pageSize)` | Returns `(items, total)` for listings in a category, ordered by `PublishedAt` descending. Throws `ValidationException` when `categoryId` is empty. Page number is clamped to 1; page size is clamped to `[1, MaxPageSize]` with a default of `DefaultPageSize`. |
+| `AdvancedSearchAsync(keyword = null, categoryId = null, minPrice = null, maxPrice = null, tags = null)` | Filters active listings by keyword (title/description), category, price range, and tags, then orders by `ViewCount` descending. |
+| `GetTrendingListingsAsync(limit = 20)` | Returns active listings ordered by `ViewCount` then `InterestCount`, taking up to `limit`. Limits outside 1 through 100 are replaced with the default of 20. |
+| `GetSearchSuggestionsAsync(prefix, limit = 10)` | Returns distinct listing titles starting with the prefix, up to `limit`. Throws `ValidationException` when the prefix is empty or outside the configured length bounds. |
+
+### Dependencies
+
+- `IListingRepository` - Data access for listing search, tag, nearby, category, and active-listing queries
+- `IUserRepository` - Data access for user search and top-seller queries
+- `Listing` and `User` - Domain models returned by the search operations
+- `ValidationException` - Reports invalid search queries, tags, coordinates, radius, and category IDs
+- `AppConstants` - Provides search query length limits and default/maximum page sizes
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.Services;
+
+// Construct the service with its repositories (typically via dependency injection)
+var searchService = new SearchService(listingRepository, userRepository);
+
+// Keyword search
+var listings = await searchService.SearchListingsAsync("laptop");
+
+// Search by tags
+var tagged = await searchService.SearchByTagsAsync(new List<string> { "electronics", "refurbished" });
+
+// Nearby search within 25 km
+var nearby = await searchService.FindNearbyListingsAsync(40.7128, -74.0060, radiusKm: 25);
+
+// Category browsing with pagination
+var (items, total) = await searchService.SearchByCategoryAsync(
+    categoryId: Guid.Parse("3fa85f64-5717-4562-b3fc-2c963f66afa6"),
+    pageNumber: 1,
+    pageSize: 20
+);
+
+// Advanced search combining filters
+var advanced = await searchService.AdvancedSearchAsync(
+    keyword: "camera",
+    minPrice: 100m,
+    maxPrice: 500m,
+    tags: new List<string> { "photography" }
+);
+
+// Trending and autocomplete
+var trending = await searchService.GetTrendingListingsAsync(limit: 10);
+var suggestions = await searchService.GetSearchSuggestionsAsync("cam");
+
+// User search and top sellers
+var users = await searchService.SearchUsersAsync("john");
+var topSellers = await searchService.GetTopSellersAsync(limit: 5);
+```
