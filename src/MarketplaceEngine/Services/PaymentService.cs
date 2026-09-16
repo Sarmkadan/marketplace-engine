@@ -58,7 +58,7 @@ public class PaymentService
         string currency = "USD")
     {
         if (string.IsNullOrWhiteSpace(paymentMethod))
-            throw new Exceptions.ValidationException("PaymentMethod", "Payment method is required.");
+            throw new ValidationException("PaymentMethod", "Payment method is required.");
 
         var listing = await _listingRepository.GetByIdAsync(listingId);
         if (listing is null)
@@ -221,7 +221,7 @@ public class PaymentService
     {
         ArgumentNullException.ThrowIfNull(reason);
         if (string.IsNullOrWhiteSpace(reason))
-            throw new Exceptions.ValidationException("Reason", "Refund reason is required.");
+            throw new ValidationException("Reason", "Refund reason is required.");
 
         var payment = await GetPaymentOrThrowAsync(paymentId);
         payment.Refund(reason);
