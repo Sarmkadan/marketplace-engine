@@ -36,6 +36,8 @@ public class Listing
     public DateTime? DueDate { get; set; }
     public string? Condition { get; set; }
 
+    public override string ToString() => $"Listing {{ Id: {Id}, Title: {Title}, Status: {Status} }}";
+
     // Validates listing content before publishing
     public void ValidateForPublishing()
     {
