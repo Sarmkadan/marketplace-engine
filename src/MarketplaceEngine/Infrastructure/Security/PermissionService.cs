@@ -22,6 +22,7 @@ public class PermissionService
     /// <param name="logger">The logger used to record permission-related events.</param>
     public PermissionService(ILogger<PermissionService> logger)
     {
+        ArgumentNullException.ThrowIfNull(logger);
         _logger = logger;
     }
 
