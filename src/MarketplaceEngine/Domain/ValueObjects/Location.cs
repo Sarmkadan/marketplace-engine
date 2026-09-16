@@ -4,6 +4,8 @@
 // CTO & Software Architect
 // =============================================================================
 
+using System.Text;
+
 namespace MarketplaceEngine.Domain.ValueObjects;
 
 /// <summary>
@@ -77,7 +79,15 @@ public sealed class Location : IEquatable<Location>
 
     public override int GetHashCode() => HashCode.Combine(City, State, CountryCode, PostalCode);
 
-    public override string ToString() => $"{City}, {State} {CountryCode}";
+    public override string ToString()
+    {
+        var sb = new StringBuilder($"{City}, {State} {CountryCode}");
+        if (!string.IsNullOrEmpty(PostalCode))
+            sb.Append($" {PostalCode}");
+        if (Latitude.HasValue && Longitude.HasValue)
+            sb.Append($" ({Latitude.Value:0.####}, {Longitude.Value:0.####})");
+        return sb.ToString();
+    }
 
     public static bool operator ==(Location? left, Location? right) => Equals(left, right);
     public static bool operator !=(Location? left, Location? right) => !Equals(left, right);
