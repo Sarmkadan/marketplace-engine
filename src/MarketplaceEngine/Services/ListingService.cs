@@ -1,15 +1,16 @@
-#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
 // =============================================================================
 
+using MarketplaceEngine.Constants;
 using MarketplaceEngine.Domain.Enums;
 using MarketplaceEngine.Domain.Models;
 using MarketplaceEngine.Domain.ValueObjects;
 using MarketplaceEngine.Exceptions;
 using MarketplaceEngine.Repositories;
-using MarketplaceEngine.Constants;
+
+#nullable enable
 
 namespace MarketplaceEngine.Services;
 
@@ -89,7 +90,8 @@ public sealed class ListingService
     /// <returns>The newly created draft listing.</returns>
     /// <exception cref="ResourceNotFoundException">Thrown if seller does not exist.</exception>
     /// <exception cref="UnauthorizedException">Thrown if seller is not active.</exception>
-    public async Task<Listing> CreateDraftListingAsync(Guid sellerId, string title, string description, decimal price, string currency, Guid categoryId, List<string> imageUrls)
+    public async Task<Listing> CreateDraftListingAsync(Guid sellerId, string title, string description,
+        decimal price, string currency, Guid categoryId, List<string> imageUrls)
     {
         ArgumentNullException.ThrowIfNull(title);
         ArgumentNullException.ThrowIfNull(description);
