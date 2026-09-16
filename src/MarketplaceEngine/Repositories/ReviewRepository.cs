@@ -20,11 +20,20 @@ public class ReviewRepository : IReviewRepository
     private const string ResourceType = "Review";
     private static readonly object _lock = new();
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ReviewRepository"/> class
+    /// using the shared <see cref="MarketplaceDbContext"/> instance.
+    /// </summary>
     public ReviewRepository()
     {
         _context = MarketplaceDbContext.GetInstance();
     }
 
+    /// <summary>
+    /// Gets a review by its unique identifier.
+    /// </summary>
+    /// <param name="id">The unique identifier of the review.</param>
+    /// <returns>The matching review, or <c>null</c> if no review with the specified identifier exists.</returns>
     public async Task<Review?> GetByIdAsync(Guid id)
     {
         await Task.Delay(5);
@@ -34,6 +43,10 @@ public class ReviewRepository : IReviewRepository
         }
     }
 
+    /// <summary>
+    /// Gets all reviews.
+    /// </summary>
+    /// <returns>A list containing all reviews.</returns>
     public async Task<List<Review>> GetAllAsync()
     {
         await Task.Delay(5);
@@ -43,6 +56,12 @@ public class ReviewRepository : IReviewRepository
         }
     }
 
+    /// <summary>
+    /// Adds a new review to the repository.
+    /// </summary>
+    /// <param name="entity">The review to add.</param>
+    /// <returns>The added review with its generated identifier and creation timestamp.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="entity"/> is <c>null</c>.</exception>
     public async Task<Review> AddAsync(Review entity)
     {
         if (entity is null)
@@ -59,6 +78,13 @@ public class ReviewRepository : IReviewRepository
         return entity;
     }
 
+    /// <summary>
+    /// Updates an existing review in the repository.
+    /// </summary>
+    /// <param name="entity">The review containing the updated values.</param>
+    /// <returns>The updated review.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="entity"/> is <c>null</c>.</exception>
+    /// <exception cref="ResourceNotFoundException">Thrown when no review with the specified identifier exists.</exception>
     public async Task<Review> UpdateAsync(Review entity)
     {
         if (entity is null)
@@ -79,6 +105,11 @@ public class ReviewRepository : IReviewRepository
         return entity;
     }
 
+    /// <summary>
+    /// Deletes a review by its unique identifier.
+    /// </summary>
+    /// <param name="id">The unique identifier of the review to delete.</param>
+    /// <exception cref="ResourceNotFoundException">Thrown when no review with the specified identifier exists.</exception>
     public async Task DeleteAsync(Guid id)
     {
         lock (_lock)
@@ -93,6 +124,11 @@ public class ReviewRepository : IReviewRepository
         await Task.Delay(5);
     }
 
+    /// <summary>
+    /// Determines whether a review with the specified identifier exists.
+    /// </summary>
+    /// <param name="id">The unique identifier of the review.</param>
+    /// <returns><c>true</c> if a review with the specified identifier exists; otherwise, <c>false</c>.</returns>
     public async Task<bool> ExistsAsync(Guid id)
     {
         await Task.Delay(5);
@@ -102,6 +138,10 @@ public class ReviewRepository : IReviewRepository
         }
     }
 
+    /// <summary>
+    /// Gets the total number of reviews in the repository.
+    /// </summary>
+    /// <returns>The total number of reviews.</returns>
     public async Task<int> CountAsync()
     {
         await Task.Delay(5);
@@ -111,6 +151,11 @@ public class ReviewRepository : IReviewRepository
         }
     }
 
+    /// <summary>
+    /// Gets all reviews written by a specific reviewer.
+    /// </summary>
+    /// <param name="reviewerId">The unique identifier of the reviewer.</param>
+    /// <returns>A list of reviews written by the specified reviewer.</returns>
     public async Task<List<Review>> GetByReviewerIdAsync(Guid reviewerId)
     {
         await Task.Delay(5);
@@ -120,6 +165,11 @@ public class ReviewRepository : IReviewRepository
         }
     }
 
+    /// <summary>
+    /// Gets all active reviews for a specific seller, ordered by creation date descending.
+    /// </summary>
+    /// <param name="sellerId">The unique identifier of the seller.</param>
+    /// <returns>A list of active reviews for the specified seller.</returns>
     public async Task<List<Review>> GetBySellerIdAsync(Guid sellerId)
     {
         await Task.Delay(5);
@@ -132,6 +182,11 @@ public class ReviewRepository : IReviewRepository
         }
     }
 
+    /// <summary>
+    /// Gets all active reviews for a specific listing, ordered by creation date descending.
+    /// </summary>
+    /// <param name="listingId">The unique identifier of the listing.</param>
+    /// <returns>A list of active reviews for the specified listing.</returns>
     public async Task<List<Review>> GetByListingIdAsync(Guid listingId)
     {
         await Task.Delay(5);
@@ -144,6 +199,13 @@ public class ReviewRepository : IReviewRepository
         }
     }
 
+    /// <summary>
+    /// Determines whether a review already exists for the specified transaction participants.
+    /// </summary>
+    /// <param name="reviewerId">The unique identifier of the reviewer.</param>
+    /// <param name="sellerId">The unique identifier of the seller.</param>
+    /// <param name="listingId">The unique identifier of the listing, or <c>null</c> if not applicable.</param>
+    /// <returns><c>true</c> if a matching review exists; otherwise, <c>false</c>.</returns>
     public async Task<bool> ExistsForTransactionAsync(Guid reviewerId, Guid sellerId, Guid? listingId)
     {
         await Task.Delay(5);
@@ -156,6 +218,11 @@ public class ReviewRepository : IReviewRepository
         }
     }
 
+    /// <summary>
+    /// Gets the average score of all active reviews for a specific seller.
+    /// </summary>
+    /// <param name="sellerId">The unique identifier of the seller.</param>
+    /// <returns>The average score, or <c>0</c> if the seller has no active reviews.</returns>
     public async Task<double> GetAverageScoreAsync(Guid sellerId)
     {
         await Task.Delay(5);
@@ -170,6 +237,13 @@ public class ReviewRepository : IReviewRepository
         }
     }
 
+    /// <summary>
+    /// Gets a page of active reviews for a specific seller, ordered by creation date descending.
+    /// </summary>
+    /// <param name="sellerId">The unique identifier of the seller.</param>
+    /// <param name="pageNumber">The one-based page number to retrieve. Values below 1 are clamped to 1.</param>
+    /// <param name="pageSize">The number of reviews per page. Values below 1 are clamped to 20, and values above 100 are clamped to 100.</param>
+    /// <returns>A tuple containing the requested page of reviews and the total number of matching reviews.</returns>
     public async Task<(List<Review> items, int total)> GetPagedBySellerAsync(Guid sellerId, int pageNumber, int pageSize)
     {
         if (pageNumber < 1) pageNumber = 1;
