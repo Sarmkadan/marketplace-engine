@@ -284,4 +284,116 @@ public static class MoneyExtensions
         var formattedAmount = money.Amount.ToString("N2", ci);
         return $"{symbol}{formattedAmount}";
     }
+
+    /// <summary>
+    /// Formats the money amount with the specified number of decimal places, prefixed by the currency code.
+    /// </summary>
+    /// <param name="money">The money value.</param>
+    /// <param name="decimals">Number of decimal places to display. Defaults to 2.</param>
+    /// <returns>A string in the form <c>"USD 1,234.56"</c>.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="money"/> is null.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="decimals"/> is negative.</exception>
+    public static string ToAmountString(this Money money, int decimals = 2)
+    {
+        ArgumentNullException.ThrowIfNull(money);
+
+        if (decimals < 0)
+            throw new ArgumentOutOfRangeException(nameof(decimals), "Decimals must be non-negative");
+
+        return $"{money.CurrencyCode} {money.Amount.ToString("N" + decimals, CultureInfo.InvariantCulture)}";
+    }
+
+    /// <summary>
+    /// Determines whether two money values share the same currency code.
+    /// </summary>
+    /// <param name="left">The first money value.</param>
+    /// <param name="right">The second money value.</param>
+    /// <returns><see langword="true"/> if both values use the same currency; otherwise, <see langword="false"/>.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="left"/> or <paramref name="right"/> is null.</exception>
+    public static bool IsSameCurrency(this Money left, Money right)
+    {
+        ArgumentNullException.ThrowIfNull(left);
+        ArgumentNullException.ThrowIfNull(right);
+
+        return left.CurrencyCode.Equals(right.CurrencyCode, StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>
+    /// Returns a new <see cref="Money"/> value with the same currency but a different amount.
+    /// </summary>
+    /// <param name="money">The money value whose currency is preserved.</param>
+    /// <param name="amount">The new amount.</param>
+    /// <returns>A new <see cref="Money"/> instance with the specified amount and the original currency.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="money"/> is null.</exception>
+    public static Money WithAmount(this Money money, decimal amount)
+    {
+        ArgumentNullException.ThrowIfNull(money);
+        return new Money(amount, money.CurrencyCode);
+    }
+
+    /// <summary>
+    /// Sums a sequence of money values, requiring them all to share the same currency.
+    /// </summary>
+    /// <param name="moneys">The money values to sum.</param>
+    /// <returns>A new <see cref="Money"/> instance representing the total.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="moneys"/> is null.</exception>
+    /// <exception cref="InvalidOperationException">The sequence is empty or contains mixed currencies.</exception>
+    public static Money Sum(this IEnumerable<Money> moneys)
+    {
+        ArgumentNullException.ThrowIfNull(moneys);
+
+        var list = moneys.ToList();
+        if (list.Count == 0)
+            throw new InvalidOperationException("Cannot sum an empty sequence of money values");
+
+        var currency = list[0].CurrencyCode;
+        if (list.Any(m => !m.CurrencyCode.Equals(currency, StringComparison.OrdinalIgnoreCase)))
+            throw new InvalidOperationException("Cannot sum money values in different currencies");
+
+        return new Money(list.Sum(m => m.Amount), currency);
+    }
+
+    /// <summary>
+    /// Returns the smallest money value in a sequence, requiring all values to share the same currency.
+    /// </summary>
+    /// <param name="moneys">The money values to inspect.</param>
+    /// <returns>The <see cref="Money"/> value with the smallest amount.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="moneys"/> is null.</exception>
+    /// <exception cref="InvalidOperationException">The sequence is empty or contains mixed currencies.</exception>
+    public static Money Min(this IEnumerable<Money> moneys)
+    {
+        ArgumentNullException.ThrowIfNull(moneys);
+
+        var list = moneys.ToList();
+        if (list.Count == 0)
+            throw new InvalidOperationException("Cannot find the minimum of an empty sequence of money values");
+
+        var currency = list[0].CurrencyCode;
+        if (list.Any(m => !m.CurrencyCode.Equals(currency, StringComparison.OrdinalIgnoreCase)))
+            throw new InvalidOperationException("Cannot compare money values in different currencies");
+
+        return list.OrderBy(m => m.Amount).First();
+    }
+
+    /// <summary>
+    /// Returns the largest money value in a sequence, requiring all values to share the same currency.
+    /// </summary>
+    /// <param name="moneys">The money values to inspect.</param>
+    /// <returns>The <see cref="Money"/> value with the largest amount.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="moneys"/> is null.</exception>
+    /// <exception cref="InvalidOperationException">The sequence is empty or contains mixed currencies.</exception>
+    public static Money Max(this IEnumerable<Money> moneys)
+    {
+        ArgumentNullException.ThrowIfNull(moneys);
+
+        var list = moneys.ToList();
+        if (list.Count == 0)
+            throw new InvalidOperationException("Cannot find the maximum of an empty sequence of money values");
+
+        var currency = list[0].CurrencyCode;
+        if (list.Any(m => !m.CurrencyCode.Equals(currency, StringComparison.OrdinalIgnoreCase)))
+            throw new InvalidOperationException("Cannot compare money values in different currencies");
+
+        return list.OrderByDescending(m => m.Amount).First();
+    }
 }
