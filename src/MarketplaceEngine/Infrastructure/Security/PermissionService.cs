@@ -16,6 +16,10 @@ public class PermissionService
 {
     private readonly ILogger<PermissionService> _logger;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="PermissionService"/> class.
+    /// </summary>
+    /// <param name="logger">The logger used to record permission-related events.</param>
     public PermissionService(ILogger<PermissionService> logger)
     {
         _logger = logger;
