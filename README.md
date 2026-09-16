@@ -716,6 +716,87 @@ The `ReviewService` manages buyer reviews for sellers and listings. It validates
 
 The `UserService` manages the user-account lifecycle and coordinates user persistence with the validation and state-transition rules defined by the `User` domain model. It covers registration and email verification, profile and account state changes, seller metrics and promotion, user queries, activity tracking, and access checks.
 
+## MessagingService
+
+The `MessagingService` manages user-to-user messaging functionality in the marketplace. It handles sending messages, retrieving conversations, managing message states (read/unread/flagged), and provides administrative functions for message moderation and cleanup.
+
+### Purpose
+
+- Send messages between users with optional listing context and attachments
+- Retrieve received, sent, and unread messages for users
+- Get conversations between two users or about specific listings
+- Manage message states (mark as read/unread, flag/unflag)
+- Add replies to existing messages
+- Provide paginated message retrieval for efficient browsing
+- Administrative functions: view flagged messages, cleanup old messages
+- Authorization checks for message deletion and moderation operations
+
+### Public API
+
+| Method | Description |
+|--------|-------------|
+| `SendMessageAsync(senderId, recipientId, subject, body, listingId, attachments)` | Sends a message between users with validation. Optionally associates with a listing and includes attachments. |
+| `GetReceivedMessagesAsync(userId)` | Retrieves all messages received by a user. |
+| `GetSentMessagesAsync(userId)` | Retrieves all messages sent by a user. |
+| `GetUnreadMessagesAsync(userId)` | Retrieves all unread messages for a user. |
+| `GetConversationAsync(userId1, userId2)` | Retrieves the conversation between two users. |
+| `MarkAsReadAsync(messageId)` | Marks a specific message as read. |
+| `MarkMultipleAsReadAsync(messageIds)` | Marks multiple messages as read. |
+| `MarkAsUnreadAsync(messageId)` | Marks a specific message as unread. |
+| `FlagMessageAsync(messageId, flaggerId)` | Flags a message (requires valid flagger user). |
+| `RemoveFlagAsync(messageId)` | Removes flag from a message. |
+| `AddReplyAsync(parentMessageId, senderId, body, attachments)` | Adds a reply to an existing message. |
+| `GetListingMessagesAsync(listingId)` | Retrieves all messages associated with a specific listing. |
+| `GetListingConversationAsync(userId1, userId2, listingId)` | Retrieves conversation between two users about a specific listing. |
+| `GetPaginatedMessagesAsync(userId, pageNumber, pageSize)` | Retrieves paginated messages for a user (offset-based). |
+| `GetMessagesByCursorAsync(userId, afterId, pageSize)` | Retrieves paginated messages using cursor-based pagination to avoid duplicates on concurrent writes. |
+| `GetConversationCountAsync(userId)` | Gets the count of conversations for a user. |
+| `DeleteMessageAsync(messageId, requesterId)` | Deletes a message if the requester is sender or recipient. |
+| `GetFlaggedMessagesAsync()` | Retrieves all flagged messages (admin only). |
+| `CleanupOldMessagesAsync(retentionDays)` | Deletes messages older than specified retention days (admin only). |
+
+### Dependencies
+
+- `IMessageRepository` - Data access for message entities
+- `IUserRepository` - Data access for user entities (to validate sender/recipient existence)
+- `Message` - Domain model representing a message with validation and state methods
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.Services;
+
+// Example: Sending a message between users
+var messagingService = new MessagingService(
+    messageRepository,
+    userRepository
+);
+
+// Send a message
+var message = await messagingService.SendMessageAsync(
+    senderId: Guid.Parse("11111111-1111-1111-1111-111111111111"),
+    recipientId: Guid.Parse("22222222-2222-2222-2222-222222222222"),
+    subject: "Question about your listing",
+    body: "Is this item still available?",
+    listingId: Guid.Parse("3fa85f64-5717-4562-b3fc-2c963f66afa6")
+);
+
+// Get user's unread messages
+var unreadMessages = await messagingService.GetUnreadMessagesAsync(
+    Guid.Parse("22222222-2222-2222-2222-222222222222")
+);
+
+// Mark a message as read
+await messagingService.MarkAsReadAsync(message.Id);
+
+// Add a reply to the message
+var reply = await messagingService.AddReplyAsync(
+    parentMessageId: message.Id,
+    senderId: Guid.Parse("22222222-2222-2222-2222-222222222222"),
+    body: "Yes, it's still available!"
+);
+```
+
 ### Purpose
 
 - Register active, unverified users with the default `User` role and a newly generated verification token
