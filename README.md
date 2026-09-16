@@ -838,3 +838,78 @@ All operations are asynchronous. Methods that first load a user by ID inherit `G
 - `User` and `UserRole` - Represent the account and enforce profile, verification, promotion, activation, sale, and rating state transitions
 - `Location` and `Rating` - Value objects accepted by profile and rating updates
 - `DuplicateResourceException`, `ResourceNotFoundException`, and `UnauthorizedException` - Communicate duplicate registration, missing users, and denied access
+
+## ModerationService
+
+The `ModerationService` manages marketplace moderation and content review. It lets users report other users or listings, lets moderators and administrators triage those reports, and applies enforcement actions such as removing flagged content, suspending users, or banning users. It also supports bulk moderation of listings and provides report queries and statistics.
+
+### Purpose
+
+- File moderation reports against users or listings with a reason, optional details, and a priority
+- Validate that the reporter is an active, verified user and that the target exists
+- Assign reports to moderators or administrators and approve or reject them
+- Remove flagged listing content, suspend users, or ban users as enforcement actions
+- Escalate report priority and apply bulk moderation actions to listings
+- Query pending reports, reports by status, and a moderator's assignments, plus report statistics
+
+### Public API
+
+| Method | Description |
+|--------|-------------|
+| `ReportUserAsync(reporterId, targetUserId, reason, details = null, priority = 1)` | Validates the reporter, verifies the target user exists, and creates a submitted moderation report. |
+| `ReportListingAsync(reporterId, listingId, reason, details = null, priority = 1)` | Validates the reporter, verifies the target listing exists, and creates a submitted moderation report. |
+| `AssignReportAsync(report, moderatorId)` | Assigns a report to a moderator or administrator; throws `UnauthorizedException` for other roles. |
+| `ApproveReportAsync(report, reviewNotes = "")` | Approves a report; throws `InvalidOperationException` when it has not been assigned to a moderator. |
+| `RejectReportAsync(report, reviewNotes = "")` | Rejects a report; throws `InvalidOperationException` when it has not been assigned to a moderator. |
+| `RemoveContentAsync(report, reviewNotes = "")` | Flags and updates the target listing (when present) and marks the report's content as removed. |
+| `SuspendUserAsync(report, reviewNotes = "")` | Deactivates the target user (when present) and marks the report as suspended. |
+| `BanUserAsync(report, reviewNotes = "")` | Deactivates the target user (when present) and marks the report as banned. |
+| `EscalateReportAsync(report)` | Escalates the report's priority. |
+| `ApplyBulkActionAsync(listingId, action)` | Applies `approve`, `remove`, or `escalate` to a listing; throws `ValidationException` for unknown actions. |
+| `GetPendingReportsAsync(page, pageSize)` | Returns pending reports ordered by most recently created, with pagination. |
+| `GetReportAsync(id)` | Retrieves a moderation report by ID or `null` when not found. |
+| `UpdateReportAsync(report)` | Replaces an existing report's state; throws `ResourceNotFoundException` when missing. |
+| `CreateReportAsync(report)` | Persists a newly created report, assigning an ID when empty. |
+| `GetReportsByStatusAsync(status)` | Returns reports matching a status, ordered by most recently created. |
+| `GetModeratorAssignmentsAsync(moderatorId)` | Returns reports assigned to a moderator, ordered by most recently created. |
+| `GetReportStatsAsync()` | Returns `(pending, inReview, resolved)` counts across report statuses. |
+
+### Dependencies
+
+- `IUserRepository` - Data access for user entities (to validate reporters, moderators, and targets and to apply suspension/ban actions)
+- `IListingRepository` - Data access for listing entities (to verify listing targets and apply removal/approval actions)
+- `MarketplaceDbContext` - The in-memory store of `ModerationReport` entities, accessed through a shared singleton instance
+- `ModerationReport`, `ModerationStatus`, and `UserRole` - Enforce report state transitions and role checks
+- `ResourceNotFoundException`, `UnauthorizedException`, `ValidationException`, and `InvalidOperationException` - Report missing resources, denied access, and invalid operations
+
+### Usage Example
+
+```csharp
+using MarketplaceEngine.Services;
+
+// Example: Reporting a listing and triaging the report
+var moderationService = new ModerationService(
+    userRepository,
+    listingRepository
+);
+
+// A verified, active user files a report against a listing
+var report = await moderationService.ReportListingAsync(
+    reporterId: Guid.Parse("11111111-1111-1111-1111-111111111111"),
+    listingId: Guid.Parse("3fa85f64-5717-4562-b3fc-2c963f66afa6"),
+    reason: "Inappropriate content",
+    details: "Listing contains prohibited material",
+    priority: 2
+);
+
+// A moderator picks up the report
+var moderatorId = Guid.Parse("22222222-2222-2222-2222-222222222222");
+await moderationService.AssignReportAsync(report, moderatorId);
+
+// The moderator removes the flagged content
+await moderationService.RemoveContentAsync(report, reviewNotes: "Confirmed violation");
+
+// Check overall moderation load
+var (pending, inReview, resolved) = await moderationService.GetReportStatsAsync();
+Console.WriteLine($"Pending: {pending}, In review: {inReview}, Resolved: {resolved}");
+```
