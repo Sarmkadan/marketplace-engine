@@ -6,16 +6,14 @@
 
 namespace MarketplaceEngine.Utilities;
 
+using MarketplaceEngine.Constants;
+
 /// <summary>
 /// Pagination calculation utilities to standardize paging across the application.
 /// Handles offset calculation, bounds checking, and page number validation.
 /// </summary>
 public static class PaginationUtility
 {
-    private const int DefaultPageSize = 20;
-    private const int MaxPageSize = 100;
-    private const int MinPageSize = 1;
-
     /// <summary>
     /// Calculates the offset for a database query based on page and page size.
     /// </summary>
@@ -33,11 +31,11 @@ public static class PaginationUtility
         if (page < 1)
             page = 1;
 
-        if (pageSize < MinPageSize)
-            pageSize = DefaultPageSize;
+        if (pageSize < AppConstants.MinPageSize)
+            pageSize = AppConstants.DefaultPageSize;
 
-        if (pageSize > MaxPageSize)
-            pageSize = MaxPageSize;
+        if (pageSize > AppConstants.MaxPageSize)
+            pageSize = AppConstants.MaxPageSize;
     }
 
     /// <summary>
@@ -46,7 +44,7 @@ public static class PaginationUtility
     public static int CalculateTotalPages(int totalItems, int pageSize)
     {
         if (pageSize <= 0)
-            pageSize = DefaultPageSize;
+            pageSize = AppConstants.DefaultPageSize;
 
         return (int)Math.Ceiling((double)totalItems / pageSize);
     }
@@ -89,7 +87,7 @@ public static class PaginationUtility
     /// </summary>
     public static int GetDefaultPageSize()
     {
-        return DefaultPageSize;
+        return AppConstants.DefaultPageSize;
     }
 
     /// <summary>
@@ -97,7 +95,7 @@ public static class PaginationUtility
     /// </summary>
     public static int GetMaxPageSize()
     {
-        return MaxPageSize;
+        return AppConstants.MaxPageSize;
     }
 }
 
