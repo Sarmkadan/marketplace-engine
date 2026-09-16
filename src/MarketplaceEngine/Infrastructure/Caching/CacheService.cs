@@ -16,6 +16,12 @@ namespace MarketplaceEngine.Infrastructure.Caching;
 /// </summary>
 public class CacheService
 {
+    private static readonly TimeSpan DefaultTtl = TimeSpan.FromMinutes(5);
+    private static readonly TimeSpan CleanupInterval = TimeSpan.FromSeconds(60);
+    private const int BaseObjectOverheadBytes = 64;
+    private const int BytesPerMegabyte = 1024 * 1024;
+    private const string WildcardSuffix = "*";
+
     private readonly ConcurrentDictionary<string, CacheItem> _cache = new();
     private readonly ILogger<CacheService> _logger;
     private readonly CancellationTokenSource _cleanupTokenSource = new();
@@ -70,7 +76,7 @@ public class CacheService
         if (string.IsNullOrWhiteSpace(key) || value is null)
             return;
 
-        var expiresAt = DateTime.UtcNow.Add(ttl ?? TimeSpan.FromMinutes(5));
+        var expiresAt = DateTime.UtcNow.Add(ttl ?? DefaultTtl);
 
         var cacheItem = new CacheItem
         {
@@ -94,9 +100,9 @@ public class CacheService
             return;
 
         // Support wildcard removal (e.g., "user:*")
-        if (key.EndsWith("*"))
+        if (key.EndsWith(WildcardSuffix))
         {
-            var prefix = key[..^1];
+            var prefix = key[..^WildcardSuffix.Length];
             var keysToRemove = _cache.Keys.Where(k => k.StartsWith(prefix)).ToList();
 
             foreach (var k in keysToRemove)
@@ -133,7 +139,7 @@ public class CacheService
         var stats = new CacheStatistics
         {
             TotalItems = _cache.Count,
-            TotalMemoryMb = (long)(GetEstimatedMemoryUsage() / (1024 * 1024)), // Hotfix: Explicit cast to long
+            TotalMemoryMb = (long)(GetEstimatedMemoryUsage() / BytesPerMegabyte), // Hotfix: Explicit cast to long
             OldestItemAge = GetOldestItemAge()
         };
 
@@ -146,7 +152,7 @@ public class CacheService
         return _cache.Values.Sum(item =>
             (item.Key?.Length ?? 0) +
             (item.Value?.ToString()?.Length ?? 0) +
-            64); // Base object overhead
+            BaseObjectOverheadBytes); // Base object overhead
     }
 
     private TimeSpan GetOldestItemAge()
@@ -165,7 +171,7 @@ public class CacheService
         {
             try
             {
-                await Task.Delay(TimeSpan.FromSeconds(60), _cleanupTokenSource.Token);
+                await Task.Delay(CleanupInterval, _cleanupTokenSource.Token);
 
                 var expiredKeys = _cache
                     .Where(kvp => kvp.Value.ExpiresAt < DateTime.UtcNow)
