@@ -14,6 +14,11 @@ namespace MarketplaceEngine.Infrastructure.Security;
 /// </summary>
 public class PermissionService
 {
+    private const UserRole AdministratorRole = UserRole.Administrator;
+    private const UserRole RegularUserRole = UserRole.User;
+    private const UserRole PremiumSellerRole = UserRole.PremiumSeller;
+    private const UserRole ModeratorRole = UserRole.Moderator;
+
     private readonly ILogger<PermissionService> _logger;
 
     /// <summary>
@@ -32,7 +37,7 @@ public class PermissionService
     public bool HasRole(UserRole userRole, UserRole requiredRole)
     {
         // Administrator has all permissions
-        if (userRole == UserRole.Administrator) // Hotfix: Use Administrator
+        if (userRole == AdministratorRole) // Hotfix: Use Administrator
             return true;
 
         return userRole == requiredRole;
@@ -44,11 +49,11 @@ public class PermissionService
     public bool CanEditListing(UserRole userRole, Guid listingSellerId, Guid userId)
     {
         // Administrator can edit any listing
-        if (userRole == UserRole.Administrator) // Hotfix: Use Administrator
+        if (userRole == AdministratorRole) // Hotfix: Use Administrator
             return true;
 
         // Only seller (User or PremiumSeller) can edit their own listings
-        if ((userRole == UserRole.User || userRole == UserRole.PremiumSeller) && listingSellerId == userId) // Hotfix: Use User/PremiumSeller
+        if ((userRole == RegularUserRole || userRole == PremiumSellerRole) && listingSellerId == userId) // Hotfix: Use User/PremiumSeller
             return true;
 
         _logger.LogWarning("User {UserId} denied edit permission for listing {ListingId}", userId, listingSellerId);
@@ -61,11 +66,11 @@ public class PermissionService
     public bool CanDeleteListing(UserRole userRole, Guid listingSellerId, Guid userId)
     {
         // Administrator can delete any listing
-        if (userRole == UserRole.Administrator) // Hotfix: Use Administrator
+        if (userRole == AdministratorRole) // Hotfix: Use Administrator
             return true;
 
         // Only seller (User or PremiumSeller) can delete their own listings
-        if ((userRole == UserRole.User || userRole == UserRole.PremiumSeller) && listingSellerId == userId) // Hotfix: Use User/PremiumSeller
+        if ((userRole == RegularUserRole || userRole == PremiumSellerRole) && listingSellerId == userId) // Hotfix: Use User/PremiumSeller
             return true;
 
         return false;
@@ -76,7 +81,7 @@ public class PermissionService
     /// </summary>
     public bool CanModerate(UserRole userRole)
     {
-        return userRole == UserRole.Administrator || userRole == UserRole.Moderator; // Hotfix: Use Administrator
+        return userRole == AdministratorRole || userRole == ModeratorRole; // Hotfix: Use Administrator
     }
 
     /// <summary>
@@ -84,7 +89,7 @@ public class PermissionService
     /// </summary>
     public bool CanCreateListing(UserRole userRole)
     {
-        return userRole == UserRole.User || userRole == UserRole.PremiumSeller || userRole == UserRole.Administrator; // Hotfix: Use User/PremiumSeller/Administrator
+        return userRole == RegularUserRole || userRole == PremiumSellerRole || userRole == AdministratorRole; // Hotfix: Use User/PremiumSeller/Administrator
     }
 
     /// <summary>
