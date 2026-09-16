@@ -63,8 +63,7 @@ public class PaymentRepository : IPaymentRepository
     /// <exception cref="ArgumentNullException"><paramref name="entity"/> is <see langword="null"/>.</exception>
     public async Task<Payment> AddAsync(Payment entity)
     {
-        if (entity is null)
-            throw new ArgumentNullException(nameof(entity));
+        ArgumentNullException.ThrowIfNull(entity);
 
         entity.Id = Guid.NewGuid();
         entity.CreatedAt = DateTime.UtcNow;
@@ -87,8 +86,7 @@ public class PaymentRepository : IPaymentRepository
     /// <exception cref="ResourceNotFoundException">No payment with the specified identifier exists.</exception>
     public async Task<Payment> UpdateAsync(Payment entity)
     {
-        if (entity is null)
-            throw new ArgumentNullException(nameof(entity));
+        ArgumentNullException.ThrowIfNull(entity);
 
         lock (_lock)
         {
