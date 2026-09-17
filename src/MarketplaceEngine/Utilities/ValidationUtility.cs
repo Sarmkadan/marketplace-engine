@@ -14,12 +14,27 @@ namespace MarketplaceEngine.Utilities;
 /// </summary>
 public static class ValidationUtility
 {
+    private const string EmailPattern = @"^[^\s@]+@[^\s@]+\.[^\s@]+$";
+    private const string PhonePattern = @"^\+?[1-9]\d{1,14}$";
+
+    private const int MaxEmailLength = 254;
+    private const int DefaultMinTextLength = 1;
+    private const int DefaultMaxTextLength = int.MaxValue;
+    private const decimal DefaultMinPrice = 0.01m;
+    private const decimal DefaultMaxPrice = 999999.99m;
+    private const decimal DefaultMinRating = 0m;
+    private const decimal DefaultMaxRating = 5m;
+    private const int DefaultMaxPageSize = 100;
+    private const int DefaultMaxInputLength = 1000;
+    private const int DefaultMinSearchQueryLength = 2;
+    private const int DefaultMaxSearchQueryLength = 100;
+
     private static readonly Regex EmailRegex = new(
-        @"^[^\s@]+@[^\s@]+\.[^\s@]+$",
+        EmailPattern,
         RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
     private static readonly Regex PhoneRegex = new(
-        @"^\+?[1-9]\d{1,14}$",
+        PhonePattern,
         RegexOptions.Compiled);
 
     /// <summary>
@@ -30,7 +45,7 @@ public static class ValidationUtility
         if (string.IsNullOrWhiteSpace(email))
             return false;
 
-        return EmailRegex.IsMatch(email) && email.Length <= 254;
+        return EmailRegex.IsMatch(email) && email.Length <= MaxEmailLength;
     }
 
     /// <summary>
@@ -47,7 +62,7 @@ public static class ValidationUtility
     /// <summary>
     /// Validates that a string is not empty and within length constraints.
     /// </summary>
-    public static bool IsValidText(string? text, int minLength = 1, int maxLength = int.MaxValue)
+    public static bool IsValidText(string? text, int minLength = DefaultMinTextLength, int maxLength = DefaultMaxTextLength)
     {
         if (string.IsNullOrWhiteSpace(text))
             return false;
@@ -70,7 +85,7 @@ public static class ValidationUtility
     /// <summary>
     /// Validates a price is positive and within reasonable bounds.
     /// </summary>
-    public static bool IsValidPrice(decimal price, decimal minPrice = 0.01m, decimal maxPrice = 999999.99m)
+    public static bool IsValidPrice(decimal price, decimal minPrice = DefaultMinPrice, decimal maxPrice = DefaultMaxPrice)
     {
         return price >= minPrice && price <= maxPrice;
     }
@@ -78,7 +93,7 @@ public static class ValidationUtility
     /// <summary>
     /// Validates a rating score (typically 1-5 stars).
     /// </summary>
-    public static bool IsValidRating(decimal rating, decimal minRating = 0m, decimal maxRating = 5m)
+    public static bool IsValidRating(decimal rating, decimal minRating = DefaultMinRating, decimal maxRating = DefaultMaxRating)
     {
         return rating >= minRating && rating <= maxRating;
     }
@@ -94,7 +109,7 @@ public static class ValidationUtility
     /// <summary>
     /// Validates pagination parameters.
     /// </summary>
-    public static bool IsValidPagination(int page, int pageSize, int maxPageSize = 100)
+    public static bool IsValidPagination(int page, int pageSize, int maxPageSize = DefaultMaxPageSize)
     {
         return page >= 1 && pageSize >= 1 && pageSize <= maxPageSize;
     }
@@ -103,7 +118,7 @@ public static class ValidationUtility
     /// Sanitizes user input to prevent injection attacks.
     /// Removes potentially harmful characters.
     /// </summary>
-    public static string SanitizeInput(string input, int maxLength = 1000)
+    public static string SanitizeInput(string input, int maxLength = DefaultMaxInputLength)
     {
         if (string.IsNullOrWhiteSpace(input))
             return string.Empty;
@@ -122,7 +137,7 @@ public static class ValidationUtility
     /// <summary>
     /// Validates a search query is appropriate length and not empty.
     /// </summary>
-    public static bool IsValidSearchQuery(string? query, int minLength = 2, int maxLength = 100)
+    public static bool IsValidSearchQuery(string? query, int minLength = DefaultMinSearchQueryLength, int maxLength = DefaultMaxSearchQueryLength)
     {
         if (string.IsNullOrWhiteSpace(query))
             return false;
