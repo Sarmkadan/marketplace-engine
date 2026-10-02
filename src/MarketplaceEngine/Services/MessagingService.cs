@@ -30,7 +30,6 @@ public class MessagingService
     {
         ArgumentNullException.ThrowIfNull(subject);
         ArgumentNullException.ThrowIfNull(body);
-        ArgumentNullException.ThrowIfNull(attachments);
 
         var sender = await _userRepository.GetByIdAsync(senderId);
         if (sender is null)
@@ -159,7 +158,6 @@ public class MessagingService
         List<string>? attachments = null)
     {
         ArgumentNullException.ThrowIfNull(body);
-        ArgumentNullException.ThrowIfNull(attachments);
 
         var parentMessage = await _messageRepository.GetByIdAsync(parentMessageId);
         if (parentMessage is null)
