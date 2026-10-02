@@ -402,6 +402,56 @@ class JsonDemo
         Console.WriteLine($"\nCompletePaymentRequest is null: {completeRequest == null}");
     }
 }
+## PricingEngine
+
+The `PricingEngine` service handles all price calculations in the marketplace, including platform fees, discounts, and bulk pricing tiers.
+
+### Purpose
+
+- Calculates final prices including platform fees (5% commission)
+- Applies percentage-based discounts (up to 50% maximum)
+- Computes bulk pricing with tiered discounts (5% for 5+, 10% for 10+, 15% for 25+ units)
+- Centralizes pricing logic to ensure consistency across the marketplace
+- Handles currency-aware calculations using the `Money` value object
+
+### Calculation Pipeline
+
+1. **Base Price**: Start with the listing's base price
+2. **Discounts**: Apply any percentage discounts (if applicable)
+3. **Platform Fee**: Calculate 5% commission on the discounted price
+4. **Final Totals**: 
+   - Buyer pays: base price (or discounted price) + platform fee
+   - Seller receives: base price (or discounted price) - platform fee
+
+### Rounding Rules
+
+All monetary values are rounded to 2 decimal places using `MidpointRounding.AwayFromZero` (standard commercial rounding).
+
+### Example Calculation
+
+For a $100 listing with a 10% discount:
+
+1. Base price: $100.00
+2. Discount (10%): $100.00 × 0.10 = $10.00
+3. Discounted price: $100.00 - $10.00 = $90.00
+4. Platform fee (5%): $90.00 × 0.05 = $4.50
+5. Buyer total: $90.00 + $4.50 = $94.50
+6. Seller payout: $90.00 - $4.50 = $85.50
+
+### Public API
+
+| Method | Description |
+|--------|-------------|
+| `CalculateTotalAsync(listingId)` | Calculates total price for a listing including platform fee |
+| `CalculateBreakdown(basePrice)` | Calculates price breakdown for a given base amount |
+| `ApplyDiscount(basePrice, discountPercent)` | Applies a percentage discount and returns breakdown |
+| `CalculateBulkPrice(unitPrice, quantity)` | Calculates bulk pricing with tiered discounts |
+
+### Dependencies
+
+- `IListingRepository` - For retrieving listing data
+- `ILogger<PricingEngine>` - For logging pricing operations
+
 ## SellerDashboardServiceTestsValidation
 
 The `SellerDashboardServiceTestsValidation` class provides validation helpers for test scenarios related to the `SellerDashboardService`. It offers extension methods to validate `User` (seller), `Listing`, and `Payment` entities, ensuring they meet expected state requirements for testing. This validation class helps maintain consistency in test data and prevents invalid entities from being used in test scenarios.
