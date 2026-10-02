@@ -55,9 +55,20 @@ public class OrderProcessor : IDisposable
     /// <param name="paymentMethod">Payment method identifier (e.g. "card", "paypal").</param>
     /// <returns>The created payment representing the order.</returns>
     /// <exception cref="MarketplaceException">Thrown when listing is unavailable or buyer is the seller.</exception>
+    /// <exception cref="ArgumentException">Thrown when input parameters are invalid.</exception>
     public async Task<Payment> PlaceOrderAsync(Guid listingId, Guid buyerId, string paymentMethod)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
+
+        // Validate input parameters
+        if (listingId == Guid.Empty)
+            throw new ArgumentException("Listing ID cannot be empty.", nameof(listingId));
+
+        if (buyerId == Guid.Empty)
+            throw new ArgumentException("Buyer ID cannot be empty.", nameof(buyerId));
+
+        if (string.IsNullOrWhiteSpace(paymentMethod))
+            throw new ArgumentException("Payment method cannot be null or empty.", nameof(paymentMethod));
 
         await _processingLock.WaitAsync();
         try
@@ -105,9 +116,14 @@ public class OrderProcessor : IDisposable
     /// </summary>
     /// <param name="paymentId">The payment/order to confirm.</param>
     /// <returns>The updated payment with completed status.</returns>
+    /// <exception cref="ArgumentException">Thrown when input parameters are invalid.</exception>
     public async Task<Payment> ConfirmOrderAsync(Guid paymentId)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
+
+        // Validate input parameters
+        if (paymentId == Guid.Empty)
+            throw new ArgumentException("Payment ID cannot be empty.", nameof(paymentId));
 
         var payment = await _paymentRepository.GetByIdAsync(paymentId);
         if (payment is null)
@@ -139,9 +155,17 @@ public class OrderProcessor : IDisposable
     /// <param name="paymentId">The payment/order to cancel.</param>
     /// <param name="reason">Reason for cancellation.</param>
     /// <returns>The updated payment with cancelled status.</returns>
+    /// <exception cref="ArgumentException">Thrown when input parameters are invalid.</exception>
     public async Task<Payment> CancelOrderAsync(Guid paymentId, string reason)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
+
+        // Validate input parameters
+        if (paymentId == Guid.Empty)
+            throw new ArgumentException("Payment ID cannot be empty.", nameof(paymentId));
+
+        if (string.IsNullOrWhiteSpace(reason))
+            throw new ArgumentException("Cancellation reason cannot be null or empty.", nameof(reason));
 
         var payment = await _paymentRepository.GetByIdAsync(paymentId);
         if (payment is null)
@@ -168,9 +192,14 @@ public class OrderProcessor : IDisposable
     /// </summary>
     /// <param name="buyerId">The buyer whose orders to retrieve.</param>
     /// <returns>List of payments representing the buyer's orders.</returns>
+    /// <exception cref="ArgumentException">Thrown when input parameters are invalid.</exception>
     public async Task<IReadOnlyList<Payment>> GetOrdersByBuyerAsync(Guid buyerId)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
+
+        // Validate input parameters
+        if (buyerId == Guid.Empty)
+            throw new ArgumentException("Buyer ID cannot be empty.", nameof(buyerId));
 
         var allPayments = await _paymentRepository.GetAllAsync();
         return allPayments
