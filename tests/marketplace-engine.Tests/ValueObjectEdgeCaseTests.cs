@@ -582,7 +582,7 @@ public class ValueObjectEdgeCaseTests
     /// </summary>
     [Theory]
     [InlineData("New York", "NY", "US", null, "New York, NY US")]
-    [InlineData("San Francisco", "CA", "US", "94105", "San Francisco, CA US")]
+    [InlineData("San Francisco", "CA", "US", "94105", "San Francisco, CA US 94105")]
     public void Location_ToString_FormatsCorrectly(string city, string state, string countryCode, string? postalCode, string expectedFormat)
     {
         // Arrange & Act
