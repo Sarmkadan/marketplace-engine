@@ -16,6 +16,8 @@ namespace MarketplaceEngine.Services;
 /// <summary>
 /// Calculates final prices including platform fees, discounts, and currency-aware totals.
 /// Centralizes all pricing logic to keep it consistent across the marketplace.
+/// Calculation order: Base price → Discounts → Platform fee → Final totals.
+/// Rounding: All monetary values rounded to 2 decimal places using MidpointRounding.AwayFromZero.
 /// </summary>
 public class PricingEngine
 {
@@ -23,20 +25,31 @@ public class PricingEngine
     private readonly ILogger<PricingEngine> _logger;
 
     /// <summary>
-    /// Platform commission rate applied to each transaction.
+    /// Platform commission rate applied to each transaction (5%).
     /// </summary>
     private const decimal PlatformFeeRate = 0.05m;
 
     /// <summary>
-    /// Maximum allowed discount percentage.
+    /// Maximum allowed discount percentage (50%).
     /// </summary>
     private const decimal MaxDiscountPercent = 0.50m;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="PricingEngine"/> class.
+    /// </summary>
+    /// <param name="listingRepository">Repository for accessing listing data.</param>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="listingRepository"/> is null.</exception>
     public PricingEngine(IListingRepository listingRepository)
         : this(listingRepository, NullLogger<PricingEngine>.Instance)
     {
     }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="PricingEngine"/> class with a logger.
+    /// </summary>
+    /// <param name="listingRepository">Repository for accessing listing data.</param>
+    /// <param name="logger">Logger for pricing operations.</param>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="listingRepository"/> or <paramref name="logger"/> is null.</exception>
     public PricingEngine(
         IListingRepository listingRepository,
         ILogger<PricingEngine> logger)
@@ -47,9 +60,18 @@ public class PricingEngine
 
     /// <summary>
     /// Calculates the total price for a listing including platform fee.
+    /// Calculation flow: Get listing base price → Apply platform fee (5%) → Return breakdown.
+    /// Rounding: Platform fee rounded to 2 decimal places using MidpointRounding.AwayFromZero.
     /// </summary>
     /// <param name="listingId">The listing to price.</param>
-    /// <returns>A tuple of (buyerTotal, platformFee, sellerPayout).</returns>
+    /// <returns>A tuple containing:
+    /// <list type="bullet">
+    /// <item><description>BuyerTotal: Amount the buyer pays (base price)</description></item>
+    /// <item><description>PlatformFee: Platform commission (5% of base price)</description></item>
+    /// <item><description>SellerPayout: Amount the seller receives (base price minus platform fee)</description></item>
+    /// </list>
+    /// </returns>
+    /// <exception cref="MarketplaceException">Thrown when the listing with <paramref name="listingId"/> is not found.</exception>
     public async Task<(Money BuyerTotal, Money PlatformFee, Money SellerPayout)> CalculateTotalAsync(Guid listingId)
     {
         var listing = await _listingRepository.GetByIdAsync(listingId);
@@ -62,9 +84,18 @@ public class PricingEngine
 
     /// <summary>
     /// Calculates the price breakdown for a given base amount.
+    /// Calculation flow: Base price → Calculate platform fee (5%) → Compute seller payout → Return totals.
+    /// Rounding: Platform fee rounded to 2 decimal places using MidpointRounding.AwayFromZero.
     /// </summary>
     /// <param name="basePrice">The listing's base price.</param>
-    /// <returns>A tuple of (buyerTotal, platformFee, sellerPayout).</returns>
+    /// <returns>A tuple containing:
+    /// <list type="bullet">
+    /// <item><description>BuyerTotal: Amount the buyer pays (equals base price)</description></item>
+    /// <item><description>PlatformFee: Platform commission (5% of base price)</description></item>
+    /// <item><description>SellerPayout: Amount the seller receives (base price minus platform fee)</description></item>
+    /// </list>
+    /// </returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="basePrice"/> is null.</exception>
     public (Money BuyerTotal, Money PlatformFee, Money SellerPayout) CalculateBreakdown(Money basePrice)
     {
         ArgumentNullException.ThrowIfNull(basePrice);
@@ -82,11 +113,21 @@ public class PricingEngine
 
     /// <summary>
     /// Applies a percentage discount to a listing price and returns the discounted breakdown.
+    /// Calculation flow: Base price → Apply discount → Calculate platform fee on discounted price → Return breakdown.
+    /// Rounding: Discount amount and platform fee rounded to 2 decimal places using MidpointRounding.AwayFromZero.
     /// </summary>
-    /// <param name="basePrice">Original price.</param>
-    /// <param name="discountPercent">Discount as a decimal (0.0 to 0.5).</param>
-    /// <returns>Price breakdown after discount.</returns>
-    /// <exception cref="ArgumentOutOfRangeException">Thrown when discount exceeds allowed range.</exception>
+    /// <param name="basePrice">Original price before discount.</param>
+    /// <param name="discountPercent">Discount as a decimal (0.0 to 0.5 representing 0% to 50%).</param>
+    /// <returns>A tuple containing:
+    /// <list type="bullet">
+    /// <item><description>DiscountedPrice: Price after discount is applied</description></item>
+    /// <item><description>Savings: Amount saved from the discount</description></item>
+    /// <item><description>PlatformFee: Platform commission (5% of discounted price)</description></item>
+    /// <item><description>SellerPayout: Amount the seller receives (discounted price minus platform fee)</description></item>
+    /// </list>
+    /// </returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="basePrice"/> is null.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="discountPercent"/> is less than 0 or greater than 0.5.</exception>
     public (Money DiscountedPrice, Money Savings, Money PlatformFee, Money SellerPayout) ApplyDiscount(
         Money basePrice, decimal discountPercent)
     {
@@ -111,11 +152,15 @@ public class PricingEngine
 
     /// <summary>
     /// Calculates a bulk pricing estimate for purchasing multiple units.
-    /// Applies a tiered discount: 5% for 5+, 10% for 10+, 15% for 25+ units.
+    /// Calculation flow: Calculate subtotal → Apply tiered discount → Return total.
+    /// Tiered discounts: 5% for 5+ units, 10% for 10+ units, 15% for 25+ units.
+    /// Rounding: Discount amount rounded to 2 decimal places using MidpointRounding.AwayFromZero.
     /// </summary>
     /// <param name="unitPrice">Price per unit.</param>
-    /// <param name="quantity">Number of units.</param>
-    /// <returns>Total price after bulk discount.</returns>
+    /// <param name="quantity">Number of units (must be positive).</param>
+    /// <returns>Total price after applying the appropriate bulk discount.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="unitPrice"/> is null.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="quantity"/> is less than or equal to zero.</exception>
     public Money CalculateBulkPrice(Money unitPrice, int quantity)
     {
         ArgumentNullException.ThrowIfNull(unitPrice);
