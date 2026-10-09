@@ -29,18 +29,32 @@ public class PaymentGateway
     /// </summary>
     private readonly double _simulatedFailureRate;
 
+    /// <summary>
+    /// Creates a gateway with no logging and simulated failures disabled.
+    /// </summary>
+    /// <param name="paymentRepository">Repository used to load and persist payments.</param>
     public PaymentGateway(IPaymentRepository paymentRepository)
         : this(paymentRepository, NullLogger<PaymentGateway>.Instance, 0.0)
     {
     }
 
+    /// <summary>
+    /// Creates a gateway with the given logger and simulated failure rate.
+    /// </summary>
+    /// <param name="paymentRepository">Repository used to load and persist payments.</param>
+    /// <param name="logger">Logger for authorization, capture and refund events.</param>
+    /// <param name="simulatedFailureRate">Probability (0.0 to 1.0, clamped) that authorization is declined.</param>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="paymentRepository"/> or <paramref name="logger"/> is null.</exception>
     public PaymentGateway(
         IPaymentRepository paymentRepository,
         ILogger<PaymentGateway> logger,
         double simulatedFailureRate = 0.0)
     {
-        _paymentRepository = paymentRepository ?? throw new ArgumentNullException(nameof(paymentRepository));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        ArgumentNullException.ThrowIfNull(paymentRepository);
+        ArgumentNullException.ThrowIfNull(logger);
+
+        _paymentRepository = paymentRepository;
+        _logger = logger;
         _simulatedFailureRate = Math.Clamp(simulatedFailureRate, 0.0, 1.0);
     }
 
@@ -118,8 +132,11 @@ public class PaymentGateway
     /// <param name="paymentId">The payment to refund.</param>
     /// <param name="reason">Reason for the refund.</param>
     /// <returns>The refunded payment.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="reason"/> is null.</exception>
     public async Task<Payment> RefundAsync(Guid paymentId, string reason)
     {
+        ArgumentNullException.ThrowIfNull(reason);
+
         var payment = await _paymentRepository.GetByIdAsync(paymentId);
         if (payment is null)
             throw new MarketplaceException($"Payment {paymentId} not found.");
@@ -152,6 +169,10 @@ public class PaymentGateway
             string.Equals(p.ExternalTransactionId, externalTransactionId, StringComparison.Ordinal));
     }
 
+    /// <summary>
+    /// Randomly decides whether the simulated provider should decline an authorization.
+    /// </summary>
+    /// <returns>True if the authorization should fail; otherwise false.</returns>
     private bool ShouldSimulateFailure()
     {
         if (_simulatedFailureRate <= 0.0)
