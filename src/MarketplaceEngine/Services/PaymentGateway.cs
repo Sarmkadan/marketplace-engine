@@ -21,6 +21,15 @@ namespace MarketplaceEngine.Services;
 /// </summary>
 public class PaymentGateway
 {
+    private const double DefaultSimulatedFailureRate = 0.0;
+    private const double MinSimulatedFailureRate = 0.0;
+    private const double MaxSimulatedFailureRate = 1.0;
+    private const string TransactionIdPrefix = "txn_";
+    private const int TransactionIdLength = 24;
+    private const string SimulatedDeclineReason = "Authorization declined by provider (simulated).";
+    private const decimal PlatformFeeRate = 0.05m;
+    private const int MoneyDecimalPlaces = 2;
+
     private readonly IPaymentRepository _paymentRepository;
     private readonly ILogger<PaymentGateway> _logger;
 
@@ -34,7 +43,7 @@ public class PaymentGateway
     /// </summary>
     /// <param name="paymentRepository">Repository used to load and persist payments.</param>
     public PaymentGateway(IPaymentRepository paymentRepository)
-        : this(paymentRepository, NullLogger<PaymentGateway>.Instance, 0.0)
+        : this(paymentRepository, NullLogger<PaymentGateway>.Instance, DefaultSimulatedFailureRate)
     {
     }
 
@@ -48,14 +57,14 @@ public class PaymentGateway
     public PaymentGateway(
         IPaymentRepository paymentRepository,
         ILogger<PaymentGateway> logger,
-        double simulatedFailureRate = 0.0)
+        double simulatedFailureRate = DefaultSimulatedFailureRate)
     {
         ArgumentNullException.ThrowIfNull(paymentRepository);
         ArgumentNullException.ThrowIfNull(logger);
 
         _paymentRepository = paymentRepository;
         _logger = logger;
-        _simulatedFailureRate = Math.Clamp(simulatedFailureRate, 0.0, 1.0);
+        _simulatedFailureRate = Math.Clamp(simulatedFailureRate, MinSimulatedFailureRate, MaxSimulatedFailureRate);
     }
 
     /// <summary>
@@ -76,7 +85,7 @@ public class PaymentGateway
         if (ShouldSimulateFailure())
         {
             payment.Status = PaymentStatus.Failed;
-            payment.FailureReason = "Authorization declined by provider (simulated).";
+            payment.FailureReason = SimulatedDeclineReason;
             payment.UpdatedAt = DateTime.UtcNow;
             await _paymentRepository.UpdateAsync(payment);
 
@@ -85,7 +94,7 @@ public class PaymentGateway
         }
 
         payment.Status = PaymentStatus.Processing;
-        payment.ExternalTransactionId = $"txn_{Guid.NewGuid():N}"[..24];
+        payment.ExternalTransactionId = $"{TransactionIdPrefix}{Guid.NewGuid():N}"[..TransactionIdLength];
         payment.UpdatedAt = DateTime.UtcNow;
         await _paymentRepository.UpdateAsync(payment);
 
@@ -114,7 +123,7 @@ public class PaymentGateway
         payment.UpdatedAt = DateTime.UtcNow;
 
         // Calculate platform fee and seller payout
-        var feeAmount = Math.Round(payment.Amount.Amount * 0.05m, 2, MidpointRounding.AwayFromZero);
+        var feeAmount = Math.Round(payment.Amount.Amount * PlatformFeeRate, MoneyDecimalPlaces, MidpointRounding.AwayFromZero);
         payment.PlatformFee = new Money(feeAmount, payment.Amount.CurrencyCode);
         payment.SellerPayout = new Money(payment.Amount.Amount - feeAmount, payment.Amount.CurrencyCode);
 
