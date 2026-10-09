@@ -23,6 +23,13 @@ public class ReviewService
     private readonly IUserRepository _userRepository;
     private readonly IListingRepository _listingRepository;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ReviewService"/> class.
+    /// </summary>
+    /// <param name="reviewRepository">Repository used to persist and query reviews.</param>
+    /// <param name="userRepository">Repository used to look up reviewers, sellers, and moderators.</param>
+    /// <param name="listingRepository">Repository used to validate listing references.</param>
+    /// <exception cref="ArgumentNullException">Thrown when any repository argument is <c>null</c>.</exception>
     public ReviewService(
         IReviewRepository reviewRepository,
         IUserRepository userRepository,
@@ -38,6 +45,17 @@ public class ReviewService
     /// is not reviewing themselves, and has not already reviewed this seller/listing.
     /// Updates the seller's aggregate rating after submission.
     /// </summary>
+    /// <param name="reviewerId">ID of the user submitting the review.</param>
+    /// <param name="sellerId">ID of the seller being reviewed.</param>
+    /// <param name="score">Rating score for the review.</param>
+    /// <param name="comment">Review text. Must not be <c>null</c>.</param>
+    /// <param name="listingId">Optional ID of the listing the review relates to.</param>
+    /// <returns>The created review.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="comment"/> is <c>null</c>.</exception>
+    /// <exception cref="ResourceNotFoundException">Thrown when the reviewer, seller, or listing does not exist.</exception>
+    /// <exception cref="UnauthorizedException">Thrown when the reviewer is not active.</exception>
+    /// <exception cref="MarketplaceException">Thrown when a seller attempts to review themselves.</exception>
+    /// <exception cref="DuplicateResourceException">Thrown when a review for this reviewer, seller, and listing already exists.</exception>
     public async Task<Review> SubmitReviewAsync(
         Guid reviewerId,
         Guid sellerId,
@@ -93,6 +111,13 @@ public class ReviewService
     /// <summary>
     /// Adds a seller reply to an existing review. Only the seller of the listing may reply.
     /// </summary>
+    /// <param name="reviewId">ID of the review to reply to.</param>
+    /// <param name="sellerId">ID of the seller attempting to reply.</param>
+    /// <param name="reply">Reply text. Must not be <c>null</c>.</param>
+    /// <returns>The updated review.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="reply"/> is <c>null</c>.</exception>
+    /// <exception cref="ResourceNotFoundException">Thrown when the review does not exist.</exception>
+    /// <exception cref="UnauthorizedException">Thrown when <paramref name="sellerId"/> is not the seller of the review.</exception>
     public async Task<Review> AddSellerReplyAsync(Guid reviewId, Guid sellerId, string reply)
     {
         ArgumentNullException.ThrowIfNull(reply);
@@ -109,6 +134,9 @@ public class ReviewService
     /// <summary>
     /// Retrieves a review by its ID.
     /// </summary>
+    /// <param name="reviewId">ID of the review to retrieve.</param>
+    /// <returns>The matching review.</returns>
+    /// <exception cref="ResourceNotFoundException">Thrown when the review does not exist.</exception>
     public async Task<Review> GetReviewAsync(Guid reviewId)
     {
         return await GetReviewOrThrowAsync(reviewId);
@@ -117,6 +145,11 @@ public class ReviewService
     /// <summary>
     /// Retrieves paginated reviews for a seller.
     /// </summary>
+    /// <param name="sellerId">ID of the seller whose reviews are requested.</param>
+    /// <param name="pageNumber">One-based page number. Defaults to 1.</param>
+    /// <param name="pageSize">Number of reviews per page. Defaults to 20.</param>
+    /// <returns>A tuple containing the reviews on the requested page and the total review count.</returns>
+    /// <exception cref="ResourceNotFoundException">Thrown when the seller does not exist.</exception>
     public async Task<(List<Review> items, int total)> GetSellerReviewsAsync(
         Guid sellerId, int pageNumber = 1, int pageSize = 20)
     {
@@ -130,6 +163,9 @@ public class ReviewService
     /// <summary>
     /// Retrieves all reviews for a specific listing.
     /// </summary>
+    /// <param name="listingId">ID of the listing whose reviews are requested.</param>
+    /// <returns>All reviews associated with the listing.</returns>
+    /// <exception cref="ResourceNotFoundException">Thrown when the listing does not exist.</exception>
     public async Task<List<Review>> GetListingReviewsAsync(Guid listingId)
     {
         var listing = await _listingRepository.GetByIdAsync(listingId);
@@ -142,6 +178,12 @@ public class ReviewService
     /// <summary>
     /// Returns aggregated review statistics for a seller.
     /// </summary>
+    /// <param name="sellerId">ID of the seller whose statistics are requested.</param>
+    /// <returns>
+    /// A tuple containing the average score (rounded to two decimals, 0 when there are no reviews),
+    /// the total review count, and a distribution map from each score (1-5) to its number of reviews.
+    /// </returns>
+    /// <exception cref="ResourceNotFoundException">Thrown when the seller does not exist.</exception>
     public async Task<(double averageScore, int total, Dictionary<int, int> distribution)> GetSellerStatsAsync(Guid sellerId)
     {
         var seller = await _userRepository.GetByIdAsync(sellerId);
@@ -159,6 +201,9 @@ public class ReviewService
     /// <summary>
     /// Flags a review for moderation.
     /// </summary>
+    /// <param name="reviewId">ID of the review to flag.</param>
+    /// <returns>The updated review.</returns>
+    /// <exception cref="ResourceNotFoundException">Thrown when the review does not exist.</exception>
     public async Task<Review> FlagReviewAsync(Guid reviewId)
     {
         var review = await GetReviewOrThrowAsync(reviewId);
@@ -169,6 +214,11 @@ public class ReviewService
     /// <summary>
     /// Removes a review (moderator action). Updates the seller's rating afterwards.
     /// </summary>
+    /// <param name="reviewId">ID of the review to remove.</param>
+    /// <param name="moderatorId">ID of the user performing the removal. Must be a moderator or administrator.</param>
+    /// <returns>The updated review.</returns>
+    /// <exception cref="UnauthorizedException">Thrown when the user does not exist or lacks the moderator or administrator role.</exception>
+    /// <exception cref="ResourceNotFoundException">Thrown when the review does not exist.</exception>
     public async Task<Review> RemoveReviewAsync(Guid reviewId, Guid moderatorId)
     {
         var moderator = await _userRepository.GetByIdAsync(moderatorId);
@@ -184,7 +234,11 @@ public class ReviewService
         return updated;
     }
 
-    // Recalculates and persists the seller's aggregate rating based on current reviews
+    /// <summary>
+    /// Recalculates and persists the seller's aggregate rating based on current reviews.
+    /// Does nothing when the seller has no reviews.
+    /// </summary>
+    /// <param name="sellerId">ID of the seller whose rating is recalculated.</param>
     private async Task UpdateSellerRatingAsync(Guid sellerId)
     {
         var reviews = await _reviewRepository.GetBySellerIdAsync(sellerId);
@@ -202,6 +256,12 @@ public class ReviewService
         }
     }
 
+    /// <summary>
+    /// Loads a review by ID or throws if it does not exist.
+    /// </summary>
+    /// <param name="reviewId">ID of the review to load.</param>
+    /// <returns>The matching review.</returns>
+    /// <exception cref="ResourceNotFoundException">Thrown when the review does not exist.</exception>
     private async Task<Review> GetReviewOrThrowAsync(Guid reviewId)
     {
         var review = await _reviewRepository.GetByIdAsync(reviewId);
