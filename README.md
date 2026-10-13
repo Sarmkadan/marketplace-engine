@@ -168,6 +168,169 @@ async Task PlaceSampleOrder()
 await PlaceSampleOrder();
 ```
 
+## Pricing and discounts
+
+Here are some copy-pasteable examples showing how to apply discounts and taxes using the PricingEngine.
+
+```csharp
+// Example: Applying a percentage discount using the ApplyDiscount method
+// First, get the listing price (in a real app, you'd get this from a service or repository)
+Money basePrice = new Money(100.00m, "USD"); // Example: $100.00
+// Apply a 10% discount
+var (discountedPrice, savings, platformFee, sellerPayout) = pricingEngine.ApplyDiscount(basePrice, 0.10m);
+Console.WriteLine($"Original price: {basePrice}");
+Console.WriteLine($"Discount (10%): {savings}");
+Console.WriteLine($"Price after discount: {discountedPrice}");
+Console.WriteLine($"Platform fee (5%): {platformFee}");
+Console.WriteLine($"Seller payout: {sellerPayout}");
+
+// Example: Applying a fixed-amount discount
+// Note: The PricingEngine doesn't have a direct method for fixed-amount discounts,
+// but we can calculate it manually or extend the engine.
+Money basePrice2 = new Money(100.00m, "USD"); // Example: $100.00
+decimal fixedDiscountAmount = 5.00m; // $5 discount
+if (fixedDiscountAmount > 0 && fixedDiscountAmount < basePrice2.Amount)
+{
+    decimal discountPercent = (float)fixedDiscountAmount / (float)basePrice2.Amount;
+    var (discountedPrice2, savings2, platformFee2, sellerPayout2) = pricingEngine.ApplyDiscount(basePrice2, discountPercent);
+    Console.WriteLine($"Original price: {basePrice2}");
+    Console.WriteLine($"Fixed discount: {fixedDiscountAmount}");
+    Console.WriteLine($"Price after discount: {discountedPrice2}");
+    Console.WriteLine($"Platform fee (5%): {platformFee2}");
+    Console.WriteLine($"Seller payout: {sellerPayout2}");
+}
+
+// Example: Quantity-tier discounts using the CalculateBulkPrice method
+Money unitPrice = new Money(25.00m, "USD"); // Example: $25.00 per unit
+int quantity = 10;
+// Get bulk price for 10 items (qualifies for 10% discount)
+Money totalPrice = pricingEngine.CalculateBulkPrice(unitPrice, quantity);
+Console.WriteLine($"Unit price: {unitPrice}");
+Console.WriteLine($"Quantity: {quantity}");
+Console.WriteLine($"Total price (with bulk discount): {totalPrice}");
+
+// Calculate the breakdown for the total price
+var (buyerTotal, platformFee3, sellerPayout3) = pricingEngine.CalculateBreakdown(totalPrice);
+Console.WriteLine($"Buyer pays: {buyerTotal}");
+Console.WriteLine($"Platform fee (5%): {platformFee3}");
+Console.WriteLine($"Seller payout: {sellerPayout3}");
+
+// Example: Including tax
+// Note: The PricingEngine doesn't have built-in tax calculation,
+// but we can demonstrate how to add tax to the final amount.
+Money basePrice3 = new Money(100.00m, "USD"); // Example: $100.00
+var (buyerTotal2, platformFee4, sellerPayout4) = pricingEngine.CalculateBreakdown(basePrice3);
+
+// Add tax (example: 8% sales tax)
+decimal taxRate = 0.08m;
+decimal taxAmount = Math.Round((buyerTotal2.Amount + platformFee4.Amount) * taxRate, 2, MidpointRounding.AwayFromZero);
+Money tax = new Money(taxAmount, buyerTotal2.CurrencyCode);
+Money totalWithTax = new Money(buyerTotal2.Amount + platformFee4.Amount + taxAmount, buyerTotal2.CurrencyCode);
+
+Console.WriteLine($"Base price: {buyerTotal2}");
+Console.WriteLine($"Platform fee (5%): {platformFee4}");
+Console.WriteLine($"Subtotal: {new Money(buyerTotal2.Amount + platformFee4.Amount, buyerTotal2.CurrencyCode)}");
+Console.WriteLine($"Tax (8%): {tax}");
+Console.WriteLine($"Total: {totalWithTax}");
+```
+
+## Handling payment failures
+
+When processing payments, it's important to handle failures gracefully. The PaymentGateway and OrderProcessor
+throw MarketplaceException for various failure scenarios that you can catch and handle.
+
+Here's an example showing how to catch and handle payment failures:
+
+```csharp
+try
+{
+    // Place the order (creates a payment in Pending status)
+    var payment = await orderProcessor.PlaceOrderAsync(listingId, buyerId, paymentMethod);
+    Console.WriteLine($"Order placed! Payment ID: {payment.Id}");
+
+    // Authorize payment
+    var authorizedPayment = await paymentGateway.AuthorizeAsync(payment.Id);
+    Console.WriteLine($"Payment authorized. Transaction ID: {authorizedPayment.ExternalTransactionId}");
+
+    // Reserve inventory
+    var reservationSuccess = await inventoryTracker.ReserveStockAsync(listingId, 1);
+    if (!reservationSuccess)
+    {
+        // Failed to reserve inventory, we should cancel the order
+        await orderProcessor.CancelOrderAsync(payment.Id, "Failed to reserve inventory");
+        Console.WriteLine("Failed to reserve inventory, order cancelled.");
+        return;
+    }
+    Console.WriteLine("Inventory reserved");
+
+    // Capture payment (completes the charge)
+    var capturedPayment = await paymentGateway.CaptureAsync(authorizedPayment.Id);
+    Console.WriteLine($"Payment captured");
+
+    // Commit inventory reservation
+    await inventoryTracker.CommitReservationAsync(listingId, 1);
+    Console.WriteLine("Inventory commitment completed");
+
+    // Confirm order (marks listing as delisted)
+    var confirmedPayment = await orderProcessor.ConfirmOrderAsync(capturedPayment.Id);
+    Console.WriteLine($"Order confirmed! Payment status: {confirmedPayment.Status}");
+}
+catch (MarketplaceException ex) when (ex.Message == "Authorization declined by provider (simulated).")
+{
+    // Handle simulated payment decline (from DefaultPaymentProvider)
+    Console.WriteLine($"Payment authorization failed: {ex.Message}");
+    // In a real app, you might ask the user to try a different payment method
+}
+catch (MarketplaceException ex) when (ex.Message.Contains("not found"))
+{
+    // Handle not found errors (payment or listing)
+    Console.WriteLine($"Resource not found: {ex.Message}");
+}
+catch (MarketplaceException ex) when (ex.Message.Contains("cannot be authorized") || 
+                                  ex.Message.Contains("must be authorized before capture") ||
+                                  ex.Message.Contains("Only completed payments can be refunded") ||
+                                  ex.Message.Contains("Completed orders must be refunded, not cancelled") ||
+                                  ex.Message.Contains("Order is already cancelled"))
+{
+    // Handle invalid payment state errors
+    Console.WriteLine($"Invalid payment state: {ex.Message}");
+}
+catch (MarketplaceException ex)
+{
+    // Handle other marketplace exceptions (validation, business rule violations, etc.)
+    Console.WriteLine($"Payment processing failed: {ex.Message}");
+    if (ex.ValidationErrors != null)
+    {
+        foreach (var validationError in ex.ValidationErrors)
+        {
+            Console.WriteLine($"  Validation error for {validationError.Key}: {string.Join(", ", validationError.Value)}");
+        }
+    }
+}
+catch (Exception ex)
+{
+    // Handle unexpected errors
+    Console.WriteLine($"Unexpected error processing payment: {ex.Message}");
+    // Log the full exception for debugging
+    _logger.LogError(ex, "Unexpected error processing payment");
+}
+
+// Alternative approach: Check payment status after operations
+// Note: The current implementation throws exceptions on failure, so this is less common
+// but useful for checking status after successful operations
+var payment = await orderProcessor.PlaceOrderAsync(listingId, buyerId, paymentMethod);
+if (payment.Status == PaymentStatus.Pending)
+{
+    Console.WriteLine("Payment is pending authorization");
+    // Proceed with authorization
+}
+else if (payment.Status == PaymentStatus.Failed)
+{
+    Console.WriteLine("Payment creation failed");
+    // Check payment.FailureReason if available
+}
+```
+
 ## Project Structure
 
 ```
