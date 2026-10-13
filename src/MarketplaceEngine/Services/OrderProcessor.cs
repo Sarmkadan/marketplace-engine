@@ -270,7 +270,8 @@ public class OrderProcessor : IDisposable
     /// <inheritdoc />
     public void Dispose()
     {
-        if (_disposed) return;
+        if (_disposed)
+            return;
         _processingLock.Dispose();
         _disposed = true;
         GC.SuppressFinalize(this);

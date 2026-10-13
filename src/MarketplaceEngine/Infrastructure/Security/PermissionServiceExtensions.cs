@@ -17,7 +17,6 @@ public static class PermissionServiceExtensions
     public static bool IsAdministrator(this PermissionService permissionService, UserRole userRole)
     {
         ArgumentNullException.ThrowIfNull(permissionService);
-        ArgumentNullException.ThrowIfNull(userRole);
 
         return userRole == UserRole.Administrator;
     }
@@ -32,7 +31,6 @@ public static class PermissionServiceExtensions
     public static bool CanEditAnyListing(this PermissionService permissionService, UserRole userRole)
     {
         ArgumentNullException.ThrowIfNull(permissionService);
-        ArgumentNullException.ThrowIfNull(userRole);
 
         return permissionService.HasRole(userRole, UserRole.Administrator);
     }
@@ -47,7 +45,6 @@ public static class PermissionServiceExtensions
     public static bool CanModerateListings(this PermissionService permissionService, UserRole userRole)
     {
         ArgumentNullException.ThrowIfNull(permissionService);
-        ArgumentNullException.ThrowIfNull(userRole);
 
         return permissionService.CanModerate(userRole);
     }
@@ -64,7 +61,6 @@ public static class PermissionServiceExtensions
     public static bool CanManageOwnListings(this PermissionService permissionService, UserRole userRole, Guid listingSellerId, Guid userId)
     {
         ArgumentNullException.ThrowIfNull(permissionService);
-        ArgumentNullException.ThrowIfNull(userRole);
 
         // Administrator can manage any listing
         if (permissionService.HasRole(userRole, UserRole.Administrator))

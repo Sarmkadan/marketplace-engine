@@ -381,8 +381,7 @@ public static class PaymentServiceTestsValidation
         if (problems.Count > 0)
         {
             throw new ArgumentException(
-                $"PaymentServiceTestsData validation failed:{Environment.NewLine}- {
-                    string.Join($"{Environment.NewLine}- ", problems)}");
+                $"PaymentServiceTestsData validation failed:{Environment.NewLine}- {string.Join($"{Environment.NewLine}- ", problems)}");
         }
     }
 }

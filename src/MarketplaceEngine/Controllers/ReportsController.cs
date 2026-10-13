@@ -26,7 +26,8 @@ namespace MarketplaceEngine.Controllers
         [HttpPost]
         public IActionResult Report([FromBody] ReportRequest request)
         {
-            if (request == null) return BadRequest("Request body is required.");
+            if (request == null)
+                return BadRequest("Request body is required.");
 
             _reportService.Report(request.ListingId, request.ReporterUserId, request.Reason);
             return Ok(new { Message = "Report submitted successfully." });

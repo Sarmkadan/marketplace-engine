@@ -359,9 +359,12 @@ public class SearchServiceTests
     [Fact]
     public async Task AdvancedSearchAsync_WithNoFilters_ReturnsAllActiveListingsByViewCount()
     {
-        var l1 = MakeListing(); l1.ViewCount = 5;
-        var l2 = MakeListing(); l2.ViewCount = 100;
-        var l3 = MakeListing(); l3.ViewCount = 20;
+        var l1 = MakeListing();
+        l1.ViewCount = 5;
+        var l2 = MakeListing();
+        l2.ViewCount = 100;
+        var l3 = MakeListing();
+        l3.ViewCount = 20;
         var active = new List<Listing> { l1, l2, l3 };
         _listingRepoMock.Setup(r => r.GetActiveListingsAsync()).ReturnsAsync(active);
 
@@ -380,9 +383,15 @@ public class SearchServiceTests
     [Fact]
     public async Task GetTrendingListingsAsync_SortsDescendingByViewCountThenInterestCount()
     {
-        var t1 = MakeListing(); t1.ViewCount = 10; t1.InterestCount = 5;
-        var t2 = MakeListing(); t2.ViewCount = 50; t2.InterestCount = 1;
-        var t3 = MakeListing(); t3.ViewCount = 10; t3.InterestCount = 20;
+        var t1 = MakeListing();
+        t1.ViewCount = 10;
+        t1.InterestCount = 5;
+        var t2 = MakeListing();
+        t2.ViewCount = 50;
+        t2.InterestCount = 1;
+        var t3 = MakeListing();
+        t3.ViewCount = 10;
+        t3.InterestCount = 20;
         var active = new List<Listing> { t1, t2, t3 };
         _listingRepoMock.Setup(r => r.GetActiveListingsAsync()).ReturnsAsync(active);
 

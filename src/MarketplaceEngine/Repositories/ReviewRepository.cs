@@ -246,9 +246,12 @@ public class ReviewRepository : IReviewRepository
     /// <returns>A tuple containing the requested page of reviews and the total number of matching reviews.</returns>
     public async Task<(List<Review> items, int total)> GetPagedBySellerAsync(Guid sellerId, int pageNumber, int pageSize)
     {
-        if (pageNumber < 1) pageNumber = 1;
-        if (pageSize < 1) pageSize = 20;
-        if (pageSize > 100) pageSize = 100;
+        if (pageNumber < 1)
+            pageNumber = 1;
+        if (pageSize < 1)
+            pageSize = 20;
+        if (pageSize > 100)
+            pageSize = 100;
 
         await Task.Delay(5);
         List<Review> all;

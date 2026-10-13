@@ -234,7 +234,8 @@ public class RecommendationService
             cancellationToken.ThrowIfCancellationRequested();
 
             var listing = await _listingRepository.GetByIdAsync(score.ListingId);
-            if (listing is null) continue;
+            if (listing is null)
+                continue;
 
             hydrated.Add(new RecommendationDto(listing, score));
         }
@@ -256,7 +257,8 @@ public class RecommendationService
         foreach (var item in items)
         {
             categoryCounts.TryGetValue(item.CategoryId, out var seen);
-            if (seen >= maxPerCategory) continue;
+            if (seen >= maxPerCategory)
+                continue;
 
             diversified.Add(item);
             categoryCounts[item.CategoryId] = seen + 1;

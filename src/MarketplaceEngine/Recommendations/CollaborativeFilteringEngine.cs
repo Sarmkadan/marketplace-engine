@@ -158,11 +158,11 @@ public sealed class CollaborativeFilteringEngine : IRecommendationEngine
             {
                 var weight = signal.SignalType switch
                 {
-                    SignalType.View     => _options.ViewWeight,
-                    SignalType.Save     => _options.SaveWeight,
-                    SignalType.Enquiry  => _options.EnquiryWeight,
+                    SignalType.View => _options.ViewWeight,
+                    SignalType.Save => _options.SaveWeight,
+                    SignalType.Enquiry => _options.EnquiryWeight,
                     SignalType.Purchase => _options.PurchaseWeight,
-                    _                  => 1.0
+                    _ => 1.0
                 };
 
                 velocityScores.TryGetValue(signal.ListingId, out var current);
@@ -235,7 +235,8 @@ public sealed class CollaborativeFilteringEngine : IRecommendationEngine
         }
 
         var maxCatWeight = categoryWeights.Values.Max();
-        if (maxCatWeight == 0.0) maxCatWeight = 1.0;
+        if (maxCatWeight == 0.0)
+            maxCatWeight = 1.0;
 
         var interacted = history.Select(s => s.ListingId).ToHashSet();
         var allActiveListings = await _listingRepository.GetActiveListingsAsync();
@@ -340,7 +341,8 @@ public sealed class CollaborativeFilteringEngine : IRecommendationEngine
         Dictionary<Guid, double> scores, int count, RecommendationReason reason)
     {
         double max = scores.Values.DefaultIfEmpty(1.0).Max();
-        if (max == 0.0) max = 1.0;
+        if (max == 0.0)
+            max = 1.0;
 
         return scores
             .OrderByDescending(kvp => kvp.Value)

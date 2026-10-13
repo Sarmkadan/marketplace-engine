@@ -316,19 +316,19 @@ public static class ListingServiceExtendedTestsExtensions
         Guid? sellerId = null,
         Guid? listingId = null,
         decimal? price = null) => new()
-    {
-        Id = listingId ?? Guid.NewGuid(),
-        SellerId = sellerId ?? Guid.NewGuid(),
-        CategoryId = Guid.NewGuid(),
-        Title = "Valid Listing Title",
-        Description = "This is a valid description with enough characters to pass validation.",
-        Price = new Money(price ?? 99.99m, "USD"),
-        Status = Domain.Enums.ListingStatus.Active,
-        ImageUrls = ["https://example.com/image.jpg"],
-        PublishedAt = DateTime.UtcNow,
-        ViewCount = 0,
-        InterestCount = 0
-    };
+        {
+            Id = listingId ?? Guid.NewGuid(),
+            SellerId = sellerId ?? Guid.NewGuid(),
+            CategoryId = Guid.NewGuid(),
+            Title = "Valid Listing Title",
+            Description = "This is a valid description with enough characters to pass validation.",
+            Price = new Money(price ?? 99.99m, "USD"),
+            Status = Domain.Enums.ListingStatus.Active,
+            ImageUrls = ["https://example.com/image.jpg"],
+            PublishedAt = DateTime.UtcNow,
+            ViewCount = 0,
+            InterestCount = 0
+        };
 
     /// <summary>
     /// Creates an administrator user for testing.

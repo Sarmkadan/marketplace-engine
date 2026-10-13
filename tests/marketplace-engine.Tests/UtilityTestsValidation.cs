@@ -144,8 +144,7 @@ public static class UtilityTestsValidation
         if (problems.Count is not 0)
         {
             throw new ArgumentException(
-                $"UtilityTests validation failed:{Environment.NewLine}- {
-                    string.Join($"{Environment.NewLine}- ", problems)}");
+                $"UtilityTests validation failed:{Environment.NewLine}- {string.Join($"{Environment.NewLine}- ", problems)}");
         }
     }
 }
