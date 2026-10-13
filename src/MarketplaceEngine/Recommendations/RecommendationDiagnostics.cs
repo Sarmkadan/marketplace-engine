@@ -26,10 +26,10 @@ public sealed record RecommendationDiagnosticsReport
     /// <summary>Human-readable health assessment derived from tracker statistics.</summary>
     public string HealthSummary => TrackerStats switch
     {
-        { TotalSignals: 0 }                          => "Cold start — no interaction signals recorded yet.",
-        { TotalSignals: < 100, TrackedUsers: < 10 }  => "Warming up — limited personalisation data available.",
+        { TotalSignals: 0 } => "Cold start — no interaction signals recorded yet.",
+        { TotalSignals: < 100, TrackedUsers: < 10 } => "Warming up — limited personalisation data available.",
         { TotalSignals: < 1_000, TrackedUsers: < 50 } => "Operational — basic personalisation active.",
-        _                                             => "Healthy — sufficient signal density for collaborative filtering."
+        _ => "Healthy — sufficient signal density for collaborative filtering."
     };
 }
 

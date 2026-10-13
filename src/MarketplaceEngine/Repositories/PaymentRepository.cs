@@ -214,9 +214,12 @@ public class PaymentRepository : IPaymentRepository
     /// <returns>The payments in the requested page and the total number of payments.</returns>
     public async Task<(List<Payment> items, int total)> GetPagedAsync(int pageNumber, int pageSize)
     {
-        if (pageNumber < 1) pageNumber = 1;
-        if (pageSize < 1) pageSize = 20;
-        if (pageSize > 100) pageSize = 100;
+        if (pageNumber < 1)
+            pageNumber = 1;
+        if (pageSize < 1)
+            pageSize = 20;
+        if (pageSize > 100)
+            pageSize = 100;
 
         await Task.Delay(5);
         List<Payment> all;

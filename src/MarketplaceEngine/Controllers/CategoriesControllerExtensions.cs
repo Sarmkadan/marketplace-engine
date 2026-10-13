@@ -30,8 +30,10 @@ public static class CategoriesControllerExtensions
     {
         ArgumentNullException.ThrowIfNull(controller);
 
-        if (depth < 1) depth = 1;
-        if (depth > 5) depth = 5;
+        if (depth < 1)
+            depth = 1;
+        if (depth > 5)
+            depth = 5;
 
         var allCategories = await controller.GetCategories(depth);
 
@@ -55,8 +57,10 @@ public static class CategoriesControllerExtensions
     {
         ArgumentNullException.ThrowIfNull(controller);
 
-        if (depth < 1) depth = 1;
-        if (depth > 5) depth = 5;
+        if (depth < 1)
+            depth = 1;
+        if (depth > 5)
+            depth = 5;
 
         var allCategories = await controller.GetCategories(depth);
 

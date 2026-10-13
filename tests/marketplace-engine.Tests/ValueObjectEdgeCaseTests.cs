@@ -494,7 +494,7 @@ public class ValueObjectEdgeCaseTests
     [InlineData("New York", "NY", " ")]
     [InlineData("New York", "NY", "USA")]
     [InlineData("New York", "NY", "U")]
-    public void Location_Constructor_WithInvalidRequiredFields_ThrowsArgumentException(string city, string state, string countryCode)
+    public void Location_Constructor_WithInvalidRequiredFields_ThrowsArgumentException(string? city, string? state, string? countryCode)
     {
         // Arrange & Act
         Action act = () => new Location(city, state, countryCode);

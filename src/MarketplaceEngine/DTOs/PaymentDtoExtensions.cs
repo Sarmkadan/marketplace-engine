@@ -207,7 +207,7 @@ public static class PaymentDtoExtensions
     public static bool IsRefundable(this PaymentDto payment, TimeSpan window)
     {
         ArgumentNullException.ThrowIfNull(payment);
-        return payment.Status.Equals("Completed", StringComparison.OrdinalIgnoreCase) && 
+        return payment.Status.Equals("Completed", StringComparison.OrdinalIgnoreCase) &&
                payment.CompletedAt.HasValue &&
                (DateTime.UtcNow - payment.CompletedAt.Value) <= window;
     }
@@ -235,27 +235,28 @@ public static class PaymentDtoExtensions
         ArgumentNullException.ThrowIfNull(payment);
         var currentStatus = payment.GetPaymentStatus();
 
-        if (currentStatus == newStatus) return false;
+        if (currentStatus == newStatus)
+            return false;
 
         return currentStatus switch
         {
-            MarketplaceEngine.Domain.Enums.PaymentStatus.Pending => 
-                newStatus == MarketplaceEngine.Domain.Enums.PaymentStatus.Processing || 
-                newStatus == MarketplaceEngine.Domain.Enums.PaymentStatus.Failed || 
-                newStatus == MarketplaceEngine.Domain.Enums.PaymentStatus.Cancelled,
-            
-            MarketplaceEngine.Domain.Enums.PaymentStatus.Processing => 
-                newStatus == MarketplaceEngine.Domain.Enums.PaymentStatus.Completed || 
-                newStatus == MarketplaceEngine.Domain.Enums.PaymentStatus.Failed || 
-                newStatus == MarketplaceEngine.Domain.Enums.PaymentStatus.InEscrow || 
+            MarketplaceEngine.Domain.Enums.PaymentStatus.Pending =>
+                newStatus == MarketplaceEngine.Domain.Enums.PaymentStatus.Processing ||
+                newStatus == MarketplaceEngine.Domain.Enums.PaymentStatus.Failed ||
                 newStatus == MarketplaceEngine.Domain.Enums.PaymentStatus.Cancelled,
 
-            MarketplaceEngine.Domain.Enums.PaymentStatus.InEscrow => 
-                newStatus == MarketplaceEngine.Domain.Enums.PaymentStatus.Completed || 
-                newStatus == MarketplaceEngine.Domain.Enums.PaymentStatus.Failed || 
+            MarketplaceEngine.Domain.Enums.PaymentStatus.Processing =>
+                newStatus == MarketplaceEngine.Domain.Enums.PaymentStatus.Completed ||
+                newStatus == MarketplaceEngine.Domain.Enums.PaymentStatus.Failed ||
+                newStatus == MarketplaceEngine.Domain.Enums.PaymentStatus.InEscrow ||
+                newStatus == MarketplaceEngine.Domain.Enums.PaymentStatus.Cancelled,
+
+            MarketplaceEngine.Domain.Enums.PaymentStatus.InEscrow =>
+                newStatus == MarketplaceEngine.Domain.Enums.PaymentStatus.Completed ||
+                newStatus == MarketplaceEngine.Domain.Enums.PaymentStatus.Failed ||
                 newStatus == MarketplaceEngine.Domain.Enums.PaymentStatus.Refunded,
 
-            MarketplaceEngine.Domain.Enums.PaymentStatus.Completed => 
+            MarketplaceEngine.Domain.Enums.PaymentStatus.Completed =>
                 newStatus == MarketplaceEngine.Domain.Enums.PaymentStatus.Refunded,
 
             _ => false

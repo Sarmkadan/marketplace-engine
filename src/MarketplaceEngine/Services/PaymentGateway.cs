@@ -15,56 +15,145 @@ using Microsoft.Extensions.Logging.Abstractions;
 namespace MarketplaceEngine.Services;
 
 /// <summary>
-/// Abstracts external payment provider integration, handling charge authorization,
-/// capture, and refund operations. Currently uses an in-process simulation
-/// that can be replaced with a real provider (Stripe, PayPal, etc.).
+/// Defines the contract for a payment provider that handles authorization, capture, and refund operations.
 /// </summary>
-public class PaymentGateway
+public interface IPaymentProvider
 {
-    private const double DefaultSimulatedFailureRate = 0.0;
-    private const double MinSimulatedFailureRate = 0.0;
-    private const double MaxSimulatedFailureRate = 1.0;
+    /// <summary>
+    /// Authorizes a payment.
+    /// </summary>
+    /// <param name="payment">The payment to authorize.</param>
+    /// <returns>The authorized payment.</returns>
+    Task<Payment> AuthorizeAsync(Payment payment);
+
+    /// <summary>
+    /// Captures an authorized payment.
+    /// </summary>
+    /// <param name="payment">The payment to capture.</param>
+    /// <returns>The captured payment.</returns>
+    Task<Payment> CaptureAsync(Payment payment);
+
+    /// <summary>
+    /// Refunds a captured payment.
+    /// </summary>
+    /// <param name="payment">The payment to refund.</param>
+    /// <param name="reason">Reason for the refund.</param>
+    /// <returns>The refunded payment.</returns>
+    Task<Payment> RefundAsync(Payment payment, string reason);
+}
+
+/// <summary>
+/// Default payment provider that simulates success or failure based on a configured failure rate.
+/// Used when no real provider is configured.
+/// </summary>
+public class DefaultPaymentProvider : IPaymentProvider
+{
     private const string TransactionIdPrefix = "txn_";
     private const int TransactionIdLength = 24;
     private const string SimulatedDeclineReason = "Authorization declined by provider (simulated).";
-    private const decimal PlatformFeeRate = 0.05m;
-    private const int MoneyDecimalPlaces = 2;
+    private const double MinSimulatedFailureRate = 0.0;
+    private const double MaxSimulatedFailureRate = 1.0;
 
+    private readonly double _failureRate;
+
+    public DefaultPaymentProvider(double failureRate = 0.0)
+    {
+        _failureRate = Math.Clamp(failureRate, MinSimulatedFailureRate, MaxSimulatedFailureRate);
+    }
+
+    public async Task<Payment> AuthorizeAsync(Payment payment)
+    {
+        if (ShouldSimulateFailure())
+        {
+            // Do not update payment state on failure - let caller handle retries
+            throw new MarketplaceException(SimulatedDeclineReason);
+        }
+
+        payment.Status = PaymentStatus.Processing;
+        payment.ExternalTransactionId = $"{TransactionIdPrefix}{Guid.NewGuid():N}"[..TransactionIdLength];
+        payment.UpdatedAt = DateTime.UtcNow;
+        return payment;
+    }
+
+    public async Task<Payment> CaptureAsync(Payment payment)
+    {
+        if (payment.Status != PaymentStatus.Processing)
+            throw new MarketplaceException($"Payment must be in Processing state to capture (current state: {payment.Status}).");
+
+        payment.Status = PaymentStatus.Completed;
+        payment.CompletedAt = DateTime.UtcNow;
+        payment.UpdatedAt = DateTime.UtcNow;
+        return payment;
+    }
+
+    public async Task<Payment> RefundAsync(Payment payment, string reason)
+    {
+        if (string.IsNullOrWhiteSpace(reason))
+            throw new ValidationException("Reason", "Refund reason is required.");
+
+        if (payment.Status != PaymentStatus.Completed)
+            throw new MarketplaceException($"Only completed payments can be refunded (current state: {payment.Status}).");
+
+        payment.Status = PaymentStatus.Refunded;
+        payment.RefundReason = reason;
+        payment.RefundedAt = DateTime.UtcNow;
+        payment.UpdatedAt = DateTime.UtcNow;
+        return payment;
+    }
+
+    private bool ShouldSimulateFailure()
+    {
+        if (_failureRate <= 0.0)
+            return false;
+
+        return Random.Shared.NextDouble() < _failureRate;
+    }
+}
+
+public class PaymentGateway
+{
     private readonly IPaymentRepository _paymentRepository;
     private readonly ILogger<PaymentGateway> _logger;
+    private readonly IPaymentProvider _provider;
 
     /// <summary>
-    /// Simulated failure rate for testing resilience (0.0 = never fail).
-    /// </summary>
-    private readonly double _simulatedFailureRate;
-
-    /// <summary>
-    /// Creates a gateway with no logging and simulated failures disabled.
+    /// Creates a gateway with no logging and the default payment provider (no simulated failures).
     /// </summary>
     /// <param name="paymentRepository">Repository used to load and persist payments.</param>
     public PaymentGateway(IPaymentRepository paymentRepository)
-        : this(paymentRepository, NullLogger<PaymentGateway>.Instance, DefaultSimulatedFailureRate)
+        : this(paymentRepository, NullLogger<PaymentGateway>.Instance, new DefaultPaymentProvider())
     {
     }
 
     /// <summary>
-    /// Creates a gateway with the given logger and simulated failure rate.
+    /// Creates a gateway with the given logger and the default payment provider (no simulated failures).
     /// </summary>
     /// <param name="paymentRepository">Repository used to load and persist payments.</param>
     /// <param name="logger">Logger for authorization, capture and refund events.</param>
-    /// <param name="simulatedFailureRate">Probability (0.0 to 1.0, clamped) that authorization is declined.</param>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="paymentRepository"/> or <paramref name="logger"/> is null.</exception>
+    public PaymentGateway(IPaymentRepository paymentRepository, ILogger<PaymentGateway> logger)
+        : this(paymentRepository, logger, new DefaultPaymentProvider())
+    {
+    }
+
+    /// <summary>
+    /// Creates a gateway with the given logger and payment provider.
+    /// </summary>
+    /// <param name="paymentRepository">Repository used to load and persist payments.</param>
+    /// <param name="logger">Logger for authorization, capture and refund events.</param>
+    /// <param name="provider">Payment provider to use for authorization, capture, and refund operations.</param>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="paymentRepository"/>, <paramref name="logger"/>, or <paramref name="provider"/> is null.</exception>
     public PaymentGateway(
         IPaymentRepository paymentRepository,
         ILogger<PaymentGateway> logger,
-        double simulatedFailureRate = DefaultSimulatedFailureRate)
+        IPaymentProvider provider)
     {
         ArgumentNullException.ThrowIfNull(paymentRepository);
         ArgumentNullException.ThrowIfNull(logger);
+        ArgumentNullException.ThrowIfNull(provider);
 
         _paymentRepository = paymentRepository;
         _logger = logger;
-        _simulatedFailureRate = Math.Clamp(simulatedFailureRate, MinSimulatedFailureRate, MaxSimulatedFailureRate);
+        _provider = provider;
     }
 
     /// <summary>
@@ -73,6 +162,7 @@ public class PaymentGateway
     /// </summary>
     /// <param name="paymentId">The payment to authorize.</param>
     /// <returns>The authorized payment with an external transaction ID.</returns>
+    /// <exception cref="MarketplaceException">Thrown when the payment is not found, not in Pending state, or authorization fails.</exception>
     public async Task<Payment> AuthorizeAsync(Guid paymentId)
     {
         var payment = await _paymentRepository.GetByIdAsync(paymentId);
@@ -82,26 +172,26 @@ public class PaymentGateway
         if (payment.Status != PaymentStatus.Pending)
             throw new MarketplaceException($"Payment {paymentId} cannot be authorized (status: {payment.Status}).");
 
-        if (ShouldSimulateFailure())
+        try
         {
-            payment.Status = PaymentStatus.Failed;
-            payment.FailureReason = SimulatedDeclineReason;
-            payment.UpdatedAt = DateTime.UtcNow;
-            await _paymentRepository.UpdateAsync(payment);
+            var authorizedPayment = await _provider.AuthorizeAsync(payment);
+            await _paymentRepository.UpdateAsync(authorizedPayment);
 
-            _logger.LogWarning("Payment {PaymentId} authorization failed (simulated)", paymentId);
-            return payment;
+            _logger.LogInformation("Payment {PaymentId} authorized, txn: {TxnId}",
+                paymentId, authorizedPayment.ExternalTransactionId);
+
+            return authorizedPayment;
         }
-
-        payment.Status = PaymentStatus.Processing;
-        payment.ExternalTransactionId = $"{TransactionIdPrefix}{Guid.NewGuid():N}"[..TransactionIdLength];
-        payment.UpdatedAt = DateTime.UtcNow;
-        await _paymentRepository.UpdateAsync(payment);
-
-        _logger.LogInformation("Payment {PaymentId} authorized, txn: {TxnId}",
-            paymentId, payment.ExternalTransactionId);
-
-        return payment;
+        catch (MarketplaceException ex) when (ex.Message == "Authorization declined by provider (simulated).")
+        {
+            _logger.LogWarning("Payment {PaymentId} authorization failed (simulated)", paymentId);
+            throw; // Re-throw the specific decline exception
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Payment {PaymentId} authorization failed with unexpected error", paymentId);
+            throw; // Re-throw any other exceptions
+        }
     }
 
     /// <summary>
@@ -109,6 +199,7 @@ public class PaymentGateway
     /// </summary>
     /// <param name="paymentId">The payment to capture.</param>
     /// <returns>The completed payment.</returns>
+    /// <exception cref="MarketplaceException">Thrown when the payment is not found or not in Processing state.</exception>
     public async Task<Payment> CaptureAsync(Guid paymentId)
     {
         var payment = await _paymentRepository.GetByIdAsync(paymentId);
@@ -118,21 +209,21 @@ public class PaymentGateway
         if (payment.Status != PaymentStatus.Processing)
             throw new MarketplaceException($"Payment {paymentId} must be authorized before capture (status: {payment.Status}).");
 
-        payment.Status = PaymentStatus.Completed;
-        payment.CompletedAt = DateTime.UtcNow;
-        payment.UpdatedAt = DateTime.UtcNow;
+        try
+        {
+            var capturedPayment = await _provider.CaptureAsync(payment);
+            await _paymentRepository.UpdateAsync(capturedPayment);
 
-        // Calculate platform fee and seller payout
-        var feeAmount = Math.Round(payment.Amount.Amount * PlatformFeeRate, MoneyDecimalPlaces, MidpointRounding.AwayFromZero);
-        payment.PlatformFee = new Money(feeAmount, payment.Amount.CurrencyCode);
-        payment.SellerPayout = new Money(payment.Amount.Amount - feeAmount, payment.Amount.CurrencyCode);
+            _logger.LogInformation("Payment {PaymentId} captured: {Amount} {Currency}",
+                paymentId, capturedPayment.Amount.Amount, capturedPayment.Amount.CurrencyCode);
 
-        await _paymentRepository.UpdateAsync(payment);
-
-        _logger.LogInformation("Payment {PaymentId} captured: {Amount} {Currency}",
-            paymentId, payment.Amount.Amount, payment.Amount.CurrencyCode);
-
-        return payment;
+            return capturedPayment;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Payment {PaymentId} capture failed", paymentId);
+            throw;
+        }
     }
 
     /// <summary>
@@ -142,6 +233,7 @@ public class PaymentGateway
     /// <param name="reason">Reason for the refund.</param>
     /// <returns>The refunded payment.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="reason"/> is null.</exception>
+    /// <exception cref="MarketplaceException">Thrown when the payment is not found or not in Completed state.</exception>
     public async Task<Payment> RefundAsync(Guid paymentId, string reason)
     {
         ArgumentNullException.ThrowIfNull(reason);
@@ -153,14 +245,20 @@ public class PaymentGateway
         if (payment.Status != PaymentStatus.Completed)
             throw new MarketplaceException($"Only completed payments can be refunded (status: {payment.Status}).");
 
-        payment.Status = PaymentStatus.Refunded;
-        payment.RefundReason = reason;
-        payment.RefundedAt = DateTime.UtcNow;
-        payment.UpdatedAt = DateTime.UtcNow;
-        await _paymentRepository.UpdateAsync(payment);
+        try
+        {
+            var refundedPayment = await _provider.RefundAsync(payment, reason);
+            await _paymentRepository.UpdateAsync(refundedPayment);
 
-        _logger.LogInformation("Payment {PaymentId} refunded: {Reason}", paymentId, reason);
-        return payment;
+            _logger.LogInformation("Payment {PaymentId} refunded: {Reason}", paymentId, reason);
+
+            return refundedPayment;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Payment {PaymentId} refund failed", paymentId);
+            throw;
+        }
     }
 
     /// <summary>
@@ -176,17 +274,5 @@ public class PaymentGateway
         var payments = await _paymentRepository.GetAllAsync();
         return payments.FirstOrDefault(p =>
             string.Equals(p.ExternalTransactionId, externalTransactionId, StringComparison.Ordinal));
-    }
-
-    /// <summary>
-    /// Randomly decides whether the simulated provider should decline an authorization.
-    /// </summary>
-    /// <returns>True if the authorization should fail; otherwise false.</returns>
-    private bool ShouldSimulateFailure()
-    {
-        if (_simulatedFailureRate <= 0.0)
-            return false;
-
-        return Random.Shared.NextDouble() < _simulatedFailureRate;
     }
 }

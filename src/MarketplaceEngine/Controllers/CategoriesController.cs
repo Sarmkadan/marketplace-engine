@@ -48,8 +48,10 @@ public class CategoriesController : ControllerBase
     [ProducesResponseType(typeof(List<CategoryDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetCategories([FromQuery] int depth = 1)
     {
-        if (depth < 1) depth = 1;
-        if (depth > 5) depth = 5;
+        if (depth < 1)
+            depth = 1;
+        if (depth > 5)
+            depth = 5;
 
         _logger.LogInformation("Fetching categories with depth={Depth}", depth);
 

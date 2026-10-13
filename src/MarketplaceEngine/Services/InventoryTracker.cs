@@ -170,7 +170,8 @@ public class InventoryTracker : IDisposable
     /// <inheritdoc />
     public void Dispose()
     {
-        if (_disposed) return;
+        if (_disposed)
+            return;
         _inventoryLock.Dispose();
         _disposed = true;
         GC.SuppressFinalize(this);

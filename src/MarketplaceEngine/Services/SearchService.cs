@@ -87,9 +87,12 @@ public class SearchService
 
         var listings = await _listingRepository.GetByCategoryIdAsync(categoryId);
 
-        if (pageNumber < 1) pageNumber = 1;
-        if (pageSize < 1) pageSize = AppConstants.DefaultPageSize;
-        if (pageSize > AppConstants.MaxPageSize) pageSize = AppConstants.MaxPageSize;
+        if (pageNumber < 1)
+            pageNumber = 1;
+        if (pageSize < 1)
+            pageSize = AppConstants.DefaultPageSize;
+        if (pageSize > AppConstants.MaxPageSize)
+            pageSize = AppConstants.MaxPageSize;
 
         var total = listings.Count;
         var items = listings

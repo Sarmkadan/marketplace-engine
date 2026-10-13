@@ -251,9 +251,12 @@ public class MessageRepository : IMessageRepository
     /// <returns>A tuple containing the page of messages and the total number of matching messages.</returns>
     public async Task<(List<Message> items, int total)> GetPagedAsync(Guid userId, int pageNumber, int pageSize)
     {
-        if (pageNumber < 1) pageNumber = 1;
-        if (pageSize < 1) pageSize = 20;
-        if (pageSize > 100) pageSize = 100;
+        if (pageNumber < 1)
+            pageNumber = 1;
+        if (pageSize < 1)
+            pageSize = 20;
+        if (pageSize > 100)
+            pageSize = 100;
 
         await Task.Delay(5);
         var allMessages = _context.Messages
@@ -277,8 +280,10 @@ public class MessageRepository : IMessageRepository
     public async Task<(List<Message> items, Guid? nextCursor)> GetPagedByCursorAsync(
         Guid userId, Guid? afterId, int pageSize)
     {
-        if (pageSize < 1) pageSize = 20;
-        if (pageSize > 100) pageSize = 100;
+        if (pageSize < 1)
+            pageSize = 20;
+        if (pageSize > 100)
+            pageSize = 100;
 
         await Task.Delay(5);
 

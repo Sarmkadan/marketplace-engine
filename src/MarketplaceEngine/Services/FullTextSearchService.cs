@@ -155,30 +155,37 @@ public class FullTextSearchService
             if (titleHits > 0)
             {
                 score += TitleBoost * Tf(titleHits, titleTokens.Count);
-                if (!matchedFields.Contains("title")) matchedFields.Add("title");
+                if (!matchedFields.Contains("title"))
+                    matchedFields.Add("title");
             }
 
             if (listing.Tags.Any(tag => tag.Equals(term, StringComparison.Ordinal)
                                      || tag.Contains(term, StringComparison.Ordinal)))
             {
                 score += TagBoost;
-                if (!matchedFields.Contains("tags")) matchedFields.Add("tags");
+                if (!matchedFields.Contains("tags"))
+                    matchedFields.Add("tags");
             }
 
             var descHits = descTokens.Count(t => t.Equals(term, StringComparison.Ordinal));
             if (descHits > 0)
             {
                 score += DescriptionBoost * Tf(descHits, descTokens.Count);
-                if (!matchedFields.Contains("description")) matchedFields.Add("description");
+                if (!matchedFields.Contains("description"))
+                    matchedFields.Add("description");
             }
         }
 
         if (score > 0)
         {
-            if (listing.IsFeatured) score *= FeaturedMultiplier;
-            if (listing.IsRecent()) score *= RecentMultiplier;
-            if (listing.ViewCount > 0) score += Math.Log10(listing.ViewCount + 1) * 0.1;
-            if (listing.InterestCount > 0) score += Math.Log10(listing.InterestCount + 1) * 0.05;
+            if (listing.IsFeatured)
+                score *= FeaturedMultiplier;
+            if (listing.IsRecent())
+                score *= RecentMultiplier;
+            if (listing.ViewCount > 0)
+                score += Math.Log10(listing.ViewCount + 1) * 0.1;
+            if (listing.InterestCount > 0)
+                score += Math.Log10(listing.InterestCount + 1) * 0.05;
         }
 
         return (listing, score, matchedFields);

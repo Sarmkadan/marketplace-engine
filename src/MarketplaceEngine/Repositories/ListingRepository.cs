@@ -316,9 +316,12 @@ public class ListingRepository : IListingRepository
     /// <returns>A tuple containing the list of listings for the specified page and the total count.</returns>
     public async Task<(List<Listing> items, int total)> GetPagedAsync(int pageNumber, int pageSize)
     {
-        if (pageNumber < 1) pageNumber = 1;
-        if (pageSize < 1) pageSize = 20;
-        if (pageSize > 100) pageSize = 100;
+        if (pageNumber < 1)
+            pageNumber = 1;
+        if (pageSize < 1)
+            pageSize = 20;
+        if (pageSize > 100)
+            pageSize = 100;
 
         await Task.Delay(5);
         List<Listing> allListings;

@@ -59,8 +59,7 @@ public static class UserServiceValidation
         if (problems.Count > 0)
         {
             throw new ArgumentException(
-                $"UserService validation failed:{Environment.NewLine}- {
-                    string.Join($"{Environment.NewLine}- ", problems)}",
+                $"UserService validation failed:{Environment.NewLine}- {string.Join($"{Environment.NewLine}- ", problems)}",
                 nameof(value));
         }
     }

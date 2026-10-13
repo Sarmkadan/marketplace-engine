@@ -30,11 +30,11 @@ public static class MarketplaceConfigurationExtensions
 
         return cacheName.Trim().ToLowerInvariant() switch
         {
-            "default"   => configuration.Caching.DefaultTtlMinutes,
-            "listing"   => configuration.Caching.ListingCacheTtlMinutes,
-            "user"      => configuration.Caching.UserCacheTtlMinutes,
-            "category"  => configuration.Caching.CategoryCacheTtlMinutes,
-            "search"    => configuration.Caching.SearchResultCacheTtlMinutes,
+            "default" => configuration.Caching.DefaultTtlMinutes,
+            "listing" => configuration.Caching.ListingCacheTtlMinutes,
+            "user" => configuration.Caching.UserCacheTtlMinutes,
+            "category" => configuration.Caching.CategoryCacheTtlMinutes,
+            "search" => configuration.Caching.SearchResultCacheTtlMinutes,
             _ => throw new KeyNotFoundException($"Cache name '{cacheName}' is not recognised.")
         };
     }

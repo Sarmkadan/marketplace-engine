@@ -203,8 +203,7 @@ public static class ReviewValidation
         if (errors.Count > 0)
         {
             throw new ArgumentException(
-                $"Review validation failed:{Environment.NewLine}- {
-                string.Join($"{Environment.NewLine}- ", errors)}");
+                $"Review validation failed:{Environment.NewLine}- {string.Join($"{Environment.NewLine}- ", errors)}");
         }
     }
 

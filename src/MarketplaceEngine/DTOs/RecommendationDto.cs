@@ -165,10 +165,10 @@ internal static class RecommendationReasonExtensions
     internal static string ToDisplayString(this RecommendationReason reason) => reason switch
     {
         RecommendationReason.CollaborativeFiltering => "Users with similar taste enjoyed this",
-        RecommendationReason.ItemSimilarity        => "Similar to items you've viewed",
-        RecommendationReason.Trending              => "Trending in the marketplace",
-        RecommendationReason.CategoryAffinity      => "Matches your preferred categories",
-        RecommendationReason.Editorial             => "Handpicked for you",
-        _                                          => "Recommended for you"
+        RecommendationReason.ItemSimilarity => "Similar to items you've viewed",
+        RecommendationReason.Trending => "Trending in the marketplace",
+        RecommendationReason.CategoryAffinity => "Matches your preferred categories",
+        RecommendationReason.Editorial => "Handpicked for you",
+        _ => "Recommended for you"
     };
 }

@@ -12,9 +12,12 @@ namespace MarketplaceEngine.Domain.Services
 
         public void Report(Guid listingId, Guid reporterUserId, string reason)
         {
-            if (listingId == Guid.Empty) throw new ArgumentException("ListingId cannot be empty.", nameof(listingId));
-            if (reporterUserId == Guid.Empty) throw new ArgumentException("ReporterUserId cannot be empty.", nameof(reporterUserId));
-            if (string.IsNullOrWhiteSpace(reason)) throw new ArgumentException("Reason cannot be empty.", nameof(reason));
+            if (listingId == Guid.Empty)
+                throw new ArgumentException("ListingId cannot be empty.", nameof(listingId));
+            if (reporterUserId == Guid.Empty)
+                throw new ArgumentException("ReporterUserId cannot be empty.", nameof(reporterUserId));
+            if (string.IsNullOrWhiteSpace(reason))
+                throw new ArgumentException("Reason cannot be empty.", nameof(reason));
 
             var report = new ListingReport(listingId, reporterUserId, reason);
             _reports.Add(report);
@@ -22,7 +25,8 @@ namespace MarketplaceEngine.Domain.Services
 
         public IEnumerable<ListingReport> GetReportsForListing(Guid listingId)
         {
-            if (listingId == Guid.Empty) throw new ArgumentException("ListingId cannot be empty.", nameof(listingId));
+            if (listingId == Guid.Empty)
+                throw new ArgumentException("ListingId cannot be empty.", nameof(listingId));
             return _reports.Where(r => r.ListingId == listingId).ToList();
         }
     }
