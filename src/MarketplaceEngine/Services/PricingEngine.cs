@@ -129,8 +129,7 @@ public class PricingEngine
         var sellerPayout = new Money(basePrice.Amount - feeAmount, basePrice.CurrencyCode);
         var buyerTotal = basePrice;
 
-        _logger.LogDebug("Price breakdown: base={Base}, fee={Fee}, seller={Seller}",
-            basePrice.Amount, feeAmount, sellerPayout.Amount);
+        PricingEngineLog.BreakdownCalculated(_logger, basePrice.Amount, feeAmount, sellerPayout.Amount);
 
         return (buyerTotal, platformFee, sellerPayout);
     }
@@ -168,8 +167,7 @@ public class PricingEngine
 
         var (_, fee, payout) = CalculateBreakdown(discountedPrice);
 
-        _logger.LogInformation("Discount applied: {Percent:P0} off {Base} = {Discounted}",
-            discountPercent, basePrice.Amount, discountedAmount);
+        PricingEngineLog.DiscountApplied(_logger, discountPercent, basePrice.Amount, discountedAmount);
 
         return (discountedPrice, savingsMoney, fee, payout);
     }
@@ -203,8 +201,7 @@ public class PricingEngine
         var discount = Math.Round(subtotal * discountRate, 2, _roundingMode);
         var total = subtotal - discount;
 
-        _logger.LogDebug("Bulk price: {Qty} x {Unit} = {Subtotal}, discount {Rate:P0} = {Total}",
-            quantity, unitPrice.Amount, subtotal, discountRate, total);
+        PricingEngineLog.BulkPriceCalculated(_logger, quantity, unitPrice.Amount, subtotal, discountRate, total);
 
         return new Money(total, unitPrice.CurrencyCode);
     }

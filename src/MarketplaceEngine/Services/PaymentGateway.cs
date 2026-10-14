@@ -51,6 +51,7 @@ public class DefaultPaymentProvider : IPaymentProvider
     private const string TransactionIdPrefix = "txn_";
     private const int TransactionIdLength = 24;
     private const string SimulatedDeclineReason = "Authorization declined by provider (simulated).";
+    private const string SimulatedDeclineCode = "simulated_decline";
     private const double MinSimulatedFailureRate = 0.0;
     private const double MaxSimulatedFailureRate = 1.0;
 
@@ -66,7 +67,7 @@ public class DefaultPaymentProvider : IPaymentProvider
         if (ShouldSimulateFailure())
         {
             // Do not update payment state on failure - let caller handle retries
-            throw new MarketplaceException(SimulatedDeclineReason);
+            throw new MarketplaceException(SimulatedDeclineReason, SimulatedDeclineCode);
         }
 
         payment.Status = PaymentStatus.Processing;
@@ -172,24 +173,27 @@ public class PaymentGateway
         if (payment.Status != PaymentStatus.Pending)
             throw new MarketplaceException($"Payment {paymentId} cannot be authorized (status: {payment.Status}).");
 
+        // The payment ID doubles as the idempotency key: authorization only ever moves a Pending payment forward.
+        var idempotencyKey = payment.Id;
+        PaymentGatewayLog.AuthorizationAttempted(_logger, paymentId, idempotencyKey);
+
         try
         {
             var authorizedPayment = await _provider.AuthorizeAsync(payment);
             await _paymentRepository.UpdateAsync(authorizedPayment);
 
-            _logger.LogInformation("Payment {PaymentId} authorized, txn: {TxnId}",
-                paymentId, authorizedPayment.ExternalTransactionId);
+            PaymentGatewayLog.AuthorizationSucceeded(_logger, paymentId, idempotencyKey, authorizedPayment.ExternalTransactionId);
 
             return authorizedPayment;
         }
         catch (MarketplaceException ex) when (ex.Message == "Authorization declined by provider (simulated).")
         {
-            _logger.LogWarning("Payment {PaymentId} authorization failed (simulated)", paymentId);
+            PaymentGatewayLog.AuthorizationDeclined(_logger, paymentId, idempotencyKey, ex.ErrorCode ?? "unknown");
             throw; // Re-throw the specific decline exception
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Payment {PaymentId} authorization failed with unexpected error", paymentId);
+            PaymentGatewayLog.AuthorizationErrored(_logger, ex, paymentId, idempotencyKey);
             throw; // Re-throw any other exceptions
         }
     }
@@ -214,14 +218,13 @@ public class PaymentGateway
             var capturedPayment = await _provider.CaptureAsync(payment);
             await _paymentRepository.UpdateAsync(capturedPayment);
 
-            _logger.LogInformation("Payment {PaymentId} captured: {Amount} {Currency}",
-                paymentId, capturedPayment.Amount.Amount, capturedPayment.Amount.CurrencyCode);
+            PaymentGatewayLog.CaptureSucceeded(_logger, paymentId, capturedPayment.Amount.Amount, capturedPayment.Amount.CurrencyCode);
 
             return capturedPayment;
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Payment {PaymentId} capture failed", paymentId);
+            PaymentGatewayLog.CaptureFailed(_logger, ex, paymentId);
             throw;
         }
     }
@@ -250,13 +253,13 @@ public class PaymentGateway
             var refundedPayment = await _provider.RefundAsync(payment, reason);
             await _paymentRepository.UpdateAsync(refundedPayment);
 
-            _logger.LogInformation("Payment {PaymentId} refunded: {Reason}", paymentId, reason);
+            PaymentGatewayLog.RefundSucceeded(_logger, paymentId, reason);
 
             return refundedPayment;
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Payment {PaymentId} refund failed", paymentId);
+            PaymentGatewayLog.RefundFailed(_logger, ex, paymentId);
             throw;
         }
     }
