@@ -4,6 +4,7 @@
 // CTO & Software Architect
 // =============================================================================
 
+using System.Diagnostics;
 using MarketplaceEngine.Domain.Enums;
 using MarketplaceEngine.Domain.ValueObjects;
 
@@ -12,6 +13,7 @@ namespace MarketplaceEngine.Domain.Models;
 /// <summary>
 /// Represents a payment transaction between a buyer and seller for a listing.
 /// </summary>
+[DebuggerDisplay("Payment {Id}, Status={Status}, Total={Amount.Amount} {Amount.CurrencyCode}")]
 public class Payment
 {
     public Guid Id { get; set; }
@@ -37,6 +39,12 @@ public class Payment
 
     // Platform fee rate (5%)
     private const decimal PlatformFeeRate = 0.05m;
+
+    /// <summary>
+    /// Returns a compact summary with the payment ID, status, total, currency and listing.
+    /// </summary>
+    public override string ToString() =>
+        $"Payment {{ Id: {Id}, Status: {Status}, Total: {Amount}, Currency: {Amount.CurrencyCode}, ListingId: {ListingId} }}";
 
     // Calculates platform fee and seller payout based on amount
     public void CalculateFees()

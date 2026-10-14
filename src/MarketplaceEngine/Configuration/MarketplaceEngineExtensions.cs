@@ -36,6 +36,7 @@ public static class MarketplaceEngineExtensions
         services.AddMarketplaceServices();
         services.AddFullTextSearch();
         services.AddRecommendationEngine(configuration);
+        services.AddMarketplaceHealthChecks();
 
         // One root options object is validated at startup, so a single failure reports every invalid key.
         services.AddOptions<MarketplaceOptions>()

@@ -43,6 +43,7 @@ public static class DependencyInjection
         services.AddSingleton<PaymentService>();
         services.AddSingleton<ReviewService>();
         services.AddSingleton<SellerDashboardService>();
+        services.AddSingleton<InventoryTracker>();
 
         // Register caching services
         services.AddSingleton<CacheService>();
