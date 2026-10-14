@@ -26,11 +26,11 @@ Unlike the rest of the codebase, the class is not `sealed`.
 
 ## Configuration
 
-Gateway settings are bound from the `PaymentGateway` configuration section into `PaymentGatewayOptions` (`src/MarketplaceEngine/Configuration/PaymentGatewayOptions.cs`). They are registered by `AddPaymentGatewayOptions()`, which `AddMarketplaceServices()` calls, and validated when the host starts by `PaymentGatewayOptionsValidator`.
+Gateway settings are bound from the `Marketplace:PaymentGateway` configuration section into `PaymentGatewayOptions` (`src/MarketplaceEngine/Configuration/PaymentGatewayOptions.cs`). They are registered by `AddMarketplaceEngine()`, and validated when the host starts as part of the `Marketplace` options tree (`MarketplaceOptionsValidator`). A missing or invalid key is reported together with all other marketplace configuration problems.
 
 | Key | Required | Rule | Default |
 |---|---|---|---|
-| `ApiKey` | yes | Non-empty. Supply it outside source control, for example `PaymentGateway__ApiKey` as an environment variable. | (none) |
+| `ApiKey` | yes | Non-empty. Supply it outside source control, for example `Marketplace__PaymentGateway__ApiKey` as an environment variable. | (none) |
 | `BaseUrl` | yes | Absolute `https://` URL. | (none) |
 | `TimeoutSeconds` | no | 1 to 120. | `30` |
 | `MaxRetries` | no | 0 to 10. | `3` |

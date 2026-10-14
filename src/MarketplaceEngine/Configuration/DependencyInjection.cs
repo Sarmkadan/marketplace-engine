@@ -90,9 +90,6 @@ public static class DependencyInjection
         // Register formatters
         services.AddSingleton<FormatterFactory>();
 
-        // Bind and validate payment gateway settings (fails startup on invalid config)
-        services.AddPaymentGatewayOptions();
-
         return services;
     }
 

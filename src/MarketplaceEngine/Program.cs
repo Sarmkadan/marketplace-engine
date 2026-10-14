@@ -10,17 +10,9 @@ using MarketplaceEngine.Infrastructure.Background;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add Marketplace services and repositories to DI container
-builder.Services.AddMarketplaceServices();
-
-// Bind and validate pricing options (fails startup on an invalid Pricing section)
-builder.Services.AddPricingOptions(builder.Configuration);
-
-// Add full-text search service
-builder.Services.AddFullTextSearch();
-
-// Add recommendation engine (collaborative filtering + activity tracking)
-builder.Services.AddRecommendationEngine(builder.Configuration);
+// Register marketplace services, search, recommendations and the validated Marketplace options
+// (fails startup with one aggregated error if the Marketplace section is missing or invalid)
+builder.Services.AddMarketplaceEngine(builder.Configuration);
 
 // Add API documentation (Swagger/OpenAPI)
 builder.Services.AddEndpointsApiExplorer();

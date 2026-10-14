@@ -333,17 +333,25 @@ else if (payment.Status == PaymentStatus.Failed)
 
 ## Configuration
 
+All marketplace settings live under the `Marketplace` section (`Marketplace:Pricing`, `Marketplace:PaymentGateway`, `Marketplace:Inventory`). They are registered with one call, `AddMarketplaceEngine`, and validated together when the host starts. A missing `Marketplace` section or any invalid key stops startup with one `OptionsValidationException` that lists every problem.
+
+```csharp
+builder.Services.AddMarketplaceEngine(builder.Configuration);
+```
+
 ### Pricing
 
-`PricingEngine` reads its settings from the `Pricing` section of `appsettings.json` (or any other configuration source, such as environment variables like `Pricing__MaxDiscountPercent`).
+`PricingEngine` reads its settings from the `Marketplace:Pricing` section of `appsettings.json` (or any other configuration source, such as environment variables like `Marketplace__Pricing__MaxDiscountPercent`).
 
 ```json
 {
-  "Pricing": {
-    "DefaultTaxRate": 0.08,
-    "RoundingMode": "AwayFromZero",
-    "MaxDiscountPercent": 50,
-    "Currency": "USD"
+  "Marketplace": {
+    "Pricing": {
+      "DefaultTaxRate": 0.08,
+      "RoundingMode": "AwayFromZero",
+      "MaxDiscountPercent": 50,
+      "Currency": "USD"
+    }
   }
 }
 ```
@@ -358,15 +366,12 @@ else if (payment.Status == PaymentStatus.Failed)
 The options are validated when the host starts. An invalid value stops startup with an `OptionsValidationException` that lists every bad field, for example:
 
 ```
-Pricing:DefaultTaxRate must be between 0 and 1 (was 1.5).
-Pricing:RoundingMode must be one of: ToEven, AwayFromZero, ToZero, ToNegativeInfinity, ToPositiveInfinity (was 'Banker').
+Invalid 'Marketplace' configuration (2 problem(s)):
+  - Marketplace:Pricing:DefaultTaxRate must be between 0 and 1 (was 1.5).
+  - Marketplace:Pricing:RoundingMode must be one of: ToEven, AwayFromZero, ToZero, ToNegativeInfinity, ToPositiveInfinity (was 'Banker').
 ```
 
-Registration happens in `Program.cs`:
-
-```csharp
-builder.Services.AddPricingOptions(builder.Configuration);
-```
+Registration happens in `Program.cs` through `AddMarketplaceEngine`, as shown in the Configuration section above.
 
 ## Project Structure
 
