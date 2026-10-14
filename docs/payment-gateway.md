@@ -24,6 +24,20 @@ var gateway = new PaymentGateway(paymentRepository, logger, simulatedFailureRate
 
 Unlike the rest of the codebase, the class is not `sealed`.
 
+## Configuration
+
+Gateway settings are bound from the `PaymentGateway` configuration section into `PaymentGatewayOptions` (`src/MarketplaceEngine/Configuration/PaymentGatewayOptions.cs`). They are registered by `AddPaymentGatewayOptions()`, which `AddMarketplaceServices()` calls, and validated when the host starts by `PaymentGatewayOptionsValidator`.
+
+| Key | Required | Rule | Default |
+|---|---|---|---|
+| `ApiKey` | yes | Non-empty. Supply it outside source control, for example `PaymentGateway__ApiKey` as an environment variable. | (none) |
+| `BaseUrl` | yes | Absolute `https://` URL. | (none) |
+| `TimeoutSeconds` | no | 1 to 120. | `30` |
+| `MaxRetries` | no | 0 to 10. | `3` |
+| `Currency` | no | Three uppercase ASCII letters (ISO-4217 shape; the code is not checked against the official list). | `USD` |
+
+An invalid configuration stops startup with an `OptionsValidationException` that lists every invalid field. The check runs when the host starts, not when the first payment is made. Without `ApiKey` or `BaseUrl`, the application will not start.
+
 ## Constants
 
 | Constant | Value | Purpose |
