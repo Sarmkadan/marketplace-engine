@@ -266,10 +266,10 @@ public class PaymentGatewayOptionsTests
         settings[Prefix + nameof(PaymentGatewayOptions.ApiKey)] = "";
         using var host = new HostBuilder()
             .ConfigureAppConfiguration(config => config.AddInMemoryCollection(settings))
-            .ConfigureServices(services =>
+            .ConfigureServices((context, services) =>
             {
                 services.AddLogging();
-                services.AddMarketplaceServices();
+                services.AddMarketplaceEngine(context.Configuration);
             })
             .Build();
 

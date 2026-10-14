@@ -17,13 +17,13 @@ namespace MarketplaceEngine.Configuration;
 public static class PricingExtensions
 {
     /// <summary>
-    /// Binds <see cref="PricingOptions"/> from the <c>Pricing</c> configuration section, validates them with
+    /// Binds <see cref="PricingOptions"/> from the <c>Marketplace:Pricing</c> configuration section, validates them with
     /// data annotations and <see cref="PricingOptionsValidator"/>, and checks them when the host starts.
     /// An invalid configuration stops startup with an <see cref="OptionsValidationException"/> that names each invalid field.
     /// Also registers <see cref="PricingEngine"/> as a singleton.
     /// </summary>
     /// <param name="services">The service collection to add the options to.</param>
-    /// <param name="configuration">The application configuration that contains the <c>Pricing</c> section.</param>
+    /// <param name="configuration">The application configuration that contains the <c>Marketplace:Pricing</c> section.</param>
     /// <returns>The same service collection, for chaining.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="services"/> or <paramref name="configuration"/> is null.</exception>
     public static IServiceCollection AddPricingOptions(this IServiceCollection services, IConfiguration configuration)

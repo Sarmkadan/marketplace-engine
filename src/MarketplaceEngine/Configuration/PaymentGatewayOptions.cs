@@ -8,7 +8,7 @@ namespace MarketplaceEngine.Configuration;
 
 /// <summary>
 /// Strongly-typed settings for the external payment gateway, bound from the
-/// <c>PaymentGateway</c> configuration section. Validated at startup by
+/// <c>Marketplace:PaymentGateway</c> configuration section. Validated at startup by
 /// <see cref="PaymentGatewayOptionsValidator"/>.
 /// </summary>
 public class PaymentGatewayOptions
@@ -16,7 +16,7 @@ public class PaymentGatewayOptions
     /// <summary>
     /// Name of the configuration section these options are bound from.
     /// </summary>
-    public const string SectionName = "PaymentGateway";
+    public const string SectionName = MarketplaceOptions.SectionName + ":PaymentGateway";
 
     /// <summary>
     /// Default request timeout in seconds.

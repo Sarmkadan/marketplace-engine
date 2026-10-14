@@ -9,7 +9,7 @@ using System.ComponentModel.DataAnnotations;
 namespace MarketplaceEngine.Configuration;
 
 /// <summary>
-/// Strongly-typed pricing settings, bound from the <c>Pricing</c> configuration section.
+/// Strongly-typed pricing settings, bound from the <c>Marketplace:Pricing</c> configuration section.
 /// Validated at startup by the data annotations on this class and by <see cref="PricingOptionsValidator"/>.
 /// </summary>
 public class PricingOptions
@@ -17,7 +17,7 @@ public class PricingOptions
     /// <summary>
     /// Name of the configuration section these options are bound from.
     /// </summary>
-    public const string SectionName = "Pricing";
+    public const string SectionName = MarketplaceOptions.SectionName + ":Pricing";
 
     /// <summary>
     /// Default name of the <see cref="MidpointRounding"/> mode used for monetary rounding.

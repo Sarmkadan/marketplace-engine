@@ -15,7 +15,7 @@ namespace MarketplaceEngine.Configuration;
 public static class PaymentGatewayExtensions
 {
     /// <summary>
-    /// Binds <see cref="PaymentGatewayOptions"/> from the <c>PaymentGateway</c> configuration section
+    /// Binds <see cref="PaymentGatewayOptions"/> from the <c>Marketplace:PaymentGateway</c> configuration section
     /// and validates them when the host starts. An invalid configuration stops startup with an
     /// <see cref="OptionsValidationException"/> that names each invalid field, instead of failing later on the first payment.
     /// </summary>
