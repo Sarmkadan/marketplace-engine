@@ -49,8 +49,7 @@ public class ProductCatalog
             query = query.Where(l => l.CategoryId == categoryId.Value);
 
         var result = query.OrderByDescending(l => l.CreatedAt).ToList().AsReadOnly();
-        _logger.LogDebug("Catalog browse returned {Count} listings (category: {CategoryId})",
-            result.Count, categoryId?.ToString() ?? "all");
+        ProductCatalogLog.BrowseCompleted(_logger, result.Count, categoryId?.ToString() ?? "all");
 
         return result;
     }
@@ -81,7 +80,7 @@ public class ProductCatalog
             .ToList()
             .AsReadOnly();
 
-        _logger.LogDebug("Catalog search for '{Term}' returned {Count} results", term, results.Count);
+        ProductCatalogLog.SearchCompleted(_logger, term, results.Count);
         return results;
     }
 
@@ -119,7 +118,7 @@ public class ProductCatalog
         listing.ViewCount++;
         await _listingRepository.UpdateAsync(listing);
 
-        _logger.LogDebug("Product detail viewed: {ListingId} (views: {ViewCount})", listingId, listing.ViewCount);
+        ProductCatalogLog.ProductDetailViewed(_logger, listingId, listing.ViewCount);
         return listing;
     }
 

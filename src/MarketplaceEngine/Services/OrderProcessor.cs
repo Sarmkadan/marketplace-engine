@@ -63,19 +63,19 @@ public class OrderProcessor : IDisposable
         // Validate input parameters
         if (listingId == Guid.Empty)
         {
-            _logger.LogWarning("Invalid listing ID: {ListingId}", listingId);
+            OrderProcessorLog.InvalidListingId(_logger, listingId);
             throw new ArgumentException("Listing ID cannot be empty.", nameof(listingId));
         }
 
         if (buyerId == Guid.Empty)
         {
-            _logger.LogWarning("Invalid buyer ID: {BuyerId}", buyerId);
+            OrderProcessorLog.InvalidBuyerId(_logger, buyerId);
             throw new ArgumentException("Buyer ID cannot be empty.", nameof(buyerId));
         }
 
         if (string.IsNullOrWhiteSpace(paymentMethod))
         {
-            _logger.LogWarning("Invalid payment method: {PaymentMethod}", paymentMethod);
+            OrderProcessorLog.InvalidPaymentMethod(_logger, paymentMethod);
             throw new ArgumentException("Payment method cannot be null or empty.", nameof(paymentMethod));
         }
 
@@ -85,26 +85,26 @@ public class OrderProcessor : IDisposable
             var listing = await _listingRepository.GetByIdAsync(listingId);
             if (listing is null)
             {
-                _logger.LogError("Listing {ListingId} not found", listingId);
+                OrderProcessorLog.ListingNotFound(_logger, listingId);
                 throw new MarketplaceException($"Listing {listingId} not found.");
             }
 
             if (listing.Status != ListingStatus.Active)
             {
-                _logger.LogWarning("Listing {ListingId} is not available for purchase (status: {Status})", listingId, listing.Status);
+                OrderProcessorLog.ListingNotAvailable(_logger, listingId, listing.Status);
                 throw new MarketplaceException($"Listing {listingId} is not available for purchase (status: {listing.Status}).");
             }
 
             if (listing.SellerId == buyerId)
             {
-                _logger.LogWarning("Buyer {BuyerId} cannot purchase their own listing {ListingId}", buyerId, listingId);
+                OrderProcessorLog.SelfPurchaseRejected(_logger, buyerId, listingId);
                 throw new MarketplaceException("Buyer cannot purchase their own listing.");
             }
 
             var buyer = await _userRepository.GetByIdAsync(buyerId);
             if (buyer is null)
             {
-                _logger.LogError("Buyer {BuyerId} not found", buyerId);
+                OrderProcessorLog.BuyerNotFound(_logger, buyerId);
                 throw new MarketplaceException($"Buyer {buyerId} not found.");
             }
 
@@ -121,8 +121,7 @@ public class OrderProcessor : IDisposable
             };
 
             await _paymentRepository.AddAsync(payment);
-            _logger.LogInformation("Order placed: Payment {PaymentId} for Listing {ListingId} by Buyer {BuyerId}",
-                payment.Id, listingId, buyerId);
+            OrderProcessorLog.OrderCreated(_logger, payment.Id, listingId, buyerId);
 
             return payment;
         }
@@ -145,24 +144,24 @@ public class OrderProcessor : IDisposable
         // Validate input parameters
         if (paymentId == Guid.Empty)
         {
-            _logger.LogWarning("Invalid payment ID: {PaymentId}", paymentId);
+            OrderProcessorLog.InvalidOrderId(_logger, paymentId);
             throw new ArgumentException("Payment ID cannot be empty.", nameof(paymentId));
         }
 
         var payment = await _paymentRepository.GetByIdAsync(paymentId);
         if (payment is null)
         {
-            _logger.LogError("Payment {PaymentId} not found", paymentId);
+            OrderProcessorLog.OrderNotFound(_logger, paymentId);
             throw new MarketplaceException($"Payment {paymentId} not found.");
         }
 
         if (payment.Status != PaymentStatus.Pending && payment.Status != PaymentStatus.Processing)
         {
-            _logger.LogWarning("Payment {PaymentId} cannot be confirmed (status: {Status})", paymentId, payment.Status);
+            OrderProcessorLog.OrderNotConfirmable(_logger, paymentId, payment.Status);
             throw new MarketplaceException($"Payment {paymentId} cannot be confirmed (status: {payment.Status}).");
         }
 
-        using (_logger.BeginScope("PaymentId: {PaymentId}", paymentId))
+        using (_logger.BeginScope("OrderId: {OrderId}", paymentId))
         {
             payment.Status = PaymentStatus.Completed;
             payment.CompletedAt = DateTime.UtcNow;
@@ -173,11 +172,11 @@ public class OrderProcessor : IDisposable
             {
                 listing.Status = ListingStatus.Delisted;
                 await _listingRepository.UpdateAsync(listing);
-                _logger.LogInformation("Listing {ListingId} status updated to Delisted", listing.Id);
+                OrderProcessorLog.ListingDelisted(_logger, listing.Id);
             }
 
             await _paymentRepository.UpdateAsync(payment);
-            _logger.LogInformation("Order confirmed: Payment {PaymentId} completed", paymentId);
+            OrderProcessorLog.OrderConfirmed(_logger, paymentId);
         }
 
         return payment;
@@ -197,43 +196,43 @@ public class OrderProcessor : IDisposable
         // Validate input parameters
         if (paymentId == Guid.Empty)
         {
-            _logger.LogWarning("Invalid payment ID: {PaymentId}", paymentId);
+            OrderProcessorLog.InvalidOrderId(_logger, paymentId);
             throw new ArgumentException("Payment ID cannot be empty.", nameof(paymentId));
         }
 
         if (string.IsNullOrWhiteSpace(reason))
         {
-            _logger.LogWarning("Invalid cancellation reason: {Reason}", reason);
+            OrderProcessorLog.InvalidCancellationReason(_logger, reason);
             throw new ArgumentException("Cancellation reason cannot be null or empty.", nameof(reason));
         }
 
         var payment = await _paymentRepository.GetByIdAsync(paymentId);
         if (payment is null)
         {
-            _logger.LogError("Payment {PaymentId} not found", paymentId);
+            OrderProcessorLog.OrderNotFound(_logger, paymentId);
             throw new MarketplaceException($"Payment {paymentId} not found.");
         }
 
         if (payment.Status == PaymentStatus.Completed)
         {
-            _logger.LogWarning("Completed orders must be refunded, not cancelled. PaymentId: {PaymentId}", paymentId);
+            OrderProcessorLog.CompletedOrderCancelRejected(_logger, paymentId);
             throw new MarketplaceException("Completed orders must be refunded, not cancelled.");
         }
 
         if (payment.Status == PaymentStatus.Cancelled)
         {
-            _logger.LogWarning("Order is already cancelled. PaymentId: {PaymentId}", paymentId);
+            OrderProcessorLog.OrderAlreadyCancelled(_logger, paymentId);
             throw new MarketplaceException("Order is already cancelled.");
         }
 
-        using (_logger.BeginScope("PaymentId: {PaymentId}", paymentId))
+        using (_logger.BeginScope("OrderId: {OrderId}", paymentId))
         {
             payment.Status = PaymentStatus.Cancelled;
             payment.FailureReason = reason;
             payment.UpdatedAt = DateTime.UtcNow;
 
             await _paymentRepository.UpdateAsync(payment);
-            _logger.LogInformation("Order cancelled: Payment {PaymentId}, reason: {Reason}", paymentId, reason);
+            OrderProcessorLog.OrderCancelled(_logger, paymentId, reason);
         }
 
         return payment;
@@ -252,7 +251,7 @@ public class OrderProcessor : IDisposable
         // Validate input parameters
         if (buyerId == Guid.Empty)
         {
-            _logger.LogWarning("Invalid buyer ID: {BuyerId}", buyerId);
+            OrderProcessorLog.InvalidBuyerId(_logger, buyerId);
             throw new ArgumentException("Buyer ID cannot be empty.", nameof(buyerId));
         }
 
@@ -263,7 +262,7 @@ public class OrderProcessor : IDisposable
             .ToList()
             .AsReadOnly();
 
-        _logger.LogInformation("Retrieved {Count} orders for buyer {BuyerId}", orders.Count, buyerId);
+        OrderProcessorLog.OrdersRetrieved(_logger, orders.Count, buyerId);
         return orders;
     }
 

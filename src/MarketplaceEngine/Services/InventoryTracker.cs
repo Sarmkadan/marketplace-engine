@@ -61,11 +61,11 @@ public class InventoryTracker : IDisposable
         {
             listing.Status = ListingStatus.Inactive;
             await _listingRepository.UpdateAsync(listing);
-            _logger.LogWarning("Listing {ListingId} deactivated: out of stock", listingId);
+            InventoryTrackerLog.ListingDeactivatedOutOfStock(_logger, listingId);
         }
         else
         {
-            _logger.LogInformation("Stock set for {ListingId}: {Quantity}", listingId, quantity);
+            InventoryTrackerLog.StockSet(_logger, listingId, quantity);
         }
     }
 
@@ -116,13 +116,12 @@ public class InventoryTracker : IDisposable
             var available = GetAvailableStock(listingId);
             if (available < quantity)
             {
-                _logger.LogWarning("Reservation failed for {ListingId}: requested {Qty}, available {Available}",
-                    listingId, quantity, available);
+                InventoryTrackerLog.StockReservationFailed(_logger, listingId, quantity, available);
                 return false;
             }
 
             _reservations.AddOrUpdate(listingId, quantity, (_, existing) => existing + quantity);
-            _logger.LogInformation("Reserved {Qty} units for {ListingId}", quantity, listingId);
+            InventoryTrackerLog.StockReserved(_logger, quantity, listingId);
             return true;
         }
         finally
@@ -153,8 +152,7 @@ public class InventoryTracker : IDisposable
             _stockLevels.AddOrUpdate(listingId, 0, (_, existing) => Math.Max(0, existing - quantity));
 
             var remaining = GetAvailableStock(listingId);
-            _logger.LogInformation("Committed {Qty} units for {ListingId}, remaining: {Remaining}",
-                quantity, listingId, remaining);
+            InventoryTrackerLog.StockCommitted(_logger, quantity, listingId, remaining);
 
             if (_stockLevels.GetValueOrDefault(listingId, 0) == 0)
             {
@@ -179,7 +177,7 @@ public class InventoryTracker : IDisposable
             throw new ArgumentOutOfRangeException(nameof(quantity), "Release quantity must be positive.");
 
         _reservations.AddOrUpdate(listingId, 0, (_, existing) => Math.Max(0, existing - quantity));
-        _logger.LogInformation("Released {Qty} reserved units for {ListingId}", quantity, listingId);
+        InventoryTrackerLog.StockReleased(_logger, quantity, listingId);
     }
 
     /// <inheritdoc />
