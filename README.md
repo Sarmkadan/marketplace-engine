@@ -331,6 +331,43 @@ else if (payment.Status == PaymentStatus.Failed)
 }
 ```
 
+## Configuration
+
+### Pricing
+
+`PricingEngine` reads its settings from the `Pricing` section of `appsettings.json` (or any other configuration source, such as environment variables like `Pricing__MaxDiscountPercent`).
+
+```json
+{
+  "Pricing": {
+    "DefaultTaxRate": 0.08,
+    "RoundingMode": "AwayFromZero",
+    "MaxDiscountPercent": 50,
+    "Currency": "USD"
+  }
+}
+```
+
+| Setting | Type | Default | Rules |
+|---------|------|---------|-------|
+| `DefaultTaxRate` | decimal | `0` | Fraction between `0` and `1` (`0.08` means 8%). |
+| `RoundingMode` | string | `AwayFromZero` | Case-sensitive name of a `MidpointRounding` member: `AwayFromZero`, `ToEven`, `ToZero`, `ToNegativeInfinity`, `ToPositiveInfinity`. Monetary values are rounded to 2 decimal places with this mode. |
+| `MaxDiscountPercent` | decimal | `50` | Percent between `0` and `100`. `ApplyDiscount` rejects larger discounts. |
+| `Currency` | string | `USD` | Three uppercase letters (ISO-4217 format). Used for totals of listings that have no price. |
+
+The options are validated when the host starts. An invalid value stops startup with an `OptionsValidationException` that lists every bad field, for example:
+
+```
+Pricing:DefaultTaxRate must be between 0 and 1 (was 1.5).
+Pricing:RoundingMode must be one of: ToEven, AwayFromZero, ToZero, ToNegativeInfinity, ToPositiveInfinity (was 'Banker').
+```
+
+Registration happens in `Program.cs`:
+
+```csharp
+builder.Services.AddPricingOptions(builder.Configuration);
+```
+
 ## Project Structure
 
 ```
