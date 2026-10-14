@@ -13,6 +13,9 @@ var builder = WebApplication.CreateBuilder(args);
 // Add Marketplace services and repositories to DI container
 builder.Services.AddMarketplaceServices();
 
+// Bind and validate pricing options (fails startup on an invalid Pricing section)
+builder.Services.AddPricingOptions(builder.Configuration);
+
 // Add full-text search service
 builder.Services.AddFullTextSearch();
 

@@ -4,12 +4,14 @@
 // CTO & Software Architect
 // =============================================================================
 
+using MarketplaceEngine.Configuration;
 using MarketplaceEngine.Domain.Models;
 using MarketplaceEngine.Domain.ValueObjects;
 using MarketplaceEngine.Exceptions;
 using MarketplaceEngine.Repositories;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Options;
 
 namespace MarketplaceEngine.Services;
 
@@ -17,12 +19,16 @@ namespace MarketplaceEngine.Services;
 /// Calculates final prices including platform fees, discounts, and currency-aware totals.
 /// Centralizes all pricing logic to keep it consistent across the marketplace.
 /// Calculation order: Base price → Discounts → Platform fee → Final totals.
-/// Rounding: All monetary values rounded to 2 decimal places using MidpointRounding.AwayFromZero.
+/// Rounding: All monetary values rounded to 2 decimal places using the configured <see cref="PricingOptions.RoundingMode"/>.
+/// Maximum discount, currency, and rounding mode come from <see cref="PricingOptions"/>.
 /// </summary>
 public class PricingEngine
 {
     private readonly IListingRepository _listingRepository;
     private readonly ILogger<PricingEngine> _logger;
+    private readonly MidpointRounding _roundingMode;
+    private readonly string _currencyCode;
+    private readonly decimal _maxDiscountFraction;
 
     /// <summary>
     /// Platform commission rate applied to each transaction (5%).
@@ -30,22 +36,17 @@ public class PricingEngine
     private const decimal PlatformFeeRate = 0.05m;
 
     /// <summary>
-    /// Maximum allowed discount percentage (50%).
-    /// </summary>
-    private const decimal MaxDiscountPercent = 0.50m;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="PricingEngine"/> class.
+    /// Initializes a new instance of the <see cref="PricingEngine"/> class with default <see cref="PricingOptions"/>.
     /// </summary>
     /// <param name="listingRepository">Repository for accessing listing data.</param>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="listingRepository"/> is null.</exception>
     public PricingEngine(IListingRepository listingRepository)
-        : this(listingRepository, NullLogger<PricingEngine>.Instance)
+        : this(listingRepository, Options.Create(new PricingOptions()), NullLogger<PricingEngine>.Instance)
     {
     }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="PricingEngine"/> class with a logger.
+    /// Initializes a new instance of the <see cref="PricingEngine"/> class with a logger and default <see cref="PricingOptions"/>.
     /// </summary>
     /// <param name="listingRepository">Repository for accessing listing data.</param>
     /// <param name="logger">Logger for pricing operations.</param>
@@ -53,15 +54,38 @@ public class PricingEngine
     public PricingEngine(
         IListingRepository listingRepository,
         ILogger<PricingEngine> logger)
+        : this(listingRepository, Options.Create(new PricingOptions()), logger)
     {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="PricingEngine"/> class from configured <see cref="PricingOptions"/>.
+    /// </summary>
+    /// <param name="listingRepository">Repository for accessing listing data.</param>
+    /// <param name="options">Pricing options. Read once, when the engine is constructed.</param>
+    /// <param name="logger">Logger for pricing operations.</param>
+    /// <exception cref="ArgumentNullException">Thrown when any argument is null.</exception>
+    /// <exception cref="ArgumentException">Thrown when <see cref="PricingOptions.RoundingMode"/> does not name a <see cref="MidpointRounding"/> member.</exception>
+    public PricingEngine(
+        IListingRepository listingRepository,
+        IOptions<PricingOptions> options,
+        ILogger<PricingEngine> logger)
+    {
+        ArgumentNullException.ThrowIfNull(options);
+
         _listingRepository = listingRepository ?? throw new ArgumentNullException(nameof(listingRepository));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+
+        var pricing = options.Value;
+        _roundingMode = Enum.Parse<MidpointRounding>(pricing.RoundingMode);
+        _currencyCode = pricing.Currency;
+        _maxDiscountFraction = pricing.MaxDiscountPercent / 100m;
     }
 
     /// <summary>
     /// Calculates the total price for a listing including platform fee.
     /// Calculation flow: Get listing base price → Apply platform fee (5%) → Return breakdown.
-    /// Rounding: Platform fee rounded to 2 decimal places using MidpointRounding.AwayFromZero.
+    /// Rounding: Platform fee rounded to 2 decimal places using the configured rounding mode.
     /// </summary>
     /// <param name="listingId">The listing to price.</param>
     /// <returns>A tuple containing:
@@ -78,14 +102,14 @@ public class PricingEngine
         if (listing is null)
             throw new MarketplaceException($"Listing {listingId} not found.");
 
-        var basePrice = listing.Price ?? new Money(0);
+        var basePrice = listing.Price ?? new Money(0, _currencyCode);
         return CalculateBreakdown(basePrice);
     }
 
     /// <summary>
     /// Calculates the price breakdown for a given base amount.
     /// Calculation flow: Base price → Calculate platform fee (5%) → Compute seller payout → Return totals.
-    /// Rounding: Platform fee rounded to 2 decimal places using MidpointRounding.AwayFromZero.
+    /// Rounding: Platform fee rounded to 2 decimal places using the configured rounding mode.
     /// </summary>
     /// <param name="basePrice">The listing's base price.</param>
     /// <returns>A tuple containing:
@@ -100,7 +124,7 @@ public class PricingEngine
     {
         ArgumentNullException.ThrowIfNull(basePrice);
 
-        var feeAmount = Math.Round(basePrice.Amount * PlatformFeeRate, 2, MidpointRounding.AwayFromZero);
+        var feeAmount = Math.Round(basePrice.Amount * PlatformFeeRate, 2, _roundingMode);
         var platformFee = new Money(feeAmount, basePrice.CurrencyCode);
         var sellerPayout = new Money(basePrice.Amount - feeAmount, basePrice.CurrencyCode);
         var buyerTotal = basePrice;
@@ -114,10 +138,10 @@ public class PricingEngine
     /// <summary>
     /// Applies a percentage discount to a listing price and returns the discounted breakdown.
     /// Calculation flow: Base price → Apply discount → Calculate platform fee on discounted price → Return breakdown.
-    /// Rounding: Discount amount and platform fee rounded to 2 decimal places using MidpointRounding.AwayFromZero.
+    /// Rounding: Discount amount and platform fee rounded to 2 decimal places using the configured rounding mode.
     /// </summary>
     /// <param name="basePrice">Original price before discount.</param>
-    /// <param name="discountPercent">Discount as a decimal (0.0 to 0.5 representing 0% to 50%).</param>
+    /// <param name="discountPercent">Discount as a decimal (0.0 up to <see cref="PricingOptions.MaxDiscountPercent"/> / 100, 0.5 by default).</param>
     /// <returns>A tuple containing:
     /// <list type="bullet">
     /// <item><description>DiscountedPrice: Price after discount is applied</description></item>
@@ -127,17 +151,17 @@ public class PricingEngine
     /// </list>
     /// </returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="basePrice"/> is null.</exception>
-    /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="discountPercent"/> is less than 0 or greater than 0.5.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="discountPercent"/> is less than 0 or greater than the configured maximum discount.</exception>
     public (Money DiscountedPrice, Money Savings, Money PlatformFee, Money SellerPayout) ApplyDiscount(
         Money basePrice, decimal discountPercent)
     {
         ArgumentNullException.ThrowIfNull(basePrice);
 
-        if (discountPercent < 0 || discountPercent > MaxDiscountPercent)
+        if (discountPercent < 0 || discountPercent > _maxDiscountFraction)
             throw new ArgumentOutOfRangeException(nameof(discountPercent),
-                $"Discount must be between 0 and {MaxDiscountPercent:P0}.");
+                $"Discount must be between 0 and {_maxDiscountFraction:P0}.");
 
-        var savings = Math.Round(basePrice.Amount * discountPercent, 2, MidpointRounding.AwayFromZero);
+        var savings = Math.Round(basePrice.Amount * discountPercent, 2, _roundingMode);
         var discountedAmount = basePrice.Amount - savings;
         var discountedPrice = new Money(discountedAmount, basePrice.CurrencyCode);
         var savingsMoney = new Money(savings, basePrice.CurrencyCode);
@@ -154,7 +178,7 @@ public class PricingEngine
     /// Calculates a bulk pricing estimate for purchasing multiple units.
     /// Calculation flow: Calculate subtotal → Apply tiered discount → Return total.
     /// Tiered discounts: 5% for 5+ units, 10% for 10+ units, 15% for 25+ units.
-    /// Rounding: Discount amount rounded to 2 decimal places using MidpointRounding.AwayFromZero.
+    /// Rounding: Discount amount rounded to 2 decimal places using the configured rounding mode.
     /// </summary>
     /// <param name="unitPrice">Price per unit.</param>
     /// <param name="quantity">Number of units (must be positive).</param>
@@ -176,7 +200,7 @@ public class PricingEngine
         };
 
         var subtotal = unitPrice.Amount * quantity;
-        var discount = Math.Round(subtotal * discountRate, 2, MidpointRounding.AwayFromZero);
+        var discount = Math.Round(subtotal * discountRate, 2, _roundingMode);
         var total = subtotal - discount;
 
         _logger.LogDebug("Bulk price: {Qty} x {Unit} = {Subtotal}, discount {Rate:P0} = {Total}",
