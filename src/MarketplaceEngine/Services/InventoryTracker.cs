@@ -84,6 +84,21 @@ public class InventoryTracker : IDisposable
     }
 
     /// <summary>
+    /// Returns the IDs of tracked listings whose available stock is at or below the threshold.
+    /// Only listings with a stock level set through <see cref="SetStockAsync"/> are considered.
+    /// </summary>
+    /// <param name="threshold">Available stock level at or below which a listing counts as low.</param>
+    /// <returns>The IDs of low-stock tracked listings.</returns>
+    public IReadOnlyList<Guid> GetLowStockListingIds(int threshold)
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+
+        return _stockLevels.Keys
+            .Where(listingId => GetAvailableStock(listingId) <= threshold)
+            .ToList();
+    }
+
+    /// <summary>
     /// Reserves stock for a pending order. Fails if insufficient inventory.
     /// </summary>
     /// <param name="listingId">The listing to reserve stock for.</param>

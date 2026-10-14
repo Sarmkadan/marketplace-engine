@@ -4,6 +4,7 @@
 // CTO & Software Architect
 // =============================================================================
 
+using MarketplaceEngine.Infrastructure.HealthChecks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -15,6 +16,24 @@ namespace MarketplaceEngine.Configuration;
 /// </summary>
 public static class HealthCheckExtensions
 {
+    /// <summary>
+    /// Registers the marketplace health checks: <c>payment-gateway</c> (configuration presence and validity)
+    /// and <c>inventory</c> (listing store reachability and low-stock count).
+    /// </summary>
+    /// <param name="services">The service collection to register into.</param>
+    /// <returns>The same service collection, for chaining.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="services"/> is <see langword="null"/>.</exception>
+    public static IServiceCollection AddMarketplaceHealthChecks(this IServiceCollection services)
+    {
+        ArgumentNullException.ThrowIfNull(services);
+
+        services.AddHealthChecks()
+            .AddCheck<PaymentGatewayHealthCheck>("payment-gateway")
+            .AddCheck<InventoryHealthCheck>("inventory");
+
+        return services;
+    }
+
     /// <summary>
     /// Maps a simple health check endpoint at GET /api/v1/health
     /// </summary>
