@@ -2,21 +2,16 @@
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
     <AssemblyName>MarketplaceEngine</AssemblyName>
     <RootNamespace>MarketplaceEngine</RootNamespace>
     <PackageId>sarmkadan.marketplace.engine</PackageId>
     <Version>1.0.0</Version>
-    <Authors>Vladyslav Zaiets</Authors>
     <Description>A lightweight marketplace backend engine providing functionality for listings, search, categories, messaging, and moderation.</Description>
     <PackageTags>marketplace engine listings search categories messaging moderation</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageProjectUrl>https://github.com/sarmkadan/marketplace-engine</PackageProjectUrl>
     <RepositoryUrl>https://github.com/sarmkadan/marketplace-engine</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <!-- SourceLink configuration -->
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
