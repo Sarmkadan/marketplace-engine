@@ -75,6 +75,12 @@ public class Review
         UpdatedAt = DateTime.UtcNow;
     }
 
+    /// <summary>
+    /// Returns a summary of the review for debugging and logging purposes.
+    /// </summary>
+    public override string ToString() =>
+        $"Review {{ Id = {Id}, Score = {Score}/5, Status = {Status} }}";
+
     // Flags review for moderation
     public void FlagForReview()
     {
