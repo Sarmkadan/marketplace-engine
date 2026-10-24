@@ -1,29 +1,30 @@
 ---
-name: Bug Report
-about: Report a bug to help improve MarketplaceEngine
-title: '[BUG] '
+name: Bug report
+about: Report a bug in Marketplace Engine
+title: '[Bug]: '
 labels: bug
-assignees: ''
 ---
 
 ## Description
 A clear and concise description of the bug.
 
-## Steps to Reproduce
+## Steps to reproduce
 1. Step one
 2. Step two
 3. Step three
 
-## Expected Behavior
+## Expected behavior
 What you expected to happen.
 
-## Actual Behavior
+## Actual behavior
 What actually happened.
 
 ## Environment
-- OS: [e.g., Windows 11, Ubuntu 22.04]
-- .NET Version: [e.g., 8.0]
-- Package Version: [e.g., 1.0.0]
+- .NET SDK version (`dotnet --version`):
+- OS (name and version):
+- Project version (`src/MarketplaceEngine/MarketplaceEngine.csproj` `<Version>`):
 
-## Additional Context
-Add any other context, logs, or screenshots.
+## Logs / stack trace
+```
+Paste relevant logs or stack trace here.
+```
