@@ -1,63 +1,62 @@
 # Contributing to Marketplace Engine
 
-Thank you for your interest in contributing!
+Thanks for helping out! This guide covers the basics for working on the `MarketplaceEngine` solution.
 
-## Requirements
+## Prerequisites
 
-- [.NET 10.0 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
-- Docker (optional, for container testing)
+- .NET SDK 10.0.100 or newer. `global.json` pins `10.0.100` with `rollForward: latestMinor`; the projects target `net10.0`.
+- Git.
+- Docker (optional, only for container testing).
 
-## Building Locally
+## Build
 
 ```bash
-# Restore dependencies
 dotnet restore
-
-# Build the solution
-dotnet build --configuration Release
-
-# Or use the Makefile
-make build
+dotnet build                  # Debug
+dotnet build -c Release       # Release, the configuration CI uses
 ```
 
-## Running Tests
+Or use `make build`. Build warnings are errors (`TreatWarningsAsErrors` in `Directory.Build.props`), so a clean build is required.
+
+## Run tests
 
 ```bash
-# Run all tests
 dotnet test --verbosity normal
-
-# Run with detailed output and TRX report
-dotnet test --verbosity normal --logger "trx;LogFileName=test-results.trx"
-
-# Or via Makefile
-make test
+dotnet test --filter "FullyQualifiedName~ListingServiceTests"   # single class
 ```
 
-## Pull Request Guidelines
+Tests live in `tests/marketplace-engine.Tests` (xUnit). Tests that touch the shared `MarketplaceDbContext` must be tagged `[Collection("Database")]`. Or use `make test`.
 
-1. Fork the repository and create a feature branch from `main`
-2. Keep changes focused — one feature or fix per PR
-3. Ensure all tests pass before submitting
-4. Add or update tests for any changed behaviour
-5. Update documentation if you change public APIs or configuration
-6. Write a clear PR description explaining what changed and why
+## Coding conventions
 
-## Code Style
+- Follow the rules in `.editorconfig`. Run `dotnet format` (or `make format`) before committing.
+- Nullable reference types and implicit usings are enabled; add `#nullable enable` to new files.
+- Use file-scoped namespaces (`namespace MarketplaceEngine.Services;`).
+- Methods that return `Task` end in `Async`.
+- Keep the existing `// Author:` header in every `.cs` file and add it to new ones.
+- Add `/// <summary>` XML docs to public types and members.
+- Do not introduce warnings. Fix them rather than suppressing them.
 
-- Follow the `.editorconfig` settings already in the repository
-- Use `var` where the type is apparent
-- File-scoped namespaces (`namespace Foo;`)
-- XML documentation on all public types and members
-- Private fields prefixed with `_` in camelCase
-- Keep all existing file headers — do not remove them
+## Branching and pull requests
 
-## Reporting Issues
+1. Branch from `main`: `git switch -c feat/<short-name>`.
+2. Keep each PR to one feature or fix.
+3. Use conventional commit prefixes: `feat:`, `fix:`, `docs:`, `chore:`, `build:`, and so on.
+4. Make sure the local build and tests pass before you push.
+5. Open a PR against `main`. The `CI` workflow (`.github/workflows/ci.yml`) must be green.
+6. Get one reviewer's approval before merging.
 
-Use GitHub Issues to report bugs or request features. For bugs, include:
-- Steps to reproduce
-- Expected vs actual behaviour
-- .NET version and OS
+Fill in the PR template in `.github/PULL_REQUEST_TEMPLATE.md`.
+
+## Reporting bugs
+
+Open an issue on GitHub using one of the templates:
+
+- [Bug report](.github/ISSUE_TEMPLATE/bug_report.md)
+- [Feature request](.github/ISSUE_TEMPLATE/feature_request.md)
+
+For bugs, include the steps to reproduce, the expected and actual behaviour, and your .NET SDK version and OS.
 
 ## License
 
-By contributing you agree that your contributions are licensed under the [MIT License](LICENSE).
+By contributing, you agree that your contributions are licensed under the [MIT License](LICENSE).
