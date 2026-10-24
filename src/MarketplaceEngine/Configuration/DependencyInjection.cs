@@ -44,6 +44,7 @@ public static class DependencyInjection
         services.AddSingleton<ReviewService>();
         services.AddSingleton<SellerDashboardService>();
         services.AddSingleton<InventoryTracker>();
+        services.AddSingleton<PriceHistoryService>();
 
         // Register caching services
         services.AddSingleton<CacheService>();
