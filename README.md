@@ -444,3 +444,7 @@ dotnet run -c Release --project MarketplaceEngine.Benchmarks
 - Test classes follow `<Type>Tests.cs` naming convention
 - Errors are thrown from the `MarketplaceException` hierarchy
 - Conventional commits (`docs:`, `chore:`, `feat:`, `fix:`)
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for prerequisites, the PR process, and how to report bugs.
