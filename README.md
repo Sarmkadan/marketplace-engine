@@ -448,3 +448,7 @@ dotnet run -c Release --project MarketplaceEngine.Benchmarks
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for prerequisites, the PR process, and how to report bugs.
+
+## License
+
+This project is licensed under the MIT License. See [LICENSE](LICENSE) for the full text.
