@@ -22,6 +22,39 @@ namespace MarketplaceEngine.Services;
 /// </summary>
 public class PaymentService
 {
+    // Default currency for new payments
+    private const string DefaultCurrencyCode = "USD";
+
+    // Resource type names used in ResourceNotFoundException
+    private const string PaymentResourceType = "Payment";
+    private const string ListingResourceType = "Listing";
+    private const string UserResourceType = "User";
+
+    // Parameter names used in ValidationException
+    private const string PaymentMethodParam = "PaymentMethod";
+    private const string ReasonParam = "Reason";
+
+    // Action descriptions used in UnauthorizedException
+    private const string MakePaymentsAction = "make payments";
+    private const string ActOnPaymentAction = "act on this payment";
+
+    // Validation messages
+    private const string PaymentMethodRequiredMessage = "Payment method is required.";
+    private const string RefundReasonRequiredMessage = "Refund reason is required.";
+    private const string ListingNoPriceMessage = "Listing has no price set.";
+    private const string SellerSelfPurchaseMessage = "A seller cannot purchase their own listing.";
+
+    // Log message templates
+    private const string PaymentInitiatedLogMessage =
+        "Payment initiated: {PaymentId}, listing {ListingId}, buyer {BuyerId}, amount {Amount} {Currency}";
+    private const string PaymentCompletedLogMessage =
+        "Payment completed: {PaymentId}, external transaction {ExternalTransactionId}";
+    private const string PaymentEscrowLogMessage = "Payment moved to escrow: {PaymentId}";
+    private const string PaymentEscrowReleasedLogMessage = "Payment escrow released: {PaymentId}";
+    private const string PaymentFailedLogMessage = "Payment failed: {PaymentId}, reason {Reason}";
+    private const string PaymentCancelledLogMessage = "Payment cancelled: {PaymentId}";
+    private const string PaymentRefundedLogMessage = "Payment refunded: {PaymentId}";
+
     private readonly IPaymentRepository _paymentRepository;
     private readonly IListingRepository _listingRepository;
     private readonly IUserRepository _userRepository;
@@ -55,20 +88,20 @@ public class PaymentService
         Guid listingId,
         Guid buyerId,
         string paymentMethod,
-        string currency = "USD")
+        string currency = DefaultCurrencyCode)
     {
         if (string.IsNullOrWhiteSpace(paymentMethod))
-            throw new ValidationException("PaymentMethod", "Payment method is required.");
+            throw new ValidationException(PaymentMethodParam, PaymentMethodRequiredMessage);
 
         var listing = await _listingRepository.GetByIdAsync(listingId);
         if (listing is null)
-            throw new ResourceNotFoundException("Listing", listingId);
+            throw new ResourceNotFoundException(ListingResourceType, listingId);
 
         if (listing.Status != ListingStatus.Active)
             throw new MarketplaceException($"Listing '{listingId}' is not available for purchase.");
 
         if (listing.Price is null)
-            throw new MarketplaceException("Listing has no price set.");
+            throw new MarketplaceException(ListingNoPriceMessage);
 
         if (!string.IsNullOrEmpty(currency) &&
             !currency.Equals(listing.Price.CurrencyCode, StringComparison.OrdinalIgnoreCase))
@@ -79,13 +112,13 @@ public class PaymentService
 
         var buyer = await _userRepository.GetByIdAsync(buyerId);
         if (buyer is null)
-            throw new ResourceNotFoundException("User", buyerId);
+            throw new ResourceNotFoundException(UserResourceType, buyerId);
 
         if (!buyer.IsActive)
-            throw new UnauthorizedException(buyerId, "make payments");
+            throw new UnauthorizedException(buyerId, MakePaymentsAction);
 
         if (listing.SellerId == buyerId)
-            throw new MarketplaceException("A seller cannot purchase their own listing.");
+            throw new MarketplaceException(SellerSelfPurchaseMessage);
 
         var amount = new Money(listing.Price.Amount, listing.Price.CurrencyCode);
         var payment = new Payment
@@ -100,7 +133,7 @@ public class PaymentService
 
         var createdPayment = await _paymentRepository.AddAsync(payment);
         _logger.LogInformation(
-            "Payment initiated: {PaymentId}, listing {ListingId}, buyer {BuyerId}, amount {Amount} {Currency}",
+            PaymentInitiatedLogMessage,
             createdPayment.Id,
             createdPayment.ListingId,
             createdPayment.BuyerId,
@@ -149,7 +182,7 @@ public class PaymentService
         }
 
         _logger.LogInformation(
-            "Payment completed: {PaymentId}, external transaction {ExternalTransactionId}",
+            PaymentCompletedLogMessage,
             payment.Id,
             externalTransactionId);
         return payment;
@@ -163,7 +196,7 @@ public class PaymentService
         var payment = await GetPaymentOrThrowAsync(paymentId);
         payment.MoveToEscrow();
         var updatedPayment = await _paymentRepository.UpdateAsync(payment);
-        _logger.LogInformation("Payment moved to escrow: {PaymentId}", updatedPayment.Id);
+        _logger.LogInformation(PaymentEscrowLogMessage, updatedPayment.Id);
         return updatedPayment;
     }
 
@@ -184,7 +217,7 @@ public class PaymentService
         }
 
         var updatedPayment = await _paymentRepository.UpdateAsync(payment);
-        _logger.LogInformation("Payment escrow released: {PaymentId}", updatedPayment.Id);
+        _logger.LogInformation(PaymentEscrowReleasedLogMessage, updatedPayment.Id);
         return updatedPayment;
     }
 
@@ -197,7 +230,7 @@ public class PaymentService
         var payment = await GetPaymentOrThrowAsync(paymentId);
         payment.Fail(reason);
         var updatedPayment = await _paymentRepository.UpdateAsync(payment);
-        _logger.LogWarning("Payment failed: {PaymentId}, reason {Reason}", updatedPayment.Id, reason);
+        _logger.LogWarning(PaymentFailedLogMessage, updatedPayment.Id, reason);
         return updatedPayment;
     }
 
@@ -210,7 +243,7 @@ public class PaymentService
         EnsureIsBuyer(payment, requesterId);
         payment.Cancel();
         var updatedPayment = await _paymentRepository.UpdateAsync(payment);
-        _logger.LogInformation("Payment cancelled: {PaymentId}", updatedPayment.Id);
+        _logger.LogInformation(PaymentCancelledLogMessage, updatedPayment.Id);
         return updatedPayment;
     }
 
@@ -221,12 +254,12 @@ public class PaymentService
     {
         ArgumentNullException.ThrowIfNull(reason);
         if (string.IsNullOrWhiteSpace(reason))
-            throw new ValidationException("Reason", "Refund reason is required.");
+            throw new ValidationException(ReasonParam, RefundReasonRequiredMessage);
 
         var payment = await GetPaymentOrThrowAsync(paymentId);
         payment.Refund(reason);
         var updatedPayment = await _paymentRepository.UpdateAsync(payment);
-        _logger.LogInformation("Payment refunded: {PaymentId}", updatedPayment.Id);
+        _logger.LogInformation(PaymentRefundedLogMessage, updatedPayment.Id);
         return updatedPayment;
     }
 
@@ -245,7 +278,7 @@ public class PaymentService
     {
         var buyer = await _userRepository.GetByIdAsync(buyerId);
         if (buyer is null)
-            throw new ResourceNotFoundException("User", buyerId);
+            throw new ResourceNotFoundException(UserResourceType, buyerId);
 
         return await _paymentRepository.GetByBuyerIdAsync(buyerId);
     }
@@ -257,7 +290,7 @@ public class PaymentService
     {
         var seller = await _userRepository.GetByIdAsync(sellerId);
         if (seller is null)
-            throw new ResourceNotFoundException("User", sellerId);
+            throw new ResourceNotFoundException(UserResourceType, sellerId);
 
         return await _paymentRepository.GetBySellerIdAsync(sellerId);
     }
@@ -274,7 +307,7 @@ public class PaymentService
     {
         var payment = await _paymentRepository.GetByIdAsync(paymentId);
         if (payment is null)
-            throw new ResourceNotFoundException("Payment", paymentId);
+            throw new ResourceNotFoundException(PaymentResourceType, paymentId);
 
         return payment;
     }
@@ -282,6 +315,6 @@ public class PaymentService
     private static void EnsureIsBuyer(Payment payment, Guid requesterId)
     {
         if (payment.BuyerId != requesterId)
-            throw new UnauthorizedException(requesterId, "act on this payment");
+            throw new UnauthorizedException(requesterId, ActOnPaymentAction);
     }
 }
