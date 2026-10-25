@@ -61,6 +61,9 @@ public interface IWebhookEventHandler
 /// </summary>
 public class WebhookService
 {
+    // Error messages
+    private const string InvalidSignatureMessage = "Invalid webhook signature";
+
     private readonly Dictionary<string, IWebhookEventHandler> _handlers = new();
     private readonly ILogger<WebhookService> _logger;
     private readonly string _webhookSecret;
@@ -104,7 +107,7 @@ public class WebhookService
             if (!VerifySignature(rawPayload, signature))
             {
                 _logger.LogWarning("Webhook signature verification failed");
-                throw new InvalidOperationException("Invalid webhook signature");
+                throw new InvalidOperationException(InvalidSignatureMessage);
             }
 
             // Deserialize webhook payload
@@ -198,10 +201,18 @@ public class WebhookService
 /// </summary>
 public class PaymentWebhookHandler : IWebhookEventHandler
 {
+    // Event type and payload keys
+    private const string PaymentCompletedEventType = "payment.completed";
+    private const string TransactionIdKey = "transactionId";
+    private const string AmountKey = "amount";
+
+    // Simulated processing time in milliseconds
+    private const int ProcessingDelayMs = 100;
+
     /// <summary>
     /// Gets the event type handled by this class ("payment.completed").
     /// </summary>
-    public string EventType => "payment.completed";
+    public string EventType => PaymentCompletedEventType;
 
     private readonly ILogger<PaymentWebhookHandler> _logger;
 
@@ -228,8 +239,8 @@ public class PaymentWebhookHandler : IWebhookEventHandler
         _logger.LogInformation("Processing payment webhook: {EventType}", webhookEvent.EventType);
 
         // Extract payment data
-        if (webhookEvent.Data.TryGetValue("transactionId", out var transactionId) &&
-            webhookEvent.Data.TryGetValue("amount", out var amount))
+        if (webhookEvent.Data.TryGetValue(TransactionIdKey, out var transactionId) &&
+            webhookEvent.Data.TryGetValue(AmountKey, out var amount))
         {
             _logger.LogInformation("Payment received: transactionId={TransactionId}, amount={Amount}",
                 transactionId, amount);
@@ -241,7 +252,7 @@ public class PaymentWebhookHandler : IWebhookEventHandler
             // 4. Update seller's balance
             // 5. Trigger fulfillment workflow
 
-            await Task.Delay(100); // Simulate processing
+            await Task.Delay(ProcessingDelayMs); // Simulate processing
         }
     }
 }
@@ -251,10 +262,18 @@ public class PaymentWebhookHandler : IWebhookEventHandler
 /// </summary>
 public class ShippingWebhookHandler : IWebhookEventHandler
 {
+    // Event type and payload keys
+    private const string ShipmentUpdatedEventType = "shipment.updated";
+    private const string TrackingNumberKey = "trackingNumber";
+    private const string StatusKey = "status";
+
+    // Simulated processing time in milliseconds
+    private const int ProcessingDelayMs = 50;
+
     /// <summary>
     /// Gets the event type handled by this class ("shipment.updated").
     /// </summary>
-    public string EventType => "shipment.updated";
+    public string EventType => ShipmentUpdatedEventType;
 
     private readonly ILogger<ShippingWebhookHandler> _logger;
 
@@ -280,8 +299,8 @@ public class ShippingWebhookHandler : IWebhookEventHandler
 
         _logger.LogInformation("Processing shipping update: {EventType}", webhookEvent.EventType);
 
-        if (webhookEvent.Data.TryGetValue("trackingNumber", out var tracking) &&
-            webhookEvent.Data.TryGetValue("status", out var status))
+        if (webhookEvent.Data.TryGetValue(TrackingNumberKey, out var tracking) &&
+            webhookEvent.Data.TryGetValue(StatusKey, out var status))
         {
             _logger.LogInformation("Shipment update: tracking={Tracking}, status={Status}", tracking, status);
 
@@ -291,7 +310,7 @@ public class ShippingWebhookHandler : IWebhookEventHandler
             // 3. Trigger delivery confirmation workflow
             // 4. Update reputation scores when delivered
 
-            await Task.Delay(50); // Simulate processing
+            await Task.Delay(ProcessingDelayMs); // Simulate processing
         }
     }
 }
