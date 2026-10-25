@@ -5,6 +5,11 @@ namespace MarketplaceEngine.Domain.ValueObjects;
 /// </summary>
 public static class RatingExtensions
 {
+    private const int MinScore = 1;
+    private const int MaxScore = 5;
+    private const char FilledStar = '★';
+    private const char EmptyStar = '☆';
+
     /// <summary>
     /// Determines if a rating has improved compared to another rating.
     /// </summary>
@@ -65,5 +70,29 @@ public static class RatingExtensions
             < 4 => "Average",
             _ => "Excellent"
         };
+    }
+
+    /// <summary>
+    /// Clamps a score into the valid rating range of 1 to 5 inclusive.
+    /// </summary>
+    /// <param name="score">The score to clamp.</param>
+    /// <returns>The score limited to the range 1 to 5.</returns>
+    public static int ClampScore(int score)
+    {
+        return Math.Clamp(score, MinScore, MaxScore);
+    }
+
+    /// <summary>
+    /// Renders the rating's average as five stars, rounded to the nearest whole star.
+    /// </summary>
+    /// <param name="rating">The rating to render.</param>
+    /// <returns>A string of five characters, filled stars (★) followed by empty stars (☆).</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="rating"/> is null.</exception>
+    public static string ToStarDisplay(this Rating rating)
+    {
+        ArgumentNullException.ThrowIfNull(rating);
+
+        var filledStars = ClampScore((int)Math.Round(rating.AverageRating, MidpointRounding.AwayFromZero));
+        return new string(FilledStar, filledStars) + new string(EmptyStar, MaxScore - filledStars);
     }
 }
