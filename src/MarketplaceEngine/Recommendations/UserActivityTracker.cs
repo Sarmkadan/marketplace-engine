@@ -36,6 +36,9 @@ public sealed class UserActivityTracker : IUserActivityTracker
     /// <summary>
     /// Initialises a new instance of <see cref="UserActivityTracker"/>.
     /// </summary>
+    /// <param name="options">Recommendation settings, including the per-user signal cap.</param>
+    /// <param name="logger">Logger used for debug-level signal tracing.</param>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="options"/> or <paramref name="logger"/> is <c>null</c>.</exception>
     public UserActivityTracker(RecommendationOptions options, ILogger<UserActivityTracker> logger)
     {
         _options = options ?? throw new ArgumentNullException(nameof(options));
