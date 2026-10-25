@@ -20,6 +20,12 @@ public class HttpClientService
 
     private const int MaxRetries = 3;
     private const int TimeoutSeconds = 30;
+    private const double BackoffBaseSeconds = 2;
+    private const string JsonContentType = "application/json";
+    private const string MethodGet = "GET";
+    private const string MethodPost = "POST";
+    private const string MethodPut = "PUT";
+    private const string MethodDelete = "DELETE";
 
     /// <summary>
     /// Initializes a new instance of the <see cref="HttpClientService"/> class.
@@ -54,7 +60,7 @@ public class HttpClientService
 
             var content = await response.Content.ReadAsStringAsync();
             return JsonSerializer.Deserialize<T>(content);
-        }, $"GET {url}");
+        }, $"{MethodGet} {url}");
     }
 
     /// <summary>
@@ -71,7 +77,7 @@ public class HttpClientService
         return await ExecuteWithRetryAsync(async () =>
         {
             var content = data is not null
-                ? new StringContent(JsonSerializer.Serialize(data), System.Text.Encoding.UTF8, "application/json")
+                ? new StringContent(JsonSerializer.Serialize(data), System.Text.Encoding.UTF8, JsonContentType)
                 : null;
 
             var response = await _httpClient.PostAsync(url, content);
@@ -79,7 +85,7 @@ public class HttpClientService
 
             var responseContent = await response.Content.ReadAsStringAsync();
             return JsonSerializer.Deserialize<T>(responseContent);
-        }, $"POST {url}");
+        }, $"{MethodPost} {url}");
     }
 
     /// <summary>
@@ -96,13 +102,13 @@ public class HttpClientService
 
         return await ExecuteWithRetryAsync(async () =>
         {
-            var content = new StringContent(JsonSerializer.Serialize(data), System.Text.Encoding.UTF8, "application/json");
+            var content = new StringContent(JsonSerializer.Serialize(data), System.Text.Encoding.UTF8, JsonContentType);
             var response = await _httpClient.PutAsync(url, content);
             response.EnsureSuccessStatusCode();
 
             var responseContent = await response.Content.ReadAsStringAsync();
             return JsonSerializer.Deserialize<T>(responseContent);
-        }, $"PUT {url}");
+        }, $"{MethodPut} {url}");
     }
 
     /// <summary>
@@ -118,7 +124,7 @@ public class HttpClientService
             var response = await _httpClient.DeleteAsync(url);
             response.EnsureSuccessStatusCode();
             return true;
-        }, $"DELETE {url}");
+        }, $"{MethodDelete} {url}");
     }
 
     /// <summary>
@@ -170,12 +176,12 @@ public class HttpClientService
             catch (HttpRequestException ex) when (attempt < MaxRetries)
             {
                 _logger.LogWarning(ex, "Transient error in {Operation}, retrying...", operationName);
-                await Task.Delay(TimeSpan.FromSeconds(Math.Pow(2, attempt))); // Exponential backoff
+                await Task.Delay(TimeSpan.FromSeconds(Math.Pow(BackoffBaseSeconds, attempt))); // Exponential backoff
             }
             catch (TimeoutException ex) when (attempt < MaxRetries)
             {
                 _logger.LogWarning(ex, "Timeout in {Operation}, retrying...", operationName);
-                await Task.Delay(TimeSpan.FromSeconds(Math.Pow(2, attempt)));
+                await Task.Delay(TimeSpan.FromSeconds(Math.Pow(BackoffBaseSeconds, attempt)));
             }
             catch (Exception ex)
             {
