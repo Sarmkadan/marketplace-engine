@@ -53,12 +53,12 @@ public static class DateTimeUtility
         return elapsed.TotalSeconds < 60
             ? "just now"
             : elapsed.TotalMinutes < 60
-            ? $"{(int)elapsed.TotalMinutes}m ago"
-            : elapsed.TotalHours < 24
-            ? $"{(int)elapsed.TotalHours}h ago"
-            : elapsed.TotalDays < 30
-            ? $"{(int)elapsed.TotalDays}d ago"
-            : $"{dateTime:yyyy-MM-dd}";
+                ? $"{(int)elapsed.TotalMinutes}m ago"
+                : elapsed.TotalHours < 24
+                    ? $"{(int)elapsed.TotalHours}h ago"
+                    : elapsed.TotalDays < 30
+                        ? $"{(int)elapsed.TotalDays}d ago"
+                        : $"{dateTime:yyyy-MM-dd}";
     }
 
     /// <summary>
