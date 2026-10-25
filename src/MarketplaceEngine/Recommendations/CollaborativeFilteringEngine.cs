@@ -317,6 +317,8 @@ public sealed class CollaborativeFilteringEngine : IRecommendationEngine
     public async Task RecordSignalAsync(
         UserActivitySignal signal, CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(signal);
+
         await _activityTracker.RecordAsync(signal, cancellationToken);
 
         // Invalidate all cached feeds that could be affected by this new signal.
