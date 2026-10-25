@@ -72,8 +72,9 @@ public static class SellerDashboardServiceExtensions
             ? Math.Round((double)((revenue.TotalPlatformFees / revenue.TotalGrossRevenue) * 100), 2)
             : 0;
 
-        var profitMarginPercentage = revenue.TotalNetRevenue > 0
-            ? Math.Round((double)(((revenue.TotalNetRevenue - revenue.TotalPlatformFees) / revenue.TotalNetRevenue) * 100), 2)
+        // TotalNetRevenue is already net of platform fees (SellerPayout), so it must not be reduced by fees again.
+        var profitMarginPercentage = revenue.TotalGrossRevenue > 0
+            ? Math.Round((double)((revenue.TotalNetRevenue / revenue.TotalGrossRevenue) * 100), 2, MidpointRounding.AwayFromZero)
             : 0;
 
         return new SellerRevenueSummaryDto

@@ -49,7 +49,7 @@ public class Payment
     // Calculates platform fee and seller payout based on amount
     public void CalculateFees()
     {
-        var fee = Math.Round(Amount.Amount * PlatformFeeRate, 2);
+        var fee = Math.Round(Amount.Amount * PlatformFeeRate, 2, MidpointRounding.AwayFromZero);
         PlatformFee = new Money(fee, Amount.CurrencyCode);
         SellerPayout = new Money(Amount.Amount - fee, Amount.CurrencyCode);
     }
