@@ -130,4 +130,10 @@ public class Message
 
     // Checks if message is old (older than 30 days)
     public bool IsOld() => (DateTime.UtcNow - CreatedAt).TotalDays > 30;
+
+    /// <summary>
+    /// Returns a short summary of the message (id, sender, creation timestamp) for debugging and logging.
+    /// </summary>
+    public override string ToString() =>
+        $"Message {{ Id = {Id}, SenderId = {SenderId}, CreatedAt = {CreatedAt:O} }}";
 }
