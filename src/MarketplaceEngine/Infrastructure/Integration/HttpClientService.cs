@@ -29,6 +29,9 @@ public class HttpClientService
     /// <param name="logger">The logger used to record request attempts and errors.</param>
     public HttpClientService(HttpClient httpClient, ILogger<HttpClientService> logger)
     {
+        ArgumentNullException.ThrowIfNull(httpClient);
+        ArgumentNullException.ThrowIfNull(logger);
+
         _httpClient = httpClient;
         _logger = logger;
         _httpClient.Timeout = TimeSpan.FromSeconds(TimeoutSeconds);
@@ -42,6 +45,8 @@ public class HttpClientService
     /// <returns>The deserialized response body, or <c>null</c> if the JSON deserializes to null.</returns>
     public async Task<T?> GetAsync<T>(string url)
     {
+        ArgumentNullException.ThrowIfNull(url);
+
         return await ExecuteWithRetryAsync(async () =>
         {
             var response = await _httpClient.GetAsync(url);
@@ -61,6 +66,8 @@ public class HttpClientService
     /// <returns>The deserialized response body, or <c>null</c> if the JSON deserializes to null.</returns>
     public async Task<T?> PostAsync<T>(string url, object? data = null)
     {
+        ArgumentNullException.ThrowIfNull(url);
+
         return await ExecuteWithRetryAsync(async () =>
         {
             var content = data is not null
@@ -84,6 +91,9 @@ public class HttpClientService
     /// <returns>The deserialized response body, or <c>null</c> if the JSON deserializes to null.</returns>
     public async Task<T?> PutAsync<T>(string url, object data)
     {
+        ArgumentNullException.ThrowIfNull(url);
+        ArgumentNullException.ThrowIfNull(data);
+
         return await ExecuteWithRetryAsync(async () =>
         {
             var content = new StringContent(JsonSerializer.Serialize(data), System.Text.Encoding.UTF8, "application/json");
@@ -101,6 +111,8 @@ public class HttpClientService
     /// <param name="url">The request URL.</param>
     public async Task DeleteAsync(string url)
     {
+        ArgumentNullException.ThrowIfNull(url);
+
         await ExecuteWithRetryAsync(async () =>
         {
             var response = await _httpClient.DeleteAsync(url);
@@ -116,6 +128,9 @@ public class HttpClientService
     /// <param name="parameter">The credentials for the scheme (for example, a token).</param>
     public void SetAuthorizationHeader(string scheme, string parameter)
     {
+        ArgumentNullException.ThrowIfNull(scheme);
+        ArgumentNullException.ThrowIfNull(parameter);
+
         _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(scheme, parameter);
     }
 
@@ -126,6 +141,9 @@ public class HttpClientService
     /// <param name="value">The header value.</param>
     public void AddHeader(string name, string value)
     {
+        ArgumentNullException.ThrowIfNull(name);
+        ArgumentNullException.ThrowIfNull(value);
+
         _httpClient.DefaultRequestHeaders.Add(name, value);
     }
 
