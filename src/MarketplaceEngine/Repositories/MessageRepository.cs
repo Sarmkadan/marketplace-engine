@@ -310,8 +310,11 @@ public class MessageRepository : IMessageRepository
     /// Marks the specified messages as read.
     /// </summary>
     /// <param name="messageIds">The unique identifiers of the messages to mark as read.</param>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="messageIds"/> is <c>null</c>.</exception>
     public async Task MarkAsReadAsync(List<Guid> messageIds)
     {
+        ArgumentNullException.ThrowIfNull(messageIds);
+
         foreach (var id in messageIds)
         {
             var message = _context.Messages.FirstOrDefault(m => m.Id == id);
