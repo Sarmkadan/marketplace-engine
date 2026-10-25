@@ -72,6 +72,9 @@ public class WebhookService
     /// <param name="webhookSecret">Shared secret used to compute and verify HMAC-SHA256 signatures.</param>
     public WebhookService(ILogger<WebhookService> logger, string webhookSecret)
     {
+        ArgumentNullException.ThrowIfNull(logger);
+        ArgumentNullException.ThrowIfNull(webhookSecret);
+
         _logger = logger;
         _webhookSecret = webhookSecret;
     }
@@ -81,6 +84,8 @@ public class WebhookService
     /// </summary>
     public void RegisterHandler(IWebhookEventHandler handler)
     {
+        ArgumentNullException.ThrowIfNull(handler);
+
         _handlers[handler.EventType] = handler;
         _logger.LogInformation("Webhook handler registered for event type: {EventType}", handler.EventType);
     }
@@ -91,6 +96,8 @@ public class WebhookService
     /// </summary>
     public async Task ProcessWebhookAsync(string rawPayload, string? signature)
     {
+        ArgumentNullException.ThrowIfNull(rawPayload);
+
         try
         {
             // Verify signature to ensure webhook came from trusted source
@@ -178,6 +185,8 @@ public class WebhookService
     /// </summary>
     public string GenerateSignature(string payload)
     {
+        ArgumentNullException.ThrowIfNull(payload);
+
         using var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(_webhookSecret));
         var hash = hmac.ComputeHash(Encoding.UTF8.GetBytes(payload));
         return Convert.ToBase64String(hash);
@@ -202,6 +211,8 @@ public class PaymentWebhookHandler : IWebhookEventHandler
     /// <param name="logger">Logger used to report payment webhook processing.</param>
     public PaymentWebhookHandler(ILogger<PaymentWebhookHandler> logger)
     {
+        ArgumentNullException.ThrowIfNull(logger);
+
         _logger = logger;
     }
 
@@ -212,6 +223,8 @@ public class PaymentWebhookHandler : IWebhookEventHandler
     /// <returns>A task that completes when processing has finished.</returns>
     public async Task HandleAsync(WebhookEvent webhookEvent)
     {
+        ArgumentNullException.ThrowIfNull(webhookEvent);
+
         _logger.LogInformation("Processing payment webhook: {EventType}", webhookEvent.EventType);
 
         // Extract payment data
@@ -251,6 +264,8 @@ public class ShippingWebhookHandler : IWebhookEventHandler
     /// <param name="logger">Logger used to report shipping webhook processing.</param>
     public ShippingWebhookHandler(ILogger<ShippingWebhookHandler> logger)
     {
+        ArgumentNullException.ThrowIfNull(logger);
+
         _logger = logger;
     }
 
@@ -261,6 +276,8 @@ public class ShippingWebhookHandler : IWebhookEventHandler
     /// <returns>A task that completes when processing has finished.</returns>
     public async Task HandleAsync(WebhookEvent webhookEvent)
     {
+        ArgumentNullException.ThrowIfNull(webhookEvent);
+
         _logger.LogInformation("Processing shipping update: {EventType}", webhookEvent.EventType);
 
         if (webhookEvent.Data.TryGetValue("trackingNumber", out var tracking) &&
