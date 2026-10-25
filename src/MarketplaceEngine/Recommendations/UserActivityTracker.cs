@@ -48,6 +48,8 @@ public sealed class UserActivityTracker : IUserActivityTracker
     /// <inheritdoc/>
     public Task RecordAsync(UserActivitySignal signal, CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(signal);
+
         lock (_writeLock)
         {
             var userSignals = _byUser.GetOrAdd(signal.UserId, _ => []);
