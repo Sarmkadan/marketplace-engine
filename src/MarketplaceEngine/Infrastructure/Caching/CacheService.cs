@@ -33,6 +33,7 @@ public class CacheService
     /// <param name="logger">Logger used for cache diagnostics.</param>
     public CacheService(ILogger<CacheService> logger)
     {
+        ArgumentNullException.ThrowIfNull(logger);
         _logger = logger;
         // Start background cleanup task to remove expired items
         _ = StartCleanupTaskAsync();
