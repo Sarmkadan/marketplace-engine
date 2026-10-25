@@ -4,6 +4,7 @@
 // CTO & Software Architect
 // =============================================================================
 
+using MarketplaceEngine.Constants;
 using MarketplaceEngine.Domain.Enums;
 using MarketplaceEngine.Domain.Models;
 using MarketplaceEngine.Domain.ValueObjects;
@@ -95,18 +96,18 @@ public static class UserServiceValidation
         {
             problems.Add("Full name is required");
         }
-        else if (fullName.Length < 2)
+        else if (fullName.Length < AppConstants.UserFullNameMinLength)
         {
-            problems.Add("Full name must be at least 2 characters long");
+            problems.Add($"Full name must be at least {AppConstants.UserFullNameMinLength} characters long");
         }
-        else if (fullName.Length > 100)
+        else if (fullName.Length > AppConstants.UserFullNameMaxLength)
         {
-            problems.Add("Full name cannot exceed 100 characters");
+            problems.Add($"Full name cannot exceed {AppConstants.UserFullNameMaxLength} characters");
         }
 
-        if (!string.IsNullOrWhiteSpace(phone) && phone.Length > 20)
+        if (!string.IsNullOrWhiteSpace(phone) && phone.Length > AppConstants.UserPhoneMaxLength)
         {
-            problems.Add("Phone number cannot exceed 20 characters");
+            problems.Add($"Phone number cannot exceed {AppConstants.UserPhoneMaxLength} characters");
         }
 
         return problems.AsReadOnly();
@@ -130,24 +131,24 @@ public static class UserServiceValidation
 
         if (!string.IsNullOrWhiteSpace(fullName))
         {
-            if (fullName.Length < 2)
+            if (fullName.Length < AppConstants.UserFullNameMinLength)
             {
-                problems.Add("Full name must be at least 2 characters long");
+                problems.Add($"Full name must be at least {AppConstants.UserFullNameMinLength} characters long");
             }
-            else if (fullName.Length > 100)
+            else if (fullName.Length > AppConstants.UserFullNameMaxLength)
             {
-                problems.Add("Full name cannot exceed 100 characters");
+                problems.Add($"Full name cannot exceed {AppConstants.UserFullNameMaxLength} characters");
             }
         }
 
-        if (!string.IsNullOrWhiteSpace(phone) && phone.Length > 20)
+        if (!string.IsNullOrWhiteSpace(phone) && phone.Length > AppConstants.UserPhoneMaxLength)
         {
-            problems.Add("Phone number cannot exceed 20 characters");
+            problems.Add($"Phone number cannot exceed {AppConstants.UserPhoneMaxLength} characters");
         }
 
-        if (!string.IsNullOrWhiteSpace(bio) && bio.Length > 500)
+        if (!string.IsNullOrWhiteSpace(bio) && bio.Length > AppConstants.UserBioMaxLength)
         {
-            problems.Add("Bio cannot exceed 500 characters");
+            problems.Add($"Bio cannot exceed {AppConstants.UserBioMaxLength} characters");
         }
 
         if (location is not null)
@@ -162,9 +163,9 @@ public static class UserServiceValidation
                 problems.Add("Location state/province is required");
             }
 
-            if (string.IsNullOrWhiteSpace(location.CountryCode) || location.CountryCode.Length != 2)
+            if (string.IsNullOrWhiteSpace(location.CountryCode) || location.CountryCode.Length != AppConstants.CountryCodeLength)
             {
-                problems.Add("Location country code must be a valid 2-letter ISO code");
+                problems.Add($"Location country code must be a valid {AppConstants.CountryCodeLength}-letter ISO code");
             }
 
             if (location.Latitude.HasValue && (location.Latitude < -90 || location.Latitude > 90))
@@ -216,18 +217,18 @@ public static class UserServiceValidation
     {
         var problems = new List<string>();
 
-        if (totalSales < 5)
+        if (totalSales < AppConstants.PremiumMinTotalSales)
         {
-            problems.Add("User must have at least 5 sales to be promoted to premium");
+            problems.Add($"User must have at least {AppConstants.PremiumMinTotalSales} sales to be promoted to premium");
         }
 
         if (rating is null)
         {
             problems.Add("User must have a rating to be promoted to premium");
         }
-        else if (rating.Score < 4)
+        else if (rating.Score < AppConstants.PremiumMinRatingScore)
         {
-            problems.Add("User must have a rating of 4+ stars to be promoted to premium");
+            problems.Add($"User must have a rating of {AppConstants.PremiumMinRatingScore}+ stars to be promoted to premium");
         }
 
         return problems.AsReadOnly();
@@ -290,9 +291,9 @@ public static class UserServiceValidation
 
         ArgumentNullException.ThrowIfNull(rating);
 
-        if (rating.Score < 1 || rating.Score > 5)
+        if (rating.Score < AppConstants.MinRating || rating.Score > AppConstants.MaxRating)
         {
-            problems.Add("Rating score must be between 1 and 5");
+            problems.Add($"Rating score must be between {AppConstants.MinRating} and {AppConstants.MaxRating}");
         }
 
         if (rating.TotalReviews < 0)
@@ -320,13 +321,13 @@ public static class UserServiceValidation
             problems.Add("Page number must be at least 1");
         }
 
-        if (pageSize < 1)
+        if (pageSize < AppConstants.MinPageSize)
         {
-            problems.Add("Page size must be at least 1");
+            problems.Add($"Page size must be at least {AppConstants.MinPageSize}");
         }
-        else if (pageSize > 100)
+        else if (pageSize > AppConstants.MaxPageSize)
         {
-            problems.Add("Page size cannot exceed 100");
+            problems.Add($"Page size cannot exceed {AppConstants.MaxPageSize}");
         }
 
         return problems.AsReadOnly();

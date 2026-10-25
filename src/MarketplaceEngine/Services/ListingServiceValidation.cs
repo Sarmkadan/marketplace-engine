@@ -4,6 +4,7 @@
 // CTO & Software Architect
 // ====================================================================
 
+using MarketplaceEngine.Constants;
 using MarketplaceEngine.Domain.Models;
 using MarketplaceEngine.Domain.ValueObjects;
 
@@ -89,26 +90,26 @@ public static class ListingServiceValidation
         {
             problems.Add("Title is required.");
         }
-        else if (title.Length < 5)
+        else if (title.Length < AppConstants.ListingTitleMinLength)
         {
-            problems.Add("Title must be at least 5 characters.");
+            problems.Add($"Title must be at least {AppConstants.ListingTitleMinLength} characters.");
         }
-        else if (title.Length > 100)
+        else if (title.Length > AppConstants.ListingTitleMaxLength)
         {
-            problems.Add("Title cannot exceed 100 characters.");
+            problems.Add($"Title cannot exceed {AppConstants.ListingTitleMaxLength} characters.");
         }
 
         if (string.IsNullOrWhiteSpace(description))
         {
             problems.Add("Description is required.");
         }
-        else if (description.Length < 20)
+        else if (description.Length < AppConstants.ListingDescriptionMinLength)
         {
-            problems.Add("Description must be at least 20 characters.");
+            problems.Add($"Description must be at least {AppConstants.ListingDescriptionMinLength} characters.");
         }
-        else if (description.Length > 5000)
+        else if (description.Length > AppConstants.ListingDescriptionMaxLength)
         {
-            problems.Add("Description cannot exceed 5000 characters.");
+            problems.Add($"Description cannot exceed {AppConstants.ListingDescriptionMaxLength} characters.");
         }
 
         if (price <= 0)
@@ -120,9 +121,9 @@ public static class ListingServiceValidation
         {
             problems.Add("Currency is required.");
         }
-        else if (currency.Length != 3)
+        else if (currency.Length != AppConstants.CurrencyCodeLength)
         {
-            problems.Add("Currency must be a 3-letter ISO code.");
+            problems.Add($"Currency must be a {AppConstants.CurrencyCodeLength}-letter ISO code.");
         }
 
         if (categoryId == Guid.Empty)
@@ -134,9 +135,9 @@ public static class ListingServiceValidation
         {
             problems.Add("At least one image is required.");
         }
-        else if (imageUrls.Count > 10)
+        else if (imageUrls.Count > AppConstants.ListingMaxImages)
         {
-            problems.Add("Cannot exceed 10 images per listing.");
+            problems.Add($"Cannot exceed {AppConstants.ListingMaxImages} images per listing.");
         }
         else
         {
@@ -185,25 +186,25 @@ public static class ListingServiceValidation
 
         if (title is not null)
         {
-            if (title.Length < 5)
+            if (title.Length < AppConstants.ListingTitleMinLength)
             {
-                problems.Add("Title must be at least 5 characters.");
+                problems.Add($"Title must be at least {AppConstants.ListingTitleMinLength} characters.");
             }
-            else if (title.Length > 100)
+            else if (title.Length > AppConstants.ListingTitleMaxLength)
             {
-                problems.Add("Title cannot exceed 100 characters.");
+                problems.Add($"Title cannot exceed {AppConstants.ListingTitleMaxLength} characters.");
             }
         }
 
         if (description is not null)
         {
-            if (description.Length < 20)
+            if (description.Length < AppConstants.ListingDescriptionMinLength)
             {
-                problems.Add("Description must be at least 20 characters.");
+                problems.Add($"Description must be at least {AppConstants.ListingDescriptionMinLength} characters.");
             }
-            else if (description.Length > 5000)
+            else if (description.Length > AppConstants.ListingDescriptionMaxLength)
             {
-                problems.Add("Description cannot exceed 5000 characters.");
+                problems.Add($"Description cannot exceed {AppConstants.ListingDescriptionMaxLength} characters.");
             }
         }
 
@@ -314,13 +315,13 @@ public static class ListingServiceValidation
             problems.Add("Page number must be at least 1.");
         }
 
-        if (pageSize < 1)
+        if (pageSize < AppConstants.MinPageSize)
         {
-            problems.Add("Page size must be at least 1.");
+            problems.Add($"Page size must be at least {AppConstants.MinPageSize}.");
         }
-        else if (pageSize > 100)
+        else if (pageSize > AppConstants.MaxPageSize)
         {
-            problems.Add("Page size cannot exceed 100.");
+            problems.Add($"Page size cannot exceed {AppConstants.MaxPageSize}.");
         }
 
         return problems.AsReadOnly();

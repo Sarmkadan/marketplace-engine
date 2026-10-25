@@ -4,6 +4,7 @@
 // CTO & Software Architect
 // =============================================================================
 
+using MarketplaceEngine.Constants;
 using MarketplaceEngine.Data;
 using MarketplaceEngine.Domain.Enums;
 using MarketplaceEngine.Domain.Models;
@@ -226,10 +227,10 @@ public class ModerationService
     {
         if (page < 1)
             throw new ArgumentOutOfRangeException(nameof(page), "Page must be greater than or equal to 1.");
-        if (pageSize < 1)
-            throw new ArgumentOutOfRangeException(nameof(pageSize), "Page size must be greater than or equal to 1.");
+        if (pageSize < AppConstants.MinPageSize)
+            throw new ArgumentOutOfRangeException(nameof(pageSize), $"Page size must be greater than or equal to {AppConstants.MinPageSize}.");
 
-        await Task.Delay(5);
+        await Task.Delay(AppConstants.SimulatedLatencyMilliseconds);
         lock (_reportsLock)
         {
             return _context.ModerationReports
@@ -244,7 +245,7 @@ public class ModerationService
     // Gets a moderation report by id
     public async Task<ModerationReport?> GetReportAsync(Guid id)
     {
-        await Task.Delay(5);
+        await Task.Delay(AppConstants.SimulatedLatencyMilliseconds);
         lock (_reportsLock)
         {
             return _context.ModerationReports.FirstOrDefault(r => r.Id == id);
@@ -256,7 +257,7 @@ public class ModerationService
     {
         ArgumentNullException.ThrowIfNull(report);
 
-        await Task.Delay(5);
+        await Task.Delay(AppConstants.SimulatedLatencyMilliseconds);
         lock (_reportsLock)
         {
             var index = _context.ModerationReports.FindIndex(r => r.Id == report.Id);
@@ -275,7 +276,7 @@ public class ModerationService
     {
         ArgumentNullException.ThrowIfNull(report);
 
-        await Task.Delay(5);
+        await Task.Delay(AppConstants.SimulatedLatencyMilliseconds);
         lock (_reportsLock)
         {
             if (report.Id == Guid.Empty)
@@ -290,7 +291,7 @@ public class ModerationService
     // Gets reports by status
     public async Task<List<ModerationReport>> GetReportsByStatusAsync(ModerationStatus status)
     {
-        await Task.Delay(5);
+        await Task.Delay(AppConstants.SimulatedLatencyMilliseconds);
         lock (_reportsLock)
         {
             return _context.ModerationReports
@@ -307,7 +308,7 @@ public class ModerationService
         if (moderator is null)
             throw new ResourceNotFoundException("User", moderatorId);
 
-        await Task.Delay(5);
+        await Task.Delay(AppConstants.SimulatedLatencyMilliseconds);
         lock (_reportsLock)
         {
             return _context.ModerationReports
@@ -320,7 +321,7 @@ public class ModerationService
     // Gets report statistics: counts of pending, in-review, and resolved reports
     public async Task<(int pending, int inReview, int resolved)> GetReportStatsAsync()
     {
-        await Task.Delay(5);
+        await Task.Delay(AppConstants.SimulatedLatencyMilliseconds);
         lock (_reportsLock)
         {
             var pending = _context.ModerationReports.Count(r => r.Status == ModerationStatus.Pending);

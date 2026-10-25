@@ -64,10 +64,10 @@ public class SearchService
     }
 
     // Finds top sellers by rating
-    public async Task<List<User>> GetTopSellersAsync(int limit = 10)
+    public async Task<List<User>> GetTopSellersAsync(int limit = AppConstants.TopSellersDefaultLimit)
     {
-        if (limit < 1 || limit > 50)
-            limit = 10;
+        if (limit < 1 || limit > AppConstants.TopSellersMaxLimit)
+            limit = AppConstants.TopSellersDefaultLimit;
 
         return await _userRepository.GetTopSellersAsync(limit);
     }
@@ -149,10 +149,10 @@ public class SearchService
     }
 
     // Gets trending searches based on view count
-    public async Task<List<Listing>> GetTrendingListingsAsync(int limit = 20)
+    public async Task<List<Listing>> GetTrendingListingsAsync(int limit = AppConstants.TrendingDefaultLimit)
     {
-        if (limit < 1 || limit > 100)
-            limit = 20;
+        if (limit < 1 || limit > AppConstants.TrendingMaxLimit)
+            limit = AppConstants.TrendingDefaultLimit;
 
         var allListings = await _listingRepository.GetActiveListingsAsync();
         return allListings
@@ -163,7 +163,7 @@ public class SearchService
     }
 
     // Autocomplete suggestions for search
-    public async Task<List<string>> GetSearchSuggestionsAsync(string prefix, int limit = 10)
+    public async Task<List<string>> GetSearchSuggestionsAsync(string prefix, int limit = AppConstants.SuggestionsDefaultLimit)
     {
         ValidateSearchQuery(prefix);
 

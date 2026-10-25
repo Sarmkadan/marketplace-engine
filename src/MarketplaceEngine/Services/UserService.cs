@@ -4,6 +4,7 @@
 // CTO & Software Architect
 // =============================================================================
 
+using MarketplaceEngine.Constants;
 using MarketplaceEngine.Domain.Enums;
 using MarketplaceEngine.Domain.Models;
 using MarketplaceEngine.Domain.ValueObjects;
@@ -131,11 +132,11 @@ public class UserService
     {
         var user = await GetUserAsync(userId);
 
-        if (user.TotalSales < 5)
-            throw new InvalidOperationException("User must have at least 5 sales to be promoted to premium");
+        if (user.TotalSales < AppConstants.PremiumMinTotalSales)
+            throw new InvalidOperationException($"User must have at least {AppConstants.PremiumMinTotalSales} sales to be promoted to premium");
 
-        if (user.Rating is null || user.Rating.Score < 4)
-            throw new InvalidOperationException("User must have a rating of 4+ stars to be promoted to premium");
+        if (user.Rating is null || user.Rating.Score < AppConstants.PremiumMinRatingScore)
+            throw new InvalidOperationException($"User must have a rating of {AppConstants.PremiumMinRatingScore}+ stars to be promoted to premium");
 
         user.PromoteToPremiumSeller();
         return await _userRepository.UpdateAsync(user);
@@ -183,10 +184,10 @@ public class UserService
     }
 
     // Gets top sellers
-    public async Task<List<User>> GetTopSellersAsync(int limit = 10)
+    public async Task<List<User>> GetTopSellersAsync(int limit = AppConstants.TopSellersDefaultLimit)
     {
-        if (limit < 1 || limit > 50)
-            limit = 10;
+        if (limit < 1 || limit > AppConstants.TopSellersMaxLimit)
+            limit = AppConstants.TopSellersDefaultLimit;
 
         return await _userRepository.GetTopSellersAsync(limit);
     }

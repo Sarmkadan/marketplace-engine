@@ -4,6 +4,7 @@
 // CTO & Software Architect
 // =============================================================================
 
+using MarketplaceEngine.Constants;
 using MarketplaceEngine.DTOs;
 using MarketplaceEngine.Exceptions;
 using MarketplaceEngine.Infrastructure.Events;
@@ -61,9 +62,9 @@ public class RecommendationService
     /// <param name="cancellationToken">Propagates notification that the operation should be cancelled.</param>
     /// <exception cref="ResourceNotFoundException">Thrown when the user does not exist.</exception>
     public async Task<RecommendationFeedDto> GetRecommendationsForUserAsync(
-        Guid userId, int count = 20, CancellationToken cancellationToken = default)
+        Guid userId, int count = AppConstants.RecommendationDefaultCount, CancellationToken cancellationToken = default)
     {
-        count = Math.Clamp(count, 1, 100);
+        count = Math.Clamp(count, 1, AppConstants.RecommendationMaxCount);
 
         var user = await _userRepository.GetByIdAsync(userId);
         if (user is null)
@@ -98,9 +99,9 @@ public class RecommendationService
     /// <param name="cancellationToken">Propagates notification that the operation should be cancelled.</param>
     /// <exception cref="ResourceNotFoundException">Thrown when the user does not exist.</exception>
     public async Task<RecommendationFeedDto> GetAffinityRecommendationsAsync(
-        Guid userId, int count = 20, CancellationToken cancellationToken = default)
+        Guid userId, int count = AppConstants.RecommendationDefaultCount, CancellationToken cancellationToken = default)
     {
-        count = Math.Clamp(count, 1, 100);
+        count = Math.Clamp(count, 1, AppConstants.RecommendationMaxCount);
 
         var user = await _userRepository.GetByIdAsync(userId);
         if (user is null)
@@ -132,9 +133,9 @@ public class RecommendationService
     /// <param name="cancellationToken">Propagates notification that the operation should be cancelled.</param>
     /// <exception cref="ResourceNotFoundException">Thrown when the listing does not exist.</exception>
     public async Task<RecommendationFeedDto> GetSimilarListingsAsync(
-        Guid listingId, int count = 10, CancellationToken cancellationToken = default)
+        Guid listingId, int count = AppConstants.SimilarRecommendationDefaultCount, CancellationToken cancellationToken = default)
     {
-        count = Math.Clamp(count, 1, 50);
+        count = Math.Clamp(count, 1, AppConstants.SimilarRecommendationMaxCount);
 
         var listing = await _listingRepository.GetByIdAsync(listingId);
         if (listing is null)
@@ -162,9 +163,9 @@ public class RecommendationService
     /// <param name="count">Maximum number of trending listings to return. Clamped to [1, 100].</param>
     /// <param name="cancellationToken">Propagates notification that the operation should be cancelled.</param>
     public async Task<RecommendationFeedDto> GetTrendingListingsAsync(
-        int count = 20, CancellationToken cancellationToken = default)
+        int count = AppConstants.RecommendationDefaultCount, CancellationToken cancellationToken = default)
     {
-        count = Math.Clamp(count, 1, 100);
+        count = Math.Clamp(count, 1, AppConstants.RecommendationMaxCount);
 
         var scored = await _engine.ComputeTrendingAsync(count, cancellationToken);
         var (items, _) = await HydrateAndDiversifyAsync(scored, cancellationToken);

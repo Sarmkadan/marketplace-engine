@@ -4,6 +4,7 @@
 // CTO & Software Architect
 // =============================================================================
 
+using MarketplaceEngine.Constants;
 using MarketplaceEngine.Domain.Enums;
 using MarketplaceEngine.DTOs;
 using MarketplaceEngine.Exceptions;
@@ -132,7 +133,7 @@ public class SellerDashboardService
 
         var topListings = listings
             .OrderByDescending(l => l.ViewCount)
-            .Take(10)
+            .Take(AppConstants.SellerDashboardTopListingsCount)
             .Select(l => new TopListingDto
             {
                 ListingId = l.Id,

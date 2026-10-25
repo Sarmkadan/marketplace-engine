@@ -115,13 +115,13 @@ public class FullTextSearchService
     /// <returns>Distinct title strings that begin with <paramref name="prefix"/>.</returns>
     public async Task<IReadOnlyList<string>> GetSuggestionsAsync(
         string prefix,
-        int limit = 10,
+        int limit = AppConstants.SuggestionsDefaultLimit,
         CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(prefix) || prefix.Length < AppConstants.SearchMinQueryLength)
             return [];
 
-        limit = Math.Clamp(limit, 1, 50);
+        limit = Math.Clamp(limit, 1, AppConstants.SuggestionsMaxLimit);
 
         var active = await _listingRepository.GetActiveListingsAsync();
         cancellationToken.ThrowIfCancellationRequested();
