@@ -118,4 +118,11 @@ public class User
         Rating = newRating;
         UpdatedAt = DateTime.UtcNow;
     }
+
+    /// <summary>
+    /// Returns a non-sensitive summary of the user for debugging and logging purposes.
+    /// Email, phone, full name and verification data are intentionally excluded.
+    /// </summary>
+    public override string ToString() =>
+        $"User {{ Id = {Id}, Role = {Role} }}";
 }
