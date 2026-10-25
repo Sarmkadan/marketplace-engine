@@ -55,7 +55,15 @@ public sealed class CollaborativeFilteringEngine : IRecommendationEngine
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Computes personalised recommendations for a user using user-based collaborative filtering.
+    /// Falls back to trending results when personalisation is disabled, the user has too little
+    /// history, or no candidates are produced. Results are cached per user and count.
+    /// </summary>
+    /// <param name="userId">The identifier of the user requesting recommendations.</param>
+    /// <param name="count">Maximum number of results to return.</param>
+    /// <param name="cancellationToken">Propagates notification that the operation should be cancelled.</param>
+    /// <returns>A read-only list of scored listings, ordered from highest to lowest score.</returns>
     public async Task<IReadOnlyList<ScoredListing>> ComputeForUserAsync(
         Guid userId, int count, CancellationToken cancellationToken = default)
     {
@@ -97,7 +105,15 @@ public sealed class CollaborativeFilteringEngine : IRecommendationEngine
         return results;
     }
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Computes listings similar to an anchor listing using item-based collaborative filtering.
+    /// Co-interaction weights are gathered from the histories of the anchor's audience.
+    /// Falls back to trending results when the anchor has no audience. Results are cached per listing and count.
+    /// </summary>
+    /// <param name="listingId">The listing from which to derive similar items.</param>
+    /// <param name="count">Maximum number of results to return.</param>
+    /// <param name="cancellationToken">Propagates notification that the operation should be cancelled.</param>
+    /// <returns>A read-only list of scored listings, ordered from highest to lowest score.</returns>
     public async Task<IReadOnlyList<ScoredListing>> ComputeSimilarAsync(
         Guid listingId, int count, CancellationToken cancellationToken = default)
     {
@@ -128,7 +144,13 @@ public sealed class CollaborativeFilteringEngine : IRecommendationEngine
         return results;
     }
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Returns globally trending listings ranked by recent signal velocity.
+    /// Results are cached by count.
+    /// </summary>
+    /// <param name="count">Maximum number of results to return.</param>
+    /// <param name="cancellationToken">Propagates notification that the operation should be cancelled.</param>
+    /// <returns>A read-only list of scored listings, ordered from highest to lowest score.</returns>
     /// <remarks>
     /// Signal velocity is computed from the activity tracker using the configured
     /// <see cref="RecommendationOptions.TrendingWindowHours"/> look-back period.
@@ -193,7 +215,15 @@ public sealed class CollaborativeFilteringEngine : IRecommendationEngine
         return results;
     }
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Computes category-affinity recommendations for a user from their category preferences,
+    /// blended with listing popularity. Falls back to trending results when personalisation is disabled,
+    /// the user has too few categorised signals, or no candidates remain. Results are cached per user and count.
+    /// </summary>
+    /// <param name="userId">The identifier of the user requesting recommendations.</param>
+    /// <param name="count">Maximum number of results to return.</param>
+    /// <param name="cancellationToken">Propagates notification that the operation should be cancelled.</param>
+    /// <returns>A read-only list of scored listings, ordered from highest to lowest score.</returns>
     /// <remarks>
     /// Builds a normalised category-preference vector from the user's interaction history.
     /// Each category weight is the sum of signal weights for interactions within that category.
@@ -278,7 +308,12 @@ public sealed class CollaborativeFilteringEngine : IRecommendationEngine
         return results;
     }
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Records a user activity signal and invalidates cached feeds that the signal could affect.
+    /// </summary>
+    /// <param name="signal">The activity signal to record.</param>
+    /// <param name="cancellationToken">Propagates notification that the operation should be cancelled.</param>
+    /// <returns>A task that completes when the signal has been recorded and caches invalidated.</returns>
     public async Task RecordSignalAsync(
         UserActivitySignal signal, CancellationToken cancellationToken = default)
     {
