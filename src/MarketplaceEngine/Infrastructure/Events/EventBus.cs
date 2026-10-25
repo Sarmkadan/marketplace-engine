@@ -68,6 +68,8 @@ public class EventBus
     /// <param name="handler">The asynchronous delegate invoked when an event of this type is published.</param>
     public void Subscribe<TEvent>(Func<TEvent, Task> handler) where TEvent : IEvent
     {
+        ArgumentNullException.ThrowIfNull(handler);
+
         var eventType = typeof(TEvent);
 
         if (!_handlers.ContainsKey(eventType))
@@ -88,6 +90,8 @@ public class EventBus
     /// <returns>A task that completes when all handlers have finished.</returns>
     public async Task PublishAsync<TEvent>(TEvent @event) where TEvent : IEvent
     {
+        ArgumentNullException.ThrowIfNull(@event);
+
         var eventType = typeof(TEvent);
 
         _logger.LogInformation(
@@ -131,6 +135,8 @@ public class EventBus
     /// <param name="handler">The handler delegate previously passed to <see cref="Subscribe{TEvent}"/>.</param>
     public void Unsubscribe<TEvent>(Func<TEvent, Task> handler) where TEvent : IEvent
     {
+        ArgumentNullException.ThrowIfNull(handler);
+
         var eventType = typeof(TEvent);
 
         if (_handlers.ContainsKey(eventType))
