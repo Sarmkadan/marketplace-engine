@@ -111,4 +111,10 @@ public class Category
         IsActive = false;
         UpdatedAt = DateTime.UtcNow;
     }
+
+    /// <summary>
+    /// Returns a short summary of the category (id, name) for debugging and logging.
+    /// </summary>
+    public override string ToString() =>
+        $"Category {{ Id = {Id}, Name = {Name} }}";
 }
