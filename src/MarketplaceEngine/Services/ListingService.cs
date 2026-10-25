@@ -19,6 +19,21 @@ namespace MarketplaceEngine.Services;
 /// </summary>
 public sealed class ListingService
 {
+    // Resource type names used in ResourceNotFoundException
+    private const string UserResourceType = "User";
+    private const string ListingResourceType = "Listing";
+
+    // Action descriptions used in UnauthorizedException
+    private const string CreateListingsAction = "create listings";
+    private const string UpdateListingAction = "update this listing";
+    private const string ModifyVisibilityAction = "modify this listing's visibility";
+    private const string PublishListingAction = "publish this listing";
+    private const string DelistListingAction = "delist this listing";
+    private const string FeatureListingsAction = "feature listings";
+
+    // Validation messages
+    private const string OnlyDraftsPublishableMessage = "Only draft listings can be published";
+
     private readonly IListingRepository _listingRepository;
     private readonly IUserRepository _userRepository;
 
@@ -51,10 +66,10 @@ public sealed class ListingService
 
         var seller = await _userRepository.GetByIdAsync(sellerId);
         if (seller is null)
-            throw new ResourceNotFoundException("User", sellerId);
+            throw new ResourceNotFoundException(UserResourceType, sellerId);
 
         if (!seller.IsActive)
-            throw new UnauthorizedException(sellerId, "create listings");
+            throw new UnauthorizedException(sellerId, CreateListingsAction);
 
         var listing = new Listing
         {
@@ -100,10 +115,10 @@ public sealed class ListingService
 
         var seller = await _userRepository.GetByIdAsync(sellerId);
         if (seller is null)
-            throw new ResourceNotFoundException("User", sellerId);
+            throw new ResourceNotFoundException(UserResourceType, sellerId);
 
         if (!seller.IsActive)
-            throw new UnauthorizedException(sellerId, "create listings");
+            throw new UnauthorizedException(sellerId, CreateListingsAction);
 
         var listing = new Listing
         {
@@ -142,10 +157,10 @@ public sealed class ListingService
     {
         var listing = await _listingRepository.GetByIdAsync(listingId);
         if (listing is null)
-            throw new ResourceNotFoundException("Listing", listingId);
+            throw new ResourceNotFoundException(ListingResourceType, listingId);
 
         if (listing.SellerId != requesterId)
-            throw new UnauthorizedException(requesterId, "update this listing");
+            throw new UnauthorizedException(requesterId, UpdateListingAction);
 
         var previousCategoryId = listing.CategoryId;
 
@@ -179,10 +194,10 @@ public sealed class ListingService
     {
         var listing = await _listingRepository.GetByIdAsync(listingId);
         if (listing is null)
-            throw new ResourceNotFoundException("Listing", listingId);
+            throw new ResourceNotFoundException(ListingResourceType, listingId);
 
         if (listing.SellerId != requesterId)
-            throw new UnauthorizedException(requesterId, "modify this listing's visibility");
+            throw new UnauthorizedException(requesterId, ModifyVisibilityAction);
 
         if (isVisible)
             listing.Publish();
@@ -205,13 +220,13 @@ public sealed class ListingService
     {
         var listing = await _listingRepository.GetByIdAsync(listingId);
         if (listing is null)
-            throw new ResourceNotFoundException("Listing", listingId);
+            throw new ResourceNotFoundException(ListingResourceType, listingId);
 
         if (listing.SellerId != requesterId)
-            throw new UnauthorizedException(requesterId, "publish this listing");
+            throw new UnauthorizedException(requesterId, PublishListingAction);
 
         if (listing.Status != ListingStatus.Draft)
-            throw new InvalidOperationException("Only draft listings can be published");
+            throw new InvalidOperationException(OnlyDraftsPublishableMessage);
 
         listing.PublishDraft();
 
@@ -228,7 +243,7 @@ public sealed class ListingService
     {
         var listing = await _listingRepository.GetByIdAsync(listingId);
         if (listing is null)
-            throw new ResourceNotFoundException("Listing", listingId);
+            throw new ResourceNotFoundException(ListingResourceType, listingId);
 
         await _listingRepository.IncrementViewCountAsync(listingId);
         return listing;
@@ -244,7 +259,7 @@ public sealed class ListingService
     {
         var listing = await _listingRepository.GetByIdAsync(listingId);
         if (listing is null)
-            throw new ResourceNotFoundException("Listing", listingId);
+            throw new ResourceNotFoundException(ListingResourceType, listingId);
 
         await _listingRepository.IncrementInterestCountAsync(listingId);
         return listing;
@@ -262,10 +277,10 @@ public sealed class ListingService
     {
         var listing = await _listingRepository.GetByIdAsync(listingId);
         if (listing is null)
-            throw new ResourceNotFoundException("Listing", listingId);
+            throw new ResourceNotFoundException(ListingResourceType, listingId);
 
         if (listing.SellerId != requesterId)
-            throw new UnauthorizedException(requesterId, "delist this listing");
+            throw new UnauthorizedException(requesterId, DelistListingAction);
 
         listing.Delist();
         return await _listingRepository.UpdateAsync(listing);
@@ -281,7 +296,7 @@ public sealed class ListingService
     {
         var seller = await _userRepository.GetByIdAsync(sellerId);
         if (seller is null)
-            throw new ResourceNotFoundException("User", sellerId);
+            throw new ResourceNotFoundException(UserResourceType, sellerId);
 
         return await _listingRepository.GetBySellerIdAsync(sellerId);
     }
@@ -335,11 +350,11 @@ public sealed class ListingService
     {
         var admin = await _userRepository.GetByIdAsync(adminId);
         if (admin is null || admin.Role != UserRole.Administrator)
-            throw new UnauthorizedException(adminId, "feature listings");
+            throw new UnauthorizedException(adminId, FeatureListingsAction);
 
         var listing = await _listingRepository.GetByIdAsync(listingId);
         if (listing is null)
-            throw new ResourceNotFoundException("Listing", listingId);
+            throw new ResourceNotFoundException(ListingResourceType, listingId);
 
         listing.MarkAsFeatured();
         return await _listingRepository.UpdateAsync(listing);
