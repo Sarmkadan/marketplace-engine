@@ -14,8 +14,19 @@ namespace MarketplaceEngine.Infrastructure.Events;
 /// </summary>
 public interface IEvent
 {
+    /// <summary>
+    /// Gets the unique identifier of this event instance.
+    /// </summary>
     Guid EventId { get; }
+
+    /// <summary>
+    /// Gets the UTC timestamp at which the event occurred.
+    /// </summary>
     DateTime OccurredAt { get; }
+
+    /// <summary>
+    /// Gets the name of the event type, used for logging.
+    /// </summary>
     string EventType { get; }
 }
 
@@ -24,6 +35,11 @@ public interface IEvent
 /// </summary>
 public interface IEventHandler<in TEvent> where TEvent : IEvent
 {
+    /// <summary>
+    /// Handles a published event.
+    /// </summary>
+    /// <param name="event">The event to handle.</param>
+    /// <returns>A task that completes when handling is finished.</returns>
     Task HandleAsync(TEvent @event);
 }
 
@@ -36,6 +52,10 @@ public class EventBus
     private readonly Dictionary<Type, List<Delegate>> _handlers = new();
     private readonly ILogger<EventBus> _logger;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="EventBus"/> class.
+    /// </summary>
+    /// <param name="logger">Logger used to report subscriptions, publishing and handler errors.</param>
     public EventBus(ILogger<EventBus> logger)
     {
         _logger = logger;
@@ -44,6 +64,8 @@ public class EventBus
     /// <summary>
     /// Subscribes a handler to an event type.
     /// </summary>
+    /// <typeparam name="TEvent">The event type to subscribe to.</typeparam>
+    /// <param name="handler">The asynchronous delegate invoked when an event of this type is published.</param>
     public void Subscribe<TEvent>(Func<TEvent, Task> handler) where TEvent : IEvent
     {
         var eventType = typeof(TEvent);
@@ -61,6 +83,9 @@ public class EventBus
     /// Publishes an event to all registered handlers.
     /// Handlers are invoked asynchronously.
     /// </summary>
+    /// <typeparam name="TEvent">The event type being published.</typeparam>
+    /// <param name="event">The event to publish.</param>
+    /// <returns>A task that completes when all handlers have finished.</returns>
     public async Task PublishAsync<TEvent>(TEvent @event) where TEvent : IEvent
     {
         var eventType = typeof(TEvent);
@@ -102,6 +127,8 @@ public class EventBus
     /// <summary>
     /// Unsubscribes a handler from an event type.
     /// </summary>
+    /// <typeparam name="TEvent">The event type to unsubscribe from.</typeparam>
+    /// <param name="handler">The handler delegate previously passed to <see cref="Subscribe{TEvent}"/>.</param>
     public void Unsubscribe<TEvent>(Func<TEvent, Task> handler) where TEvent : IEvent
     {
         var eventType = typeof(TEvent);
@@ -116,6 +143,7 @@ public class EventBus
     /// <summary>
     /// Unsubscribes all handlers from a specific event type.
     /// </summary>
+    /// <typeparam name="TEvent">The event type whose handlers should be removed.</typeparam>
     public void UnsubscribeAll<TEvent>() where TEvent : IEvent
     {
         var eventType = typeof(TEvent);
