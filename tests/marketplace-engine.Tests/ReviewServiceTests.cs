@@ -117,6 +117,37 @@ public class ReviewServiceTests
 
     [Fact]
     /// <summary>
+    /// Tests that the first review for a reviewer, seller, and listing is accepted, and a second one for the same combination throws <see cref="DuplicateResourceException"/>.
+    /// </summary>
+    public async Task SubmitReviewAsync_WhenSecondReviewForSameListing_ThrowsDuplicateResourceException()
+    {
+        // Arrange
+        var reviewerId = Guid.NewGuid();
+        var sellerId = Guid.NewGuid();
+        var listingId = Guid.NewGuid();
+
+        _userRepoMock.Setup(r => r.GetByIdAsync(reviewerId)).ReturnsAsync(new User { Id = reviewerId, IsActive = true });
+        _userRepoMock.Setup(r => r.GetByIdAsync(sellerId)).ReturnsAsync(new User { Id = sellerId, IsActive = true });
+        _listingRepoMock.Setup(r => r.GetByIdAsync(listingId)).ReturnsAsync(new Listing { Id = listingId, SellerId = sellerId });
+        _reviewRepoMock.SetupSequence(r => r.ExistsForTransactionAsync(reviewerId, sellerId, listingId))
+            .ReturnsAsync(false)
+            .ReturnsAsync(true);
+        _reviewRepoMock.Setup(r => r.AddAsync(It.IsAny<Review>()))
+            .ReturnsAsync((Review rv) => { rv.Id = Guid.NewGuid(); return rv; });
+        _reviewRepoMock.Setup(r => r.GetBySellerIdAsync(sellerId)).ReturnsAsync(new List<Review>());
+
+        // Act
+        var first = await _sut.SubmitReviewAsync(reviewerId, sellerId, 5, "Great seller, fast shipping!", listingId);
+        var act = async () => await _sut.SubmitReviewAsync(reviewerId, sellerId, 4, "Good transaction overall.", listingId);
+
+        // Assert
+        first.ListingId.Should().Be(listingId);
+        await act.Should().ThrowAsync<DuplicateResourceException>();
+        _reviewRepoMock.Verify(r => r.AddAsync(It.IsAny<Review>()), Times.Once);
+    }
+
+    [Fact]
+    /// <summary>
     /// Tests that <see cref="ReviewService.SubmitReviewAsync"/> successfully creates a review and updates seller rating with valid data.
     /// <returns>The created review entity.</returns>
     /// </summary>
