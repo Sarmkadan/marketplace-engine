@@ -138,6 +138,8 @@ public class ListingsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> CreateListing([FromBody] CreateListingRequest request)
     {
+        ArgumentNullException.ThrowIfNull(request);
+
         _logger.LogInformation("Creating new listing: {Title}", request.Title);
 
         if (string.IsNullOrWhiteSpace(request.Title))
@@ -187,6 +189,8 @@ public class ListingsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> CreateDraftListing([FromBody] CreateListingRequest request)
     {
+        ArgumentNullException.ThrowIfNull(request);
+
         _logger.LogInformation("Creating new draft listing: {Title}", request.Title);
 
         if (string.IsNullOrWhiteSpace(request.Title))
@@ -273,6 +277,8 @@ public class ListingsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> UpdateListing(Guid id, [FromBody] UpdateListingRequest request)
     {
+        ArgumentNullException.ThrowIfNull(request);
+
         _logger.LogInformation("Updating listing: {ListingId}", id);
 
         var price = request.Price.HasValue ? new Money(request.Price.Value, "USD") : null;
