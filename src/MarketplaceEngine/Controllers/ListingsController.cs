@@ -9,6 +9,7 @@ using MarketplaceEngine.Services;
 using MarketplaceEngine.Domain.Models;
 using MarketplaceEngine.Domain.ValueObjects; // Hotfix: Add missing using directive
 using MarketplaceEngine.DTOs;
+using MarketplaceEngine.Mapping;
 using MarketplaceEngine.Infrastructure.Caching;
 
 namespace MarketplaceEngine.Controllers;
@@ -74,7 +75,7 @@ public class ListingsController : ControllerBase
         var (items, total) = await _listingService.GetPaginatedListingsAsync(page, pageSize); // Hotfix: Use GetPaginatedListingsAsync
         var response = new PaginatedResponse<ListingDto>
         {
-            Items = items.Select(l => new ListingDto(l)).ToList(),
+            Items = ListingMapper.ToDtoList(items),
             Page = page,
             PageSize = pageSize,
             Total = total // Hotfix: Use total from GetPaginatedListingsAsync
@@ -117,7 +118,7 @@ public class ListingsController : ControllerBase
             return NotFound(new { error = "Listing not found" });
         }
 
-        var dto = new ListingDto(listing);
+        var dto = ListingMapper.ToDto(listing);
         await _cacheService.SetAsync(cacheKey, dto, TimeSpan.FromMinutes(2));
 
         return Ok(dto);
@@ -169,7 +170,7 @@ public class ListingsController : ControllerBase
         await InvalidateListingsCaches();
 
         _logger.LogInformation("Listing created: {ListingId}", created.Id);
-        var dto = new ListingDto(created);
+        var dto = ListingMapper.ToDto(created);
         return CreatedAtAction(nameof(GetListing), new { id = created.Id }, dto);
     }
 
@@ -205,7 +206,7 @@ public class ListingsController : ControllerBase
         await InvalidateListingsCaches();
 
         _logger.LogInformation("Draft listing created: {ListingId}", created.Id);
-        var dto = new ListingDto(created);
+        var dto = ListingMapper.ToDto(created);
         return CreatedAtAction(nameof(GetListing), new { id = created.Id }, dto);
     }
 
@@ -250,7 +251,7 @@ public class ListingsController : ControllerBase
         await InvalidateListingsCaches();
 
         _logger.LogInformation("Draft listing published: {ListingId}", id);
-        return Ok(new ListingDto(updated));
+        return Ok(ListingMapper.ToDto(updated));
     }
 
     /// <summary>
@@ -296,7 +297,7 @@ public class ListingsController : ControllerBase
         await InvalidateListingsCaches();
 
         _logger.LogInformation("Listing updated and caches invalidated: {ListingId}", id);
-        return Ok(new ListingDto(updated));
+        return Ok(ListingMapper.ToDto(updated));
     }
 
     /// <summary>
@@ -327,7 +328,7 @@ public class ListingsController : ControllerBase
         }
 
         var results = await _searchService.SearchListingsAsync(q);
-        var dtos = results.Take(limit).Select(l => new ListingDto(l)).ToList();
+        var dtos = ListingMapper.ToDtoList(results.Take(limit));
 
         // Cache search results for 10 minutes
         await _cacheService.SetAsync(cacheKey, dtos, TimeSpan.FromMinutes(10));
