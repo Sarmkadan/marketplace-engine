@@ -5,6 +5,7 @@
 // CTO & Software Architect
 // =============================================================================
 
+using MarketplaceEngine.Constants;
 using MarketplaceEngine.Domain.Enums;
 using MarketplaceEngine.Domain.Models;
 
@@ -50,9 +51,9 @@ public static class ModerationServiceExtensions
         ArgumentNullException.ThrowIfNull(listingIds);
         ArgumentException.ThrowIfNullOrWhiteSpace(reason);
 
-        if (priority < 1 || priority > 5)
+        if (priority < AppConstants.ReportMinPriority || priority > AppConstants.ReportMaxPriority)
         {
-            throw new ArgumentOutOfRangeException(nameof(priority), priority, "Priority must be between 1 and 5");
+            throw new ArgumentOutOfRangeException(nameof(priority), priority, $"Priority must be between {AppConstants.ReportMinPriority} and {AppConstants.ReportMaxPriority}");
         }
 
         var reports = new List<ModerationReport>();
@@ -88,9 +89,9 @@ public static class ModerationServiceExtensions
         ArgumentNullException.ThrowIfNull(userIds);
         ArgumentException.ThrowIfNullOrWhiteSpace(reason);
 
-        if (priority < 1 || priority > 5)
+        if (priority < AppConstants.ReportMinPriority || priority > AppConstants.ReportMaxPriority)
         {
-            throw new ArgumentOutOfRangeException(nameof(priority), priority, "Priority must be between 1 and 5");
+            throw new ArgumentOutOfRangeException(nameof(priority), priority, $"Priority must be between {AppConstants.ReportMinPriority} and {AppConstants.ReportMaxPriority}");
         }
 
         var reports = new List<ModerationReport>();
@@ -275,9 +276,9 @@ public static class ModerationServiceExtensions
         {
             throw new ArgumentOutOfRangeException(nameof(page), page, "Page must be non-negative");
         }
-        if (pageSize < 1)
+        if (pageSize < AppConstants.MinPageSize)
         {
-            throw new ArgumentOutOfRangeException(nameof(pageSize), pageSize, "Page size must be at least 1");
+            throw new ArgumentOutOfRangeException(nameof(pageSize), pageSize, $"Page size must be at least {AppConstants.MinPageSize}");
         }
 
         var allReports = await service.GetPendingReportsAsync(page, pageSize);

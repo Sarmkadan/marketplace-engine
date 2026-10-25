@@ -4,6 +4,7 @@
 // CTO & Software Architect
 // =============================================================================
 
+using MarketplaceEngine.Constants;
 using MarketplaceEngine.Domain.Enums;
 using MarketplaceEngine.Domain.Models;
 using MarketplaceEngine.Exceptions;
@@ -89,7 +90,7 @@ public class ProductCatalog
     /// </summary>
     /// <param name="count">Number of featured products to return.</param>
     /// <returns>Top listings by view count.</returns>
-    public async Task<IReadOnlyList<Listing>> GetFeaturedAsync(int count = 10)
+    public async Task<IReadOnlyList<Listing>> GetFeaturedAsync(int count = AppConstants.DefaultFeaturedListingLimit)
     {
         if (count <= 0)
             throw new ArgumentOutOfRangeException(nameof(count), "Count must be positive.");

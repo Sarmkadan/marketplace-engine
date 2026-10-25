@@ -23,6 +23,11 @@ public static class AppConstants
     public const int UserFullNameMinLength = 2;
     public const int UserFullNameMaxLength = 100;
     public const int UserBioMaxLength = 500;
+    public const int UserPhoneMaxLength = 20;
+    public const int CountryCodeLength = 2;
+    public const int CurrencyCodeLength = 3;
+    public const int PremiumMinTotalSales = 5;
+    public const int PremiumMinRatingScore = 4;
 
     // Category constraints
     public const int CategoryNameMinLength = 2;
@@ -74,6 +79,19 @@ public static class AppConstants
     public const int FeaturedListingMaxLimit = 100;
     public const int DefaultFeaturedListingLimit = 10;
 
+    // Recommendations and top-N lists
+    public const int RecommendationDefaultCount = 20;
+    public const int RecommendationMaxCount = 100;
+    public const int SimilarRecommendationDefaultCount = 10;
+    public const int SimilarRecommendationMaxCount = 50;
+    public const int TrendingDefaultLimit = 20;
+    public const int TrendingMaxLimit = 100;
+    public const int TopSellersDefaultLimit = 10;
+    public const int TopSellersMaxLimit = 50;
+    public const int SuggestionsDefaultLimit = 10;
+    public const int SuggestionsMaxLimit = 50;
+    public const int SellerDashboardTopListingsCount = 10;
+
     // Verification
     public const int EmailVerificationExpiryMinutes = 1440; // 24 hours
     public const int PasswordResetTokenExpiryMinutes = 60;
@@ -96,6 +114,9 @@ public static class AppConstants
     public const int MinRating = 1;
     public const int MaxRating = 5;
     public const double RatingConfidenceThreshold = 10;
+
+    // Simulated latency
+    public const int SimulatedLatencyMilliseconds = 5;
 
     // API response messages
     public static class Messages
