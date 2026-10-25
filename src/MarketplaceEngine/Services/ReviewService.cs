@@ -4,6 +4,7 @@
 // CTO & Software Architect
 // =============================================================================
 
+using MarketplaceEngine.Constants;
 using MarketplaceEngine.Domain.Enums;
 using MarketplaceEngine.Domain.Models;
 using MarketplaceEngine.Domain.ValueObjects;
@@ -190,12 +191,14 @@ public class ReviewService
         if (seller is null)
             throw new ResourceNotFoundException("User", sellerId);
 
-        var reviews = await _reviewRepository.GetBySellerIdAsync(sellerId);
+        var reviews = (await _reviewRepository.GetBySellerIdAsync(sellerId))
+            .Where(r => IsValidScore(r.Score))
+            .ToList();
         var average = reviews.Count == 0 ? 0.0 : reviews.Average(r => r.Score);
-        var distribution = Enumerable.Range(1, 5)
+        var distribution = Enumerable.Range(AppConstants.MinRating, AppConstants.MaxRating - AppConstants.MinRating + 1)
             .ToDictionary(s => s, s => reviews.Count(r => r.Score == s));
 
-        return (Math.Round(average, 2), reviews.Count, distribution);
+        return (Math.Round(average, 2, MidpointRounding.AwayFromZero), reviews.Count, distribution);
     }
 
     /// <summary>
@@ -241,11 +244,13 @@ public class ReviewService
     /// <param name="sellerId">ID of the seller whose rating is recalculated.</param>
     private async Task UpdateSellerRatingAsync(Guid sellerId)
     {
-        var reviews = await _reviewRepository.GetBySellerIdAsync(sellerId);
+        var reviews = (await _reviewRepository.GetBySellerIdAsync(sellerId))
+            .Where(r => IsValidScore(r.Score))
+            .ToList();
         if (reviews.Count == 0)
             return;
 
-        var avgScore = (int)Math.Round(reviews.Average(r => r.Score));
+        var avgScore = (int)Math.Round(reviews.Average(r => r.Score), MidpointRounding.AwayFromZero);
         var newRating = new Rating(avgScore, reviews.Count);
 
         var seller = await _userRepository.GetByIdAsync(sellerId);
@@ -255,6 +260,14 @@ public class ReviewService
             await _userRepository.UpdateAsync(seller);
         }
     }
+
+    /// <summary>
+    /// Determines whether a score lies within the allowed rating range.
+    /// </summary>
+    /// <param name="score">The score to check.</param>
+    /// <returns><c>true</c> when the score is between <see cref="AppConstants.MinRating"/> and <see cref="AppConstants.MaxRating"/>.</returns>
+    private static bool IsValidScore(int score) =>
+        score >= AppConstants.MinRating && score <= AppConstants.MaxRating;
 
     /// <summary>
     /// Loads a review by ID or throws if it does not exist.
