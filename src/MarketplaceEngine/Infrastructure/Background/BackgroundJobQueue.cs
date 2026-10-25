@@ -13,8 +13,20 @@ namespace MarketplaceEngine.Infrastructure.Background;
 /// </summary>
 public interface IBackgroundJob
 {
+    /// <summary>
+    /// Gets the unique identifier of this job instance.
+    /// </summary>
     Guid JobId { get; }
+
+    /// <summary>
+    /// Gets the human-readable name of the job, used in log messages.
+    /// </summary>
     string JobName { get; }
+
+    /// <summary>
+    /// Executes the job's work asynchronously.
+    /// </summary>
+    /// <returns>A task that completes when the job has finished.</returns>
     Task ExecuteAsync();
 }
 
@@ -30,6 +42,10 @@ public class BackgroundJobQueue
     private readonly CancellationTokenSource _cancellationTokenSource = new();
     private Task? _workerTask;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="BackgroundJobQueue"/> class.
+    /// </summary>
+    /// <param name="logger">Logger used to report queue activity and job outcomes.</param>
     public BackgroundJobQueue(ILogger<BackgroundJobQueue> logger)
     {
         _logger = logger;
@@ -136,16 +152,31 @@ public class BackgroundJobQueue
 /// </summary>
 public class SearchIndexingJob : IBackgroundJob
 {
+    /// <summary>
+    /// Gets the unique identifier of this job instance.
+    /// </summary>
     public Guid JobId { get; } = Guid.NewGuid();
+
+    /// <summary>
+    /// Gets the human-readable name of the job.
+    /// </summary>
     public string JobName => "Search Indexing";
 
     private readonly ILogger<SearchIndexingJob> _logger;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SearchIndexingJob"/> class.
+    /// </summary>
+    /// <param name="logger">Logger used to report indexing progress.</param>
     public SearchIndexingJob(ILogger<SearchIndexingJob> logger)
     {
         _logger = logger;
     }
 
+    /// <summary>
+    /// Executes the search index rebuild.
+    /// </summary>
+    /// <returns>A task that completes when the rebuild has finished.</returns>
     public async Task ExecuteAsync()
     {
         _logger.LogInformation("Starting search index rebuild");
@@ -167,16 +198,31 @@ public class SearchIndexingJob : IBackgroundJob
 /// </summary>
 public class DataCleanupJob : IBackgroundJob
 {
+    /// <summary>
+    /// Gets the unique identifier of this job instance.
+    /// </summary>
     public Guid JobId { get; } = Guid.NewGuid();
+
+    /// <summary>
+    /// Gets the human-readable name of the job.
+    /// </summary>
     public string JobName => "Data Cleanup";
 
     private readonly ILogger<DataCleanupJob> _logger;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DataCleanupJob"/> class.
+    /// </summary>
+    /// <param name="logger">Logger used to report cleanup progress.</param>
     public DataCleanupJob(ILogger<DataCleanupJob> logger)
     {
         _logger = logger;
     }
 
+    /// <summary>
+    /// Executes the data cleanup.
+    /// </summary>
+    /// <returns>A task that completes when the cleanup has finished.</returns>
     public async Task ExecuteAsync()
     {
         _logger.LogInformation("Starting data cleanup");
@@ -198,16 +244,31 @@ public class DataCleanupJob : IBackgroundJob
 /// </summary>
 public class NotificationDispatchJob : IBackgroundJob
 {
+    /// <summary>
+    /// Gets the unique identifier of this job instance.
+    /// </summary>
     public Guid JobId { get; } = Guid.NewGuid();
+
+    /// <summary>
+    /// Gets the human-readable name of the job.
+    /// </summary>
     public string JobName => "Notification Dispatch";
 
     private readonly ILogger<NotificationDispatchJob> _logger;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="NotificationDispatchJob"/> class.
+    /// </summary>
+    /// <param name="logger">Logger used to report dispatch progress.</param>
     public NotificationDispatchJob(ILogger<NotificationDispatchJob> logger)
     {
         _logger = logger;
     }
 
+    /// <summary>
+    /// Executes the notification dispatch.
+    /// </summary>
+    /// <returns>A task that completes when the dispatch has finished.</returns>
     public async Task ExecuteAsync()
     {
         _logger.LogInformation("Starting notification dispatch");
