@@ -26,6 +26,11 @@ public class CacheService
     private readonly ILogger<CacheService> _logger;
     private readonly CancellationTokenSource _cleanupTokenSource = new();
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="CacheService"/> class
+    /// and starts the background task that removes expired items.
+    /// </summary>
+    /// <param name="logger">Logger used for cache diagnostics.</param>
     public CacheService(ILogger<CacheService> logger)
     {
         _logger = logger;
@@ -37,6 +42,9 @@ public class CacheService
     /// Retrieves a cached value by key.
     /// Returns null if key doesn't exist or has expired.
     /// </summary>
+    /// <typeparam name="T">The type to which the cached value is returned.</typeparam>
+    /// <param name="key">The cache key. Null, empty, or whitespace keys return the default value.</param>
+    /// <returns>The cached value, or the default value of <typeparamref name="T"/> if not found or expired.</returns>
     public async Task<T?> GetAsync<T>(string key)
     {
         if (string.IsNullOrWhiteSpace(key))
@@ -71,6 +79,10 @@ public class CacheService
     /// Stores a value in cache with optional TTL.
     /// Default TTL is 5 minutes if not specified.
     /// </summary>
+    /// <typeparam name="T">The type of the value to store.</typeparam>
+    /// <param name="key">The cache key. Null, empty, or whitespace keys are ignored.</param>
+    /// <param name="value">The value to store. Null values are ignored.</param>
+    /// <param name="ttl">Optional time-to-live for the entry. Defaults to 5 minutes when null.</param>
     public async Task SetAsync<T>(string key, T value, TimeSpan? ttl = null)
     {
         if (string.IsNullOrWhiteSpace(key) || value is null)
@@ -93,7 +105,9 @@ public class CacheService
 
     /// <summary>
     /// Removes a specific key from cache.
+    /// Keys ending with <c>*</c> remove every key that starts with the prefix before the wildcard.
     /// </summary>
+    /// <param name="key">The key to remove, or a prefix pattern ending with <c>*</c>. Null, empty, or whitespace keys are ignored.</param>
     public async Task RemoveAsync(string key)
     {
         if (string.IsNullOrWhiteSpace(key))
@@ -134,6 +148,7 @@ public class CacheService
     /// <summary>
     /// Gets cache statistics (size, hit rate, etc).
     /// </summary>
+    /// <returns>A <see cref="CacheStatistics"/> snapshot of the current cache state.</returns>
     public async Task<CacheStatistics> GetStatisticsAsync()
     {
         var stats = new CacheStatistics
@@ -210,7 +225,18 @@ public class CacheService
 /// </summary>
 public class CacheStatistics
 {
+    /// <summary>
+    /// Gets or sets the number of items currently held in the cache.
+    /// </summary>
     public int TotalItems { get; set; }
+
+    /// <summary>
+    /// Gets or sets the rough estimated memory usage of the cache, in megabytes.
+    /// </summary>
     public long TotalMemoryMb { get; set; }
+
+    /// <summary>
+    /// Gets or sets the age of the oldest item in the cache, or zero when the cache is empty.
+    /// </summary>
     public TimeSpan OldestItemAge { get; set; }
 }
