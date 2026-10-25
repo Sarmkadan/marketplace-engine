@@ -15,9 +15,24 @@ namespace MarketplaceEngine.Infrastructure.Integration;
 /// </summary>
 public class WebhookEvent
 {
+    /// <summary>
+    /// Gets or sets the event type name used to route the event to a registered handler (e.g. "payment.completed").
+    /// </summary>
     public string EventType { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the time at which the event occurred.
+    /// </summary>
     public DateTime Timestamp { get; set; }
+
+    /// <summary>
+    /// Gets or sets the event payload as key/value pairs.
+    /// </summary>
     public Dictionary<string, object?> Data { get; set; } = new();
+
+    /// <summary>
+    /// Gets or sets the provider-supplied signature of the event, if any.
+    /// </summary>
     public string? Signature { get; set; }
 }
 
@@ -26,7 +41,16 @@ public class WebhookEvent
 /// </summary>
 public interface IWebhookEventHandler
 {
+    /// <summary>
+    /// Gets the event type this handler is responsible for.
+    /// </summary>
     string EventType { get; }
+
+    /// <summary>
+    /// Handles a received webhook event of the type returned by <see cref="EventType"/>.
+    /// </summary>
+    /// <param name="webhookEvent">The event to handle.</param>
+    /// <returns>A task that completes when the event has been handled.</returns>
     Task HandleAsync(WebhookEvent webhookEvent);
 }
 
@@ -41,6 +65,11 @@ public class WebhookService
     private readonly ILogger<WebhookService> _logger;
     private readonly string _webhookSecret;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="WebhookService"/> class.
+    /// </summary>
+    /// <param name="logger">Logger used to report webhook processing activity.</param>
+    /// <param name="webhookSecret">Shared secret used to compute and verify HMAC-SHA256 signatures.</param>
     public WebhookService(ILogger<WebhookService> logger, string webhookSecret)
     {
         _logger = logger;
@@ -160,15 +189,27 @@ public class WebhookService
 /// </summary>
 public class PaymentWebhookHandler : IWebhookEventHandler
 {
+    /// <summary>
+    /// Gets the event type handled by this class ("payment.completed").
+    /// </summary>
     public string EventType => "payment.completed";
 
     private readonly ILogger<PaymentWebhookHandler> _logger;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="PaymentWebhookHandler"/> class.
+    /// </summary>
+    /// <param name="logger">Logger used to report payment webhook processing.</param>
     public PaymentWebhookHandler(ILogger<PaymentWebhookHandler> logger)
     {
         _logger = logger;
     }
 
+    /// <summary>
+    /// Handles a "payment.completed" event by extracting the transaction ID and amount from the payload.
+    /// </summary>
+    /// <param name="webhookEvent">The payment event to handle.</param>
+    /// <returns>A task that completes when processing has finished.</returns>
     public async Task HandleAsync(WebhookEvent webhookEvent)
     {
         _logger.LogInformation("Processing payment webhook: {EventType}", webhookEvent.EventType);
@@ -197,15 +238,27 @@ public class PaymentWebhookHandler : IWebhookEventHandler
 /// </summary>
 public class ShippingWebhookHandler : IWebhookEventHandler
 {
+    /// <summary>
+    /// Gets the event type handled by this class ("shipment.updated").
+    /// </summary>
     public string EventType => "shipment.updated";
 
     private readonly ILogger<ShippingWebhookHandler> _logger;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ShippingWebhookHandler"/> class.
+    /// </summary>
+    /// <param name="logger">Logger used to report shipping webhook processing.</param>
     public ShippingWebhookHandler(ILogger<ShippingWebhookHandler> logger)
     {
         _logger = logger;
     }
 
+    /// <summary>
+    /// Handles a "shipment.updated" event by extracting the tracking number and status from the payload.
+    /// </summary>
+    /// <param name="webhookEvent">The shipping event to handle.</param>
+    /// <returns>A task that completes when processing has finished.</returns>
     public async Task HandleAsync(WebhookEvent webhookEvent)
     {
         _logger.LogInformation("Processing shipping update: {EventType}", webhookEvent.EventType);
