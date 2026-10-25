@@ -7,6 +7,7 @@
 using Microsoft.AspNetCore.Mvc;
 using MarketplaceEngine.Services;
 using MarketplaceEngine.DTOs;
+using MarketplaceEngine.Mapping;
 using MarketplaceEngine.Infrastructure.Caching;
 using MarketplaceEngine.Repositories; // Hotfix: Add missing using directive
 
@@ -144,7 +145,7 @@ public class CategoriesController : ControllerBase
 
         var response = new PaginatedResponse<ListingDto>
         {
-            Items = paginatedListings.Select(l => new ListingDto(l)).ToList(),
+            Items = ListingMapper.ToDtoList(paginatedListings),
             Page = page,
             PageSize = pageSize,
             Total = total

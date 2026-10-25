@@ -6,6 +6,7 @@
 
 using Microsoft.AspNetCore.Mvc;
 using MarketplaceEngine.DTOs;
+using MarketplaceEngine.Mapping;
 using MarketplaceEngine.Services;
 
 namespace MarketplaceEngine.Controllers;
@@ -48,7 +49,7 @@ public class ReviewsController : ControllerBase
         var review = await _reviewService.SubmitReviewAsync(
             request.ReviewerId, request.SellerId, request.Score, request.Comment, request.ListingId);
 
-        return CreatedAtAction(nameof(GetReview), new { id = review.Id }, new ReviewDto(review));
+        return CreatedAtAction(nameof(GetReview), new { id = review.Id }, ReviewMapper.ToDto(review));
     }
 
     /// <summary>
@@ -60,7 +61,7 @@ public class ReviewsController : ControllerBase
     public async Task<IActionResult> GetReview(Guid id)
     {
         var review = await _reviewService.GetReviewAsync(id);
-        return Ok(new ReviewDto(review));
+        return Ok(ReviewMapper.ToDto(review));
     }
 
     /// <summary>
@@ -79,7 +80,7 @@ public class ReviewsController : ControllerBase
         var (items, total) = await _reviewService.GetSellerReviewsAsync(sellerId, page, pageSize);
         var response = new PaginatedResponse<ReviewDto>
         {
-            Items = items.Select(r => new ReviewDto(r)).ToList(),
+            Items = ReviewMapper.ToDtoList(items),
             Page = page,
             PageSize = pageSize,
             Total = total
@@ -96,7 +97,7 @@ public class ReviewsController : ControllerBase
     public async Task<IActionResult> GetListingReviews(Guid listingId)
     {
         var reviews = await _reviewService.GetListingReviewsAsync(listingId);
-        return Ok(reviews.Select(r => new ReviewDto(r)).ToList());
+        return Ok(ReviewMapper.ToDtoList(reviews));
     }
 
     /// <summary>
@@ -134,7 +135,7 @@ public class ReviewsController : ControllerBase
             return BadRequest("Reply content is required.");
 
         var review = await _reviewService.AddSellerReplyAsync(id, request.SellerId, request.Reply);
-        return Ok(new ReviewDto(review));
+        return Ok(ReviewMapper.ToDto(review));
     }
 
     /// <summary>
@@ -146,7 +147,7 @@ public class ReviewsController : ControllerBase
     public async Task<IActionResult> FlagReview(Guid id)
     {
         var review = await _reviewService.FlagReviewAsync(id);
-        return Ok(new ReviewDto(review));
+        return Ok(ReviewMapper.ToDto(review));
     }
 
     /// <summary>
@@ -159,6 +160,6 @@ public class ReviewsController : ControllerBase
     public async Task<IActionResult> RemoveReview(Guid id, [FromQuery] Guid moderatorId)
     {
         var review = await _reviewService.RemoveReviewAsync(id, moderatorId);
-        return Ok(new ReviewDto(review));
+        return Ok(ReviewMapper.ToDto(review));
     }
 }
