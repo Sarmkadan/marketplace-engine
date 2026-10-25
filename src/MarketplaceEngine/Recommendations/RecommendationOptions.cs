@@ -127,4 +127,104 @@ public sealed class RecommendationOptions
         configuration.GetSection("Marketplace:Recommendations").Bind(options);
         return options;
     }
+
+    // ── Validation ────────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Validates the option values and throws if any of them is out of range.
+    /// Called once at startup, before the options are registered in the DI container.
+    /// </summary>
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// Thrown if any of the following conditions are violated. The <c>ParamName</c> of the
+    /// exception is the name of the offending property:
+    /// <list type="bullet">
+    ///   <item><description><see cref="MinOverlapForNeighbour"/> must be non-negative.</description></item>
+    ///   <item><description><see cref="MaxNeighbours"/> must be non-negative.</description></item>
+    ///   <item><description><see cref="MinSimilarityThreshold"/> must be between 0 and 1.</description></item>
+    ///   <item><description><see cref="TrendingWindowHours"/> must be positive.</description></item>
+    ///   <item><description><see cref="ViewWeight"/>, <see cref="SaveWeight"/>, <see cref="EnquiryWeight"/> and <see cref="PurchaseWeight"/> must be non-negative.</description></item>
+    ///   <item><description><see cref="UserFeedCacheTtlMinutes"/>, <see cref="TrendingFeedCacheTtlMinutes"/> and <see cref="ItemSimilarityCacheTtlMinutes"/> must be non-negative.</description></item>
+    ///   <item><description><see cref="MaxSignalsPerUser"/> must be positive.</description></item>
+    ///   <item><description><see cref="ActivityHistoryDays"/> must be positive.</description></item>
+    ///   <item><description><see cref="MinAffinitySignals"/> must be non-negative.</description></item>
+    ///   <item><description><see cref="MaxCategoryConcentration"/> must be greater than 0 and at most 1.</description></item>
+    /// </list>
+    /// </exception>
+    public void Validate()
+    {
+        if (MinOverlapForNeighbour < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(MinOverlapForNeighbour), MinOverlapForNeighbour, "must be non-negative.");
+        }
+
+        if (MaxNeighbours < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(MaxNeighbours), MaxNeighbours, "must be non-negative.");
+        }
+
+        if (MinSimilarityThreshold < 0 || MinSimilarityThreshold > 1)
+        {
+            throw new ArgumentOutOfRangeException(nameof(MinSimilarityThreshold), MinSimilarityThreshold, "must be between 0 and 1.");
+        }
+
+        if (TrendingWindowHours <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(TrendingWindowHours), TrendingWindowHours, "must be positive.");
+        }
+
+        if (ViewWeight < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(ViewWeight), ViewWeight, "must be non-negative.");
+        }
+
+        if (SaveWeight < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(SaveWeight), SaveWeight, "must be non-negative.");
+        }
+
+        if (EnquiryWeight < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(EnquiryWeight), EnquiryWeight, "must be non-negative.");
+        }
+
+        if (PurchaseWeight < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(PurchaseWeight), PurchaseWeight, "must be non-negative.");
+        }
+
+        if (UserFeedCacheTtlMinutes < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(UserFeedCacheTtlMinutes), UserFeedCacheTtlMinutes, "must be non-negative.");
+        }
+
+        if (TrendingFeedCacheTtlMinutes < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(TrendingFeedCacheTtlMinutes), TrendingFeedCacheTtlMinutes, "must be non-negative.");
+        }
+
+        if (ItemSimilarityCacheTtlMinutes < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(ItemSimilarityCacheTtlMinutes), ItemSimilarityCacheTtlMinutes, "must be non-negative.");
+        }
+
+        if (MaxSignalsPerUser <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(MaxSignalsPerUser), MaxSignalsPerUser, "must be positive.");
+        }
+
+        if (ActivityHistoryDays <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(ActivityHistoryDays), ActivityHistoryDays, "must be positive.");
+        }
+
+        if (MinAffinitySignals < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(MinAffinitySignals), MinAffinitySignals, "must be non-negative.");
+        }
+
+        if (MaxCategoryConcentration <= 0 || MaxCategoryConcentration > 1)
+        {
+            throw new ArgumentOutOfRangeException(nameof(MaxCategoryConcentration), MaxCategoryConcentration, "must be greater than 0 and at most 1.");
+        }
+    }
 }

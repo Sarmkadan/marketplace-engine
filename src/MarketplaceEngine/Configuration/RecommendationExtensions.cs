@@ -39,6 +39,9 @@ public static class RecommendationExtensions
             ? RecommendationOptions.FromConfiguration(configuration)
             : RecommendationOptions.CreateDefault();
 
+        // Fail fast at startup on out-of-range values from configuration.
+        options.Validate();
+
         services.AddSingleton(options);
         services.AddSingleton<IUserActivityTracker, UserActivityTracker>();
         services.AddSingleton<IRecommendationEngine, CollaborativeFilteringEngine>();
