@@ -21,6 +21,12 @@ public class HttpClientService
     private const int MaxRetries = 3;
     private const int TimeoutSeconds = 30;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="HttpClientService"/> class.
+    /// Sets the underlying client timeout to 30 seconds.
+    /// </summary>
+    /// <param name="httpClient">The HTTP client used to send requests.</param>
+    /// <param name="logger">The logger used to record request attempts and errors.</param>
     public HttpClientService(HttpClient httpClient, ILogger<HttpClientService> logger)
     {
         _httpClient = httpClient;
@@ -31,6 +37,9 @@ public class HttpClientService
     /// <summary>
     /// Makes a GET request with automatic retries.
     /// </summary>
+    /// <typeparam name="T">The type to deserialize the response body into.</typeparam>
+    /// <param name="url">The request URL.</param>
+    /// <returns>The deserialized response body, or <c>null</c> if the JSON deserializes to null.</returns>
     public async Task<T?> GetAsync<T>(string url)
     {
         return await ExecuteWithRetryAsync(async () =>
@@ -46,6 +55,10 @@ public class HttpClientService
     /// <summary>
     /// Makes a POST request with optional request body.
     /// </summary>
+    /// <typeparam name="T">The type to deserialize the response body into.</typeparam>
+    /// <param name="url">The request URL.</param>
+    /// <param name="data">The object to serialize as JSON into the request body, or <c>null</c> for no body.</param>
+    /// <returns>The deserialized response body, or <c>null</c> if the JSON deserializes to null.</returns>
     public async Task<T?> PostAsync<T>(string url, object? data = null)
     {
         return await ExecuteWithRetryAsync(async () =>
@@ -65,6 +78,10 @@ public class HttpClientService
     /// <summary>
     /// Makes a PUT request.
     /// </summary>
+    /// <typeparam name="T">The type to deserialize the response body into.</typeparam>
+    /// <param name="url">The request URL.</param>
+    /// <param name="data">The object to serialize as JSON into the request body.</param>
+    /// <returns>The deserialized response body, or <c>null</c> if the JSON deserializes to null.</returns>
     public async Task<T?> PutAsync<T>(string url, object data)
     {
         return await ExecuteWithRetryAsync(async () =>
@@ -81,6 +98,7 @@ public class HttpClientService
     /// <summary>
     /// Makes a DELETE request.
     /// </summary>
+    /// <param name="url">The request URL.</param>
     public async Task DeleteAsync(string url)
     {
         await ExecuteWithRetryAsync(async () =>
@@ -94,6 +112,8 @@ public class HttpClientService
     /// <summary>
     /// Sets authorization header for API requests.
     /// </summary>
+    /// <param name="scheme">The authentication scheme (for example, <c>Bearer</c>).</param>
+    /// <param name="parameter">The credentials for the scheme (for example, a token).</param>
     public void SetAuthorizationHeader(string scheme, string parameter)
     {
         _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(scheme, parameter);
@@ -102,6 +122,8 @@ public class HttpClientService
     /// <summary>
     /// Adds custom header to all requests.
     /// </summary>
+    /// <param name="name">The header name.</param>
+    /// <param name="value">The header value.</param>
     public void AddHeader(string name, string value)
     {
         _httpClient.DefaultRequestHeaders.Add(name, value);
