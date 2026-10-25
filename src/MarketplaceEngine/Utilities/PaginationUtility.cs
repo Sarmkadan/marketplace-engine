@@ -4,9 +4,9 @@
 // CTO & Software Architect
 // =============================================================================
 
-namespace MarketplaceEngine.Utilities;
-
 using MarketplaceEngine.Constants;
+
+namespace MarketplaceEngine.Utilities;
 
 /// <summary>
 /// Pagination calculation utilities to standardize paging across the application.
