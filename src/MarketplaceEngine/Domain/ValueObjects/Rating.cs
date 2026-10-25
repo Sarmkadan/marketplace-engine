@@ -4,6 +4,8 @@
 // CTO & Software Architect
 // =============================================================================
 
+using System.Globalization;
+
 namespace MarketplaceEngine.Domain.ValueObjects;
 
 /// <summary>
@@ -64,7 +66,9 @@ public sealed class Rating : IEquatable<Rating>
 
     public override int GetHashCode() => HashCode.Combine(Score, TotalReviews);
 
-    public override string ToString() => $"{AverageRating:F2}/5 ({TotalReviews} reviews)";
+    // Culture-invariant so the decimal separator is stable across machines (e.g. "4.86", not "4,86")
+    public override string ToString() =>
+        string.Format(CultureInfo.InvariantCulture, "{0:F2}/5 ({1} reviews)", AverageRating, TotalReviews);
 
     public static bool operator ==(Rating? left, Rating? right) => Equals(left, right);
     public static bool operator !=(Rating? left, Rating? right) => !Equals(left, right);
