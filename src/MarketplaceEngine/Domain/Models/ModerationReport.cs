@@ -161,4 +161,10 @@ public class ModerationReport
             UpdatedAt = DateTime.UtcNow;
         }
     }
+
+    /// <summary>
+    /// Returns a short summary of the report (id, reason, status) for debugging and logging.
+    /// </summary>
+    public override string ToString() =>
+        $"ModerationReport {{ Id = {Id}, Reason = {Reason}, Status = {Status} }}";
 }
