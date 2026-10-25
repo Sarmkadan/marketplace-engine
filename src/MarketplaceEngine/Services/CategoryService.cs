@@ -78,6 +78,8 @@ public class CategoryService
     public async Task<Category> CreateCategoryAsync(string name, string? description = null,
         Guid? parentCategoryId = null)
     {
+        ArgumentNullException.ThrowIfNull(name);
+
         var category = new Category
         {
             Name = name,
@@ -206,6 +208,8 @@ public class CategoryService
     // Gets category by slug
     public async Task<Category> GetBySlugAsync(string slug)
     {
+        ArgumentNullException.ThrowIfNull(slug);
+
         await Task.Delay(5);
         var category = _context.Categories.FirstOrDefault(c => c.Slug == slug && c.IsActive);
         if (category is null)
