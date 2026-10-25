@@ -69,6 +69,12 @@ public class ApiResponse<T>
             RequestId = requestId
         };
     }
+
+    /// <summary>
+    /// Returns a short summary of the response (success, message) for debugging and logging.
+    /// </summary>
+    public override string ToString() =>
+        $"ApiResponse<{typeof(T).Name}> {{ Success = {Success}, Message = {Message} }}";
 }
 
 /// <summary>
@@ -112,6 +118,12 @@ public class ApiResponse
             RequestId = requestId
         };
     }
+
+    /// <summary>
+    /// Returns a short summary of the response (success, message) for debugging and logging.
+    /// </summary>
+    public override string ToString() =>
+        $"ApiResponse {{ Success = {Success}, Message = {Message} }}";
 }
 
 /// <summary>
